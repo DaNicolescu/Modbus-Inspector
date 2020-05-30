@@ -12,30 +12,30 @@ std::unordered_map<uint16_t, uint8_t> modbus_queries;
 
 void list_devs()
 {
-    int errcode;
-    pcap_if_t *alldevs, *currdev;
-    char errbuff[PCAP_ERRBUF_SIZE];
+    pcap_if_t *all_devs;
+    pcap_if_t *current_dev;
+    char error_buff[PCAP_ERRBUF_SIZE];
+    int ret;
 
-    errcode = pcap_findalldevs(&alldevs, errbuff);
+    ret = pcap_findalldevs(&all_devs, error_buff);
 
-    if(errcode != 0) {
-        fprint("pcap_findalldevs failed: %s\n", errbuff);
+    if (ret) {
+	std::cout << "pcap_findalldevs failes: " << error_buff << std::endl;
 
         return;
     }
 
-    currdev = alldevs;
+    current_dev = all_devs;
 
-    while(currdev) {
-        printf("%s\t%s\n", currdev->name,
-	       currdev->description
-	       ? currdev->description : "(no description)");
+    while (current_dev) {
+	std::cout << current_dev->name << " " << (current_dev->description
+	    ? current_dev->description : "(no description)") << std::endl;
 
-        currdev = currdev->next;
+        current_dev = current_dev->next;
     }
 
-    if(alldevs)
-        pcap_freealldevs(alldevs);
+    if (all_devs)
+        pcap_freealldevs(all_devs);
 }
 
 void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
@@ -47,17 +47,17 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     const uint8_t *ip_header;
     const uint8_t *tcp_header;
     const uint8_t *payload;
-    int ethernet_header_length = 14; /* Doesn't change */
+    int ethernet_header_length = ETH_HDR_LEN;
     int ip_header_length;
     int tcp_header_length;
     int payload_length;
 
-    //printf("entered handler\n");
+    // std::cout << "entered handler" << std::endl;
 
     ethernet_header = (struct ether_header*) packet;
 
     if (ntohs(ethernet_header->ether_type) != ETHERTYPE_IP) {
-        printf("Not an IP packet\n\n");
+	std::cout << "Not an IP packet" << std::endl << std::endl;
 
         return;
     }
@@ -70,8 +70,11 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
        than what we currently have captured. If the snapshot
        length set with pcap_open_live() is too small, you may
        not have the whole packet. */
-    //printf("Total packet available: %d bytes\n", header->caplen);
-    //printf("Expected packet size: %d bytes\n", header->len);
+    // std::cout << "Total packet available: " << header->caplen << " bytes" <<
+    // std::endl;
+
+    // std::cout << "Expected packet size: " << header->len << " bytes" <<
+    // std::endl;
 
     /* Find start of IP header */
     ip_header = packet + ethernet_header_length;
@@ -81,7 +84,8 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     /* The IHL is number of 32-bit segments. Multiply
        by four to get a byte count for pointer arithmetic */
     ip_header_length = ip_header_length * 4;
-    //printf("IP header length (IHL) in bytes: %d\n", ip_header_length);
+    // std::cout << "IP header length (IHL) in bytes: " << ip_header_length <<
+    // std::endl;
 
     /* Now that we know where the IP header is, we can 
        inspect the IP header for a protocol number to 
@@ -89,7 +93,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
        Protocol is always the 10th byte of the IP header */
     u_char protocol = *(ip_header + 9);
     if (protocol != IPPROTO_TCP) {
-        printf("Not a TCP packet\n\n");
+	std::cout << "Not a TCP packet" << std::endl << std::endl;
 
         return;
     }
@@ -108,18 +112,20 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
        the IP header length. We multiply by four again to get a
        byte count. */
     tcp_header_length = tcp_header_length * 4;
-    //printf("TCP header length in bytes: %d\n", tcp_header_length);
+    // std::cout << "TCP header length in bytes: " << tcp_header_length <<
+    // std::endl;
 
     /* Add up all the header sizes to find the payload offset */
     int total_headers_size = ethernet_header_length+ip_header_length+tcp_header_length;
-    //printf("Size of all headers combined: %d bytes\n", total_headers_size);
+    // std::cout << "Size of all headers combined: " << total_headers_size <<
+    // " bytes" << std::endl;
     payload_length = header->caplen -
         (ethernet_header_length + ip_header_length + tcp_header_length);
-    //printf("Payload size: %d bytes\n", payload_length);
+    // std::cout << "Payload size: " << payload_length << " bytes" << std::endl;
     payload = packet + total_headers_size;
 
     if (payload_length <= 0) {
-	printf("no modbus payload\n\n");
+	std::cout << "No modbus payload" << std::endl << std::endl;
 
 	return;
     }
@@ -131,6 +137,9 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     printf("length: %d\n", htons(modbus->length));
     printf("slave id: %d\n", modbus->unit_id);
     printf("function code: %d\n", modbus->function_code);
+
+    // Trebuie facut un map pentru a determina folosind transaction_id carei
+    // cereri raspunde un slave
 
     printf("\n");
 }

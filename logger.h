@@ -1,6 +1,8 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#define ETH_HDR_LEN		    0x0E
+
 #define READ_COIL_STATUS	    0x01
 #define READ_INPUT_STATUS	    0x02
 #define READ_HOLDING_REGISTERS	    0x03
