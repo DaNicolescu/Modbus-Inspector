@@ -74,6 +74,15 @@ void get_modbus_read_response(struct modbus_read_response *modbus_struct,
 	   modbus_struct->byte_count);
 }
 
+void get_modbus_single_write(struct modbus_single_write *modbus_struct,
+			     const uint8_t *payload)
+{
+    memcpy(modbus_struct, payload, sizeof(struct modbus_single_write));
+
+    modbus_struct->address = htons(modbus_struct->address);
+    modbus_struct->value = htons(modbus_struct->value);
+}
+
 void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 		       const uint8_t *packet)
 {
@@ -82,6 +91,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_tcp_generic *modbus;
     struct modbus_read_query read_query;
     struct modbus_read_response read_response;
+    struct modbus_single_write single_write_packet;
     const uint8_t *ip_header;
     const uint8_t *tcp_header;
     const uint8_t *payload;
@@ -274,8 +284,22 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
 	break;
     case FORCE_SINGLE_COIL:
+	std::cout << "FORCE SINGLE COIL" << std::endl;
+
+	get_modbus_single_write(&single_write_packet, payload);
+
+        std::cout << "address: " << single_write_packet.address << std::endl;
+        std::cout << "value: " << single_write_packet.value << std::endl;
+
 	break;
     case PRESET_SINGLE_REGISTER:
+	std::cout << "PRESET SINGLE REGISTER" << std::endl;
+
+	get_modbus_single_write(&single_write_packet, payload);
+
+        std::cout << "address: " << single_write_packet.address << std::endl;
+        std::cout << "value: " << single_write_packet.value << std::endl;
+
 	break;
     case READ_EXCEPTION_STATUS:
 	break;

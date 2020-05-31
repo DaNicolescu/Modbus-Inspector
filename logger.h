@@ -34,6 +34,20 @@ struct modbus_read_response {
     uint8_t *data;
 } __attribute__((packed));
 
+struct modbus_single_write {
+    struct modbus_tcp_generic generic_header;
+    uint16_t address;
+    uint16_t value;
+} __attribute__((packed));
+
+struct modbus_multiple_write_query {
+    struct modbus_tcp_generic generic_header;
+    uint16_t starting_address;
+    uint16_t num_of_points;
+    uint8_t byte_count;
+    uint8_t *data;
+} __attribute__((packed));
+
 struct modbus_tcp_all {
     struct modbus_tcp *generic_header;
     bool query;
