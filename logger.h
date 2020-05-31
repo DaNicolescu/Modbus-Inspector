@@ -14,12 +14,29 @@
 #define PRESET_MULTIPLE_REGISTERS   0x10
 #define REPORT_SLAVE_ID		    0x11
 
-struct modbus_tcp {
+struct modbus_tcp_generic {
     uint16_t transaction_id;
     uint16_t protocol_id;
     uint16_t length;
     uint8_t unit_id;
     uint8_t function_code;
 } __attribute__((packed));
+
+struct modbus_read_query {
+    struct modbus_tcp_generic generic_header;
+    uint16_t starting_address;
+    uint16_t num_of_points;
+} __attribute__((packed));
+
+struct modbus_read_response {
+    struct modbus_tcp_generic generic_header;
+    uint8_t byte_count;
+    uint8_t *data;
+} __attribute__((packed));
+
+struct modbus_tcp_all {
+    struct modbus_tcp *generic_header;
+    bool query;
+};
 
 #endif
