@@ -21,7 +21,7 @@ void list_devs()
     ret = pcap_findalldevs(&all_devs, error_buff);
 
     if (ret) {
-	std::cout << "pcap_findalldevs failes: " << error_buff << std::endl;
+        std::cout << "pcap_findalldevs failes: " << error_buff << std::endl;
 
         return;
     }
@@ -29,8 +29,8 @@ void list_devs()
     current_dev = all_devs;
 
     while (current_dev) {
-	std::cout << current_dev->name << " " << (current_dev->description
-	    ? current_dev->description : "(no description)") << std::endl;
+        std::cout << current_dev->name << " " << (current_dev->description
+            ? current_dev->description : "(no description)") << std::endl;
 
         current_dev = current_dev->next;
     }
@@ -42,13 +42,13 @@ void list_devs()
 bool modbus_packet_is_query(uint16_t transaction_id)
 {
     if (modbus_queries.find(transaction_id) == modbus_queries.end())
-	return true;
+        return true;
 
     return false;
 }
 
 void get_modbus_read_query(struct modbus_read_query *modbus_struct,
-			   const uint8_t *payload)
+                           const uint8_t *payload)
 {
     memcpy(modbus_struct, payload, sizeof(struct modbus_read_query));
 
@@ -57,25 +57,25 @@ void get_modbus_read_query(struct modbus_read_query *modbus_struct,
 }
 
 void get_modbus_read_response(struct modbus_read_response *modbus_struct,
-			      const uint8_t *payload)
+                              const uint8_t *payload)
 {
     memcpy(modbus_struct, payload,
-	   sizeof(struct modbus_tcp_generic) + 1);
+           sizeof(struct modbus_tcp_generic) + 1);
 
     modbus_struct->data = (uint8_t*) malloc(modbus_struct->byte_count);
 
     if (!modbus_struct->data) {
-	std::cout << "Failed to allocate memory" << std::endl;
+        std::cout << "Failed to allocate memory" << std::endl;
 
-	return;
+        return;
     }
 
     memcpy(modbus_struct->data, payload + sizeof(struct modbus_tcp_generic) + 1,
-	   modbus_struct->byte_count);
+           modbus_struct->byte_count);
 }
 
 void get_modbus_single_write(struct modbus_single_write *modbus_struct,
-			     const uint8_t *payload)
+                             const uint8_t *payload)
 {
     memcpy(modbus_struct, payload, sizeof(struct modbus_single_write));
 
@@ -84,7 +84,7 @@ void get_modbus_single_write(struct modbus_single_write *modbus_struct,
 }
 
 void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
-		       const uint8_t *packet)
+                       const uint8_t *packet)
 {
     /* First, lets make sure we have an IP packet */
     struct ether_header *ethernet_header;
@@ -106,7 +106,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     ethernet_header = (struct ether_header*) packet;
 
     if (ntohs(ethernet_header->ether_type) != ETHERTYPE_IP) {
-	std::cout << "Not an IP packet" << std::endl << std::endl;
+        std::cout << "Not an IP packet" << std::endl << std::endl;
 
         return;
     }
@@ -142,7 +142,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
        Protocol is always the 10th byte of the IP header */
     u_char protocol = *(ip_header + 9);
     if (protocol != IPPROTO_TCP) {
-	std::cout << "Not a TCP packet" << std::endl << std::endl;
+        std::cout << "Not a TCP packet" << std::endl << std::endl;
 
         return;
     }
@@ -174,9 +174,9 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     payload = packet + total_headers_size;
 
     if (payload_length <= 0) {
-	std::cout << "No modbus payload" << std::endl << std::endl;
+        std::cout << "No modbus payload" << std::endl << std::endl;
 
-	return;
+        return;
     }
 
     modbus = (struct modbus_tcp_generic*) payload;
@@ -184,133 +184,133 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     query_packet = modbus_packet_is_query(htons(modbus->transaction_id));
 
     if (query_packet)
-	modbus_queries.insert(htons(modbus->transaction_id));
+        modbus_queries.insert(htons(modbus->transaction_id));
     else
-	modbus_queries.erase(htons(modbus->transaction_id));
+        modbus_queries.erase(htons(modbus->transaction_id));
 
     std::cout << "MODBUS " << (query_packet ? "query" : "response")
-	    << std::endl;
+        << std::endl;
     std::cout << "transaction id: " << htons(modbus->transaction_id)
-	    << std::endl;
+        << std::endl;
     std::cout << "protocol id: " << htons(modbus->protocol_id) << std::endl;
     std::cout << "length: " << htons(modbus->length) << std::endl;
     std::cout << "slave id: " << unsigned(modbus->unit_id) << std::endl;
     std::cout << "function code: " << unsigned(modbus->function_code)
-	    << std::endl;
+        << std::endl;
 
     switch (modbus->function_code) {
     case READ_COIL_STATUS:
-	std::cout << "READ COIL STATUS" << std::endl;
+        std::cout << "READ COIL STATUS" << std::endl;
 
-	if (query_packet) {
-	    get_modbus_read_query(&read_query, payload);
+        if (query_packet) {
+            get_modbus_read_query(&read_query, payload);
 
-	    std::cout << "starting address: " << read_query.starting_address
-		    << std::endl;
-	    std::cout << "num of points: " << read_query.num_of_points
-		    << std::endl;
-	} else {
-	    get_modbus_read_response(&read_response, payload);
+            std::cout << "starting address: " << read_query.starting_address
+                << std::endl;
+            std::cout << "num of points: " << read_query.num_of_points
+                << std::endl;
+        } else {
+            get_modbus_read_response(&read_response, payload);
 
-	    std::cout << "byte count: " << unsigned(read_response.byte_count)
-		    << std::endl;
+            std::cout << "byte count: " << unsigned(read_response.byte_count)
+                << std::endl;
 
-	    std::cout << "first byte of data: "
-		    << unsigned(read_response.data[0]) << std::endl;
-	}
+            std::cout << "first byte of data: "
+                << unsigned(read_response.data[0]) << std::endl;
+        }
 
-	break;
+        break;
     case READ_INPUT_STATUS:
-	std::cout << "READ INPUT STATUS" << std::endl;
+        std::cout << "READ INPUT STATUS" << std::endl;
 
-	if (query_packet) {
-	    get_modbus_read_query(&read_query, payload);
+        if (query_packet) {
+            get_modbus_read_query(&read_query, payload);
 
-	    std::cout << "starting address: " << read_query.starting_address
-		    << std::endl;
-	    std::cout << "num of points: " << read_query.num_of_points
-		    << std::endl;
-	} else {
-	    get_modbus_read_response(&read_response, payload);
+            std::cout << "starting address: " << read_query.starting_address
+                << std::endl;
+            std::cout << "num of points: " << read_query.num_of_points
+                << std::endl;
+        } else {
+            get_modbus_read_response(&read_response, payload);
 
-	    std::cout << "byte count: " << unsigned(read_response.byte_count)
-		    << std::endl;
+            std::cout << "byte count: " << unsigned(read_response.byte_count)
+                << std::endl;
 
-	    std::cout << "first byte of data: "
-		    << unsigned(read_response.data[0]) << std::endl;
-	}
+            std::cout << "first byte of data: "
+                << unsigned(read_response.data[0]) << std::endl;
+        }
 
-	break;
+        break;
     case READ_HOLDING_REGISTERS:
-	std::cout << "READ HOLDING REGISTERS" << std::endl;
+        std::cout << "READ HOLDING REGISTERS" << std::endl;
 
-	if (query_packet) {
-	    get_modbus_read_query(&read_query, payload);
+        if (query_packet) {
+            get_modbus_read_query(&read_query, payload);
 
-	    std::cout << "starting address: " << read_query.starting_address
-		    << std::endl;
-	    std::cout << "num of points: " << read_query.num_of_points
-		    << std::endl;
-	} else {
-	    get_modbus_read_response(&read_response, payload);
+            std::cout << "starting address: " << read_query.starting_address
+                << std::endl;
+            std::cout << "num of points: " << read_query.num_of_points
+                << std::endl;
+        } else {
+            get_modbus_read_response(&read_response, payload);
 
-	    std::cout << "byte count: " << unsigned(read_response.byte_count)
-		    << std::endl;
+            std::cout << "byte count: " << unsigned(read_response.byte_count)
+                << std::endl;
 
-	    std::cout << "first byte of data: "
-		    << unsigned(read_response.data[0]) << std::endl;
-	}
+            std::cout << "first byte of data: "
+                << unsigned(read_response.data[0]) << std::endl;
+        }
 
-	break;
+        break;
     case READ_INPUT_REGISTERS:
-	std::cout << "READ INPUT REGISTERS" << std::endl;
+        std::cout << "READ INPUT REGISTERS" << std::endl;
 
-	if (query_packet) {
-	    get_modbus_read_query(&read_query, payload);
+        if (query_packet) {
+            get_modbus_read_query(&read_query, payload);
 
-	    std::cout << "starting address: " << read_query.starting_address
-		    << std::endl;
-	    std::cout << "num of points: " << read_query.num_of_points
-		    << std::endl;
-	} else {
-	    get_modbus_read_response(&read_response, payload);
+            std::cout << "starting address: " << read_query.starting_address
+                << std::endl;
+            std::cout << "num of points: " << read_query.num_of_points
+                << std::endl;
+        } else {
+            get_modbus_read_response(&read_response, payload);
 
-	    std::cout << "byte count: " << unsigned(read_response.byte_count)
-		    << std::endl;
+            std::cout << "byte count: " << unsigned(read_response.byte_count)
+                << std::endl;
 
-	    std::cout << "first byte of data: "
-		    << unsigned(read_response.data[0]) << std::endl;
-	}
+            std::cout << "first byte of data: "
+                << unsigned(read_response.data[0]) << std::endl;
+        }
 
-	break;
+        break;
     case FORCE_SINGLE_COIL:
-	std::cout << "FORCE SINGLE COIL" << std::endl;
+        std::cout << "FORCE SINGLE COIL" << std::endl;
 
-	get_modbus_single_write(&single_write_packet, payload);
+        get_modbus_single_write(&single_write_packet, payload);
 
         std::cout << "address: " << single_write_packet.address << std::endl;
         std::cout << "value: " << single_write_packet.value << std::endl;
 
-	break;
+        break;
     case PRESET_SINGLE_REGISTER:
-	std::cout << "PRESET SINGLE REGISTER" << std::endl;
+        std::cout << "PRESET SINGLE REGISTER" << std::endl;
 
-	get_modbus_single_write(&single_write_packet, payload);
+        get_modbus_single_write(&single_write_packet, payload);
 
         std::cout << "address: " << single_write_packet.address << std::endl;
         std::cout << "value: " << single_write_packet.value << std::endl;
 
-	break;
+        break;
     case READ_EXCEPTION_STATUS:
-	break;
+        break;
     case FORCE_MULTIPLE_COILS:
-	break;
+        break;
     case PRESET_MULTIPLE_REGISTERS:
-	break;
+        break;
     case REPORT_SLAVE_ID:
-	break;
+        break;
     default:
-	std::cout << "Function code decoding not yet implemented" << std::endl;
+        std::cout << "Function code decoding not yet implemented" << std::endl;
     }
 
     std::cout << std::endl;
@@ -329,12 +329,12 @@ int main(int argc, char **argv) {
     //list_devs();
 
     pcap_handler = pcap_open_live(device, snapshot_len, promiscuous, timeout,
-			    error_buffer);
+                                  error_buffer);
 
     if (!pcap_handler) {
-	std::cout << "Error while opening device" << std::endl;
+        std::cout << "Error while opening device" << std::endl;
 
-	return 1;
+        return 1;
     }
 
     // adding filter to capture only tcp packets
