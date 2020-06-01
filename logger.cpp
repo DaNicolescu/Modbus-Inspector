@@ -143,66 +143,44 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         return;
     }
 
-    /* The total packet length, including all headers
-       and the data payload is stored in
-       header->len and header->caplen. Caplen is
-       the amount actually available, and len is the
-       total packet length even if it is larger
-       than what we currently have captured. If the snapshot
-       length set with pcap_open_live() is too small, you may
-       not have the whole packet. */
     // std::cout << "Total packet available: " << header->caplen << " bytes" <<
     // std::endl;
 
     // std::cout << "Expected packet size: " << header->len << " bytes" <<
     // std::endl;
 
-    /* Find start of IP header */
     ip_header = packet + ethernet_header_length;
-    /* The second-half of the first byte in ip_header
-       contains the IP header length (IHL). */
-    ip_header_length = ((*ip_header) & 0x0F);
-    /* The IHL is number of 32-bit segments. Multiply
-       by four to get a byte count for pointer arithmetic */
-    ip_header_length = ip_header_length * 4;
+    ip_header_length = ((*ip_header) & 0x0F) * 4;
+
     // std::cout << "IP header length (IHL) in bytes: " << ip_header_length <<
     // std::endl;
 
-    /* Now that we know where the IP header is, we can 
-       inspect the IP header for a protocol number to 
-       make sure it is TCP before going any further. 
-       Protocol is always the 10th byte of the IP header */
-    u_char protocol = *(ip_header + 9);
+    uint8_t protocol = *(ip_header + 9);
+
     if (protocol != IPPROTO_TCP) {
         std::cout << "Not a TCP packet" << std::endl << std::endl;
 
         return;
     }
 
-    /* Add the ethernet and ip header length to the start of the packet
-       to find the beginning of the TCP header */
     tcp_header = packet + ethernet_header_length + ip_header_length;
-    /* TCP header length is stored in the first half 
-       of the 12th byte in the TCP header. Because we only want
-       the value of the top half of the byte, we have to shift it
-       down to the bottom half otherwise it is using the most 
-       significant bits instead of the least significant bits */
     tcp_header_length = ((*(tcp_header + 12)) & 0xF0) >> 4;
-    /* The TCP header length stored in those 4 bits represents
-       how many 32-bit words there are in the header, just like
-       the IP header length. We multiply by four again to get a
-       byte count. */
     tcp_header_length = tcp_header_length * 4;
+
     // std::cout << "TCP header length in bytes: " << tcp_header_length <<
     // std::endl;
 
-    /* Add up all the header sizes to find the payload offset */
-    int total_headers_size = ethernet_header_length+ip_header_length+tcp_header_length;
+    int total_headers_size = ethernet_header_length
+        + ip_header_length+tcp_header_length;
+
     // std::cout << "Size of all headers combined: " << total_headers_size <<
     // " bytes" << std::endl;
-    payload_length = header->caplen -
-        (ethernet_header_length + ip_header_length + tcp_header_length);
+
+    payload_length = header->caplen
+        - (ethernet_header_length + ip_header_length + tcp_header_length);
+
     // std::cout << "Payload size: " << payload_length << " bytes" << std::endl;
+
     payload = packet + total_headers_size;
 
     if (payload_length <= 0) {
