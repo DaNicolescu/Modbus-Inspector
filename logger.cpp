@@ -122,6 +122,8 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_read_query read_query;
     struct modbus_read_response read_response;
     struct modbus_single_write single_write_packet;
+    struct modbus_multiple_write_query multiple_write_query;
+    struct modbus_multiple_write_response multiple_write_response;
     const uint8_t *ip_header;
     const uint8_t *tcp_header;
     const uint8_t *payload;
@@ -334,8 +336,54 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     case READ_EXCEPTION_STATUS:
         break;
     case FORCE_MULTIPLE_COILS:
+        std::cout << "FORCE MULTIPLE COILS" << std::endl;
+
+        if (query_packet) {
+            get_modbus_multiple_write_query(&multiple_write_query, payload);
+
+            std::cout << "starting address: "
+                << multiple_write_query.starting_address << std::endl;
+            std::cout << "num of points: "
+                << multiple_write_query.num_of_points << std::endl;
+            std::cout << "byte count: "
+                << unsigned(multiple_write_query.byte_count) << std::endl;
+            std::cout << "first byte of data: "
+                << unsigned(multiple_write_query.data[0]) << std::endl;
+        } else {
+            get_modbus_multiple_write_response(&multiple_write_response,
+                                               payload);
+
+            std::cout << "starting address: "
+                << multiple_write_response.starting_address << std::endl;
+            std::cout << "num of points: "
+                << multiple_write_response.num_of_points << std::endl;
+        }
+
         break;
     case PRESET_MULTIPLE_REGISTERS:
+        std::cout << "PRESET MULTIPLE REGISTERS" << std::endl;
+
+        if (query_packet) {
+            get_modbus_multiple_write_query(&multiple_write_query, payload);
+
+            std::cout << "starting address: "
+                << multiple_write_query.starting_address << std::endl;
+            std::cout << "num of points: "
+                << multiple_write_query.num_of_points << std::endl;
+            std::cout << "byte count: "
+                << unsigned(multiple_write_query.byte_count) << std::endl;
+            std::cout << "first byte of data: "
+                << unsigned(multiple_write_query.data[0]) << std::endl;
+        } else {
+            get_modbus_multiple_write_response(&multiple_write_response,
+                                               payload);
+
+            std::cout << "starting address: "
+                << multiple_write_response.starting_address << std::endl;
+            std::cout << "num of points: "
+                << multiple_write_response.num_of_points << std::endl;
+        }
+
         break;
     case REPORT_SLAVE_ID:
         break;
