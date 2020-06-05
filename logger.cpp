@@ -447,8 +447,6 @@ void extract_data_from_xls_config_file(std::string file_name)
     uint16_t crt_row = 0;
     int int_id;
 
-    std::cout << "pula1" << std::endl;
-
     for (devices_sheet_num = 0; devices_sheet_num < num_of_sheets;
          devices_sheet_num++) {
 
@@ -606,6 +604,75 @@ void extract_data_from_xls_config_file(std::string file_name)
             return;
         }
     }
+
+    std::unordered_map<uint8_t, struct device_struct*>::iterator it;
+    struct address_struct *addr;
+    int device_sheet_num;
+    int crt_dev_slave_id;
+
+    for (it = devices_map.begin(); it != devices_map.end(); it++) {
+        crt_dev_slave_id = it->first;
+        dev = it->second;
+
+        for (device_sheet_num = 0; device_sheet_num < num_of_sheets;
+             device_sheet_num++) {
+
+            if (work_book.GetSheetName(device_sheet_num)
+                == XLS_DEVICE_ADDRESSES_SHEET_NAME
+                + std::to_string(crt_dev_slave_id))
+                break;
+        }
+
+        if (device_sheet_num == num_of_sheets) {
+            std::cout << "No sheet found for device " << crt_dev_slave_id
+                << std::endl;
+
+            return;
+        }
+
+        work_book.InitIterator(devices_sheet_num);
+
+        while (true) {
+            xls::cellContent cell = work_book.GetNextCell();
+
+            if (cell.type == xls::cellBlank)
+                break;
+
+            work_book.ShowCell(cell);
+
+            if (cell.row == 1)
+                continue;
+
+            switch (cell.col) {
+            case XLS_DEVICE_ADDRESSES_ADDRESS_COLUMN:
+                addr = new address_struct;
+
+                if (!addr) {
+                    std::cout << "Not enough memory to allocate an" <<
+                        "address_struct" << std::endl;
+
+                    return;
+                }
+
+                break;
+            case XLS_DEVICE_ADDRESSES_RW_COLUMN:
+                break;
+            case XLS_DEVICE_ADDRESSES_DESCRIPTION_COLUMN:
+                break;
+            case XLS_DEVICE_ADDRESSES_SIZE_COLUMN:
+                break;
+            case XLS_DEVICE_ADDRESSES_TYPE_COLUMN:
+                break;
+            case XLS_DEVICE_ADDRESSES_RANGE_COLUMN:
+                break;
+            default:
+                std::cout << "Invalid column" << std::endl;
+
+                return;
+            }
+        }
+    }
+
 }
 
 void display_devices()
