@@ -6,10 +6,14 @@
 #include <netinet/in.h>
 #include <net/ethernet.h>
 #include <unordered_set>
+#include <unordered_map>
+#include <sstream>
 
 #include "logger.h"
+#include "XlsReader.h"
 
 std::unordered_set<uint16_t> modbus_queries;
+std::unordered_map<uint8_t, struct device_struct*> devices_map;
 
 void list_devs()
 {
@@ -116,7 +120,6 @@ void get_modbus_multiple_write_response(
 void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                        const uint8_t *packet)
 {
-    /* First, lets make sure we have an IP packet */
     struct ether_header *ethernet_header;
     struct modbus_tcp_generic *modbus;
     struct modbus_read_query read_query;
@@ -372,7 +375,259 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     std::cout << std::endl;
 }
 
-int main(int argc, char **argv) {
+std::vector<std::string> split_into_strings(std::string str,
+                                            std::string delimiter)
+{
+    char *cstr = const_cast<char*>(str.c_str());
+    char *cdelimiter = const_cast<char*>(delimiter.c_str());
+    char *current;
+    std::vector<std::string> arr;
+
+    current = strtok(cstr, cdelimiter);
+
+    while (current) {
+        arr.push_back(current);
+        current = strtok(NULL, cdelimiter);
+    }
+
+    return arr;
+}
+
+std::vector<uint8_t> split_into_uint8s(std::string str,
+                                       std::string delimiter)
+{
+    char *cstr = const_cast<char*>(str.c_str());
+    char *cdelimiter = const_cast<char*>(delimiter.c_str());
+    char *current;
+    int crt_num;
+    std::vector<uint8_t> arr;
+
+    current = strtok(cstr, cdelimiter);
+
+    while (current) {
+        std::stringstream sstream(current);
+        sstream >> crt_num;
+        arr.push_back(crt_num);
+        current = strtok(NULL, cdelimiter);
+    }
+
+    return arr;
+}
+
+void display_xls_config_file(std::string file_name)
+{
+    xls::WorkBook work_book(file_name);
+    int num_of_sheets = work_book.GetSheetCount();
+
+    for (int sheet_num = 0; sheet_num < num_of_sheets; sheet_num++) {
+        std::cout << "Sheet Name: " << work_book.GetSheetName(sheet_num)
+            << std::endl;
+
+        work_book.InitIterator(sheet_num);
+
+        while (true) {
+            xls::cellContent cell = work_book.GetNextCell();
+
+            if (cell.type == xls::cellBlank)
+                break;
+
+            work_book.ShowCell(cell);
+        }
+
+        std::cout << std::endl << std::endl;
+    }
+}
+
+void extract_data_from_xls_config_file(std::string file_name)
+{
+    xls::WorkBook work_book(file_name);
+    int num_of_sheets = work_book.GetSheetCount();
+    int devices_sheet_num;
+    struct device_struct *dev = NULL;
+    uint16_t crt_row = 0;
+    int int_id;
+
+    std::cout << "pula1" << std::endl;
+
+    for (devices_sheet_num = 0; devices_sheet_num < num_of_sheets;
+         devices_sheet_num++) {
+
+        if (work_book.GetSheetName(devices_sheet_num) == XLS_DEVICES_SHEET_NAME)
+            break;
+    }
+
+    if (devices_sheet_num == num_of_sheets) {
+        std::cout << "No sheet with the name " << XLS_DEVICES_SHEET_NAME
+            << " found" << std::endl;
+
+        return;
+    }
+
+    work_book.InitIterator(devices_sheet_num);
+
+    std::cout << "pula1" << std::endl;
+
+    while (true) {
+        xls::cellContent cell = work_book.GetNextCell();
+
+        if (cell.type == xls::cellBlank)
+            break;
+
+        work_book.ShowCell(cell);
+
+        if (cell.row == 1)
+            continue;
+
+        switch (cell.col) {
+        case XLS_DEVICES_SLAVE_ID_COLUMN:
+            std::cout << "slave id" << std::endl;
+
+            dev = new device_struct;
+
+            std::cout << "malloced" << std::endl;
+
+            if (!dev) {
+                std::cout << "Not enough memory for a new device structure"
+                    << std::endl;
+            }
+
+            sscanf(cell.str.c_str(), "%d", &int_id);
+
+            dev->id = (uint8_t) int_id;
+            std::cout << "dev id: " << (unsigned) dev->id << std::endl;
+            dev->name = "No devices name";
+            dev->read_coils = "No Read Coils";
+            dev->write_coils = "No Write Coils";
+            dev->inputs = "No Inputs";
+            dev->read_holding_registers = "No Read Holding Registers";
+            dev->write_holding_registers = "No Write Holding Registers";
+            dev->input_registers = "No Input Registers";
+
+            std::cout << "set device strings" << std::endl;
+
+            devices_map[dev->id] = dev;
+
+            crt_row = cell.row;
+
+            break;
+        case XLS_DEVICES_DEVICE_NAME_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+            dev->name = cell.str;
+
+            break;
+        case XLS_DEVICES_READ_COILS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+            dev->read_coils = cell.str;
+
+            break;
+        case XLS_DEVICES_WRITE_COILS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+            dev->write_coils = cell.str;
+
+            break;
+        case XLS_DEVICES_INPUTS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+            dev->inputs = cell.str;
+
+            break;
+        case XLS_DEVICES_READ_HLD_REGS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+            dev->read_holding_registers = cell.str;
+
+            break;
+        case XLS_DEVICES_WRITE_HLD_REGS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+            dev->write_holding_registers = cell.str;
+
+            break;
+        case XLS_DEVICES_INPUT_REGS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+            dev->input_registers = cell.str;
+
+            break;
+        case XLS_DEVICES_GENERIC_FUNCS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+           dev->generic_supported_functions = split_into_uint8s(cell.str, ",");
+
+           break;
+        case XLS_DEVICES_SPECIFIC_FUNCS_COLUMN:
+            if (!dev || crt_row != cell.row) {
+                std::cout << "No slave ID assigned" << std::endl;
+
+                return;
+            }
+
+           dev->specific_supported_functions = split_into_uint8s(cell.str, ",");
+
+            break;
+         default:
+            std::cout << "Invalid column" << std::endl;
+
+            return;
+        }
+    }
+}
+
+void display_devices()
+{
+    std::unordered_map<uint8_t, struct device_struct*>::iterator it;
+
+    for (it = devices_map.begin(); it != devices_map.end(); it++) {
+        std::cout << "Slave ID: " << unsigned(it->second->id) << std::endl;
+        std::cout << "Read Coils: " << it->second->read_coils << std::endl;
+        std::cout << "Read Holding Registers: "
+            << it->second->read_holding_registers << std::endl;
+        std::cout << "Generic Supported Functions:" << std::endl;
+
+        for (const uint8_t& function : it->second->generic_supported_functions)
+            std::cout << unsigned(function) << ", ";
+
+        std::cout << std::endl;
+    }
+}
+
+int main(int argc, char **argv)
+{
     pcap_t *pcap_handler;
     struct bpf_program filter;
     char error_buffer[PCAP_ERRBUF_SIZE];
@@ -382,7 +637,13 @@ int main(int argc, char **argv) {
     int timeout = 1000;
     int res;
 
-    //list_devs();
+    // list_devs();
+
+    //display_xls_config_file(XLS_CONFIG_FILE_NAME);
+    extract_data_from_xls_config_file(XLS_CONFIG_FILE_NAME);
+    display_devices();
+
+    return 0;
 
     pcap_handler = pcap_open_live(device, snapshot_len, promiscuous, timeout,
                                   error_buffer);

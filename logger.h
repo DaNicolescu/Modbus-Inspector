@@ -1,6 +1,11 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <string>
+#include <vector>
+#include <utility>
+#include <unordered_map>
+
 #define ETH_HDR_LEN                 0x0E
 
 #define READ_COIL_STATUS            0x01
@@ -13,6 +18,27 @@
 #define FORCE_MULTIPLE_COILS        0x0F
 #define PRESET_MULTIPLE_REGISTERS   0x10
 #define REPORT_SLAVE_ID             0x11
+
+// config file
+#define XLS_CONFIG_FILE_NAME            "../config.xls"
+#define XLS_DEVICES_SHEET_NAME          "devices"
+#define XLS_DEVICES_NUM_OF_COLUMNS      10
+#define XLS_ADDRESSES_NUM_OF_COLUMNS    6
+
+#define XLS_DEVICES_SLAVE_ID_COLUMN         1
+#define XLS_DEVICES_DEVICE_NAME_COLUMN      2
+#define XLS_DEVICES_READ_COILS_COLUMN       3
+#define XLS_DEVICES_WRITE_COILS_COLUMN      4
+#define XLS_DEVICES_INPUTS_COLUMN           5
+#define XLS_DEVICES_READ_HLD_REGS_COLUMN    6
+#define XLS_DEVICES_WRITE_HLD_REGS_COLUMN   7
+#define XLS_DEVICES_INPUT_REGS_COLUMN       8
+#define XLS_DEVICES_GENERIC_FUNCS_COLUMN    9
+#define XLS_DEVICES_SPECIFIC_FUNCS_COLUMN   10
+
+#define XLS_INT_TYPE                        1
+#define XLS_UINT_TYPE                       2
+#define XLS_FLOAT_TYPE                      4
 
 struct modbus_tcp_generic {
     uint16_t transaction_id;
@@ -54,9 +80,28 @@ struct modbus_multiple_write_response {
     uint16_t num_of_points;
 } __attribute__((packed));
 
-struct modbus_tcp_all {
-    struct modbus_tcp *generic_header;
-    bool query;
+struct address_struct {
+    uint16_t address;
+    bool write;
+    std::string description;
+    uint8_t size;
+    uint8_t type;
+    std::vector<uint64_t> possible_values;
+    std::vector<std::pair<uint64_t, uint64_t>> possible_ranges;
+};
+
+struct device_struct {
+    uint8_t id;
+    std::string name;
+    std::string read_coils;
+    std::string write_coils;
+    std::string inputs;
+    std::string read_holding_registers;
+    std::string write_holding_registers;
+    std::string input_registers;
+    std::vector<uint8_t> generic_supported_functions;
+    std::vector<uint8_t> specific_supported_functions;
+    std::unordered_map<uint16_t, struct address_struct*> addresses_map;
 };
 
 #endif
