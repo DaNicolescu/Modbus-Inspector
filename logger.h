@@ -44,9 +44,20 @@
 #define XLS_DEVICE_ADDRESSES_TYPE_COLUMN            5
 #define XLS_DEVICE_ADDRESSES_RANGE_COLUMN           6
 
-#define XLS_INT_TYPE                        1
-#define XLS_UINT_TYPE                       2
-#define XLS_FLOAT_TYPE                      4
+#define XLS_ADDRESS_READ                            "R"
+#define XLS_ADDRESS_READ_WRITE                      "RW"
+
+#define XLS_INT_TYPE_STR                            "int"
+#define XLS_UINT_TYPE_STR                           "uint"
+#define XLS_FLOAT_TYPE_STR                          "float"
+#define XLS_INT_TYPE                                1
+#define XLS_UINT_TYPE                               2
+#define XLS_FLOAT_TYPE                              4
+
+#define XLS_8BIT_ADDRESS_SIZE_STR                   "8"
+#define XLS_16BIT_ADDRESS_SIZE_STR                  "16"
+#define XLS_8BIT_ADDRESS_SIZE                       1
+#define XLS_16BIT_ADDRESS_SIZE                      2
 
 struct modbus_tcp_generic {
     uint16_t transaction_id;
@@ -88,14 +99,19 @@ struct modbus_multiple_write_response {
     uint16_t num_of_points;
 } __attribute__((packed));
 
+union value_type {
+    int i;
+    float f;
+};
+
 struct address_struct {
     uint16_t address;
     bool write;
     std::string description;
     uint8_t size;
     uint8_t type;
-    std::vector<uint64_t> possible_values;
-    std::vector<std::pair<uint64_t, uint64_t>> possible_ranges;
+    std::vector<union value_type> possible_values;
+    std::vector<std::pair<union value_type, union value_type>> possible_ranges;
 };
 
 struct device_struct {

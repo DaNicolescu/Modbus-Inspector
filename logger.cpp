@@ -375,6 +375,78 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     std::cout << std::endl;
 }
 
+void read_range(struct address_struct *addr, std::string str)
+{
+    std::pair<union value_type, union value_type> pair;
+    union value_type first_num;
+    union value_type second_num;
+    char *cstr = new char[str.length() + 1];
+    char *token;
+
+    strcpy(cstr, str.c_str());
+    token = strtok(cstr, ":");
+
+    std::cout << "read range: " << str << std::endl;
+
+    if (!token) {
+        std::cout << "Invalid Range" << std::endl;
+
+        return;
+    }
+
+    switch (addr->type) {
+    case XLS_INT_TYPE:
+        sscanf(token, "%d", &first_num.i);
+
+        break;
+    case XLS_UINT_TYPE:
+        sscanf(token, "%d", &first_num.i);
+
+        break;
+    case XLS_FLOAT_TYPE:
+        sscanf(token, "%f", &first_num.f);
+
+        break;
+    default:
+        std::cout << "Invalid Type" << std::endl;
+
+        return;
+    }
+
+    std::cout << "token1:" << token << std::endl;
+
+    token = strtok(NULL, ":");
+
+    if (!token) {
+        addr->possible_values.push_back(first_num);
+    } else {
+        switch (addr->type) {
+        case XLS_INT_TYPE:
+            sscanf(token, "%d", &second_num.i);
+
+            break;
+        case XLS_UINT_TYPE:
+            sscanf(token, "%d", &second_num.i);
+
+            break;
+        case XLS_FLOAT_TYPE:
+            sscanf(token, "%f", &second_num.f);
+
+            break;
+        default:
+            std::cout << "Invalid Type" << std::endl;
+
+            return;
+        }
+
+        pair = std::make_pair(first_num, second_num);
+
+        addr->possible_ranges.push_back(pair);
+    }
+
+    std::cout << "token2:" << token << std::endl;
+}
+
 std::vector<std::string> split_into_strings(std::string str,
                                             std::string delimiter)
 {
@@ -606,6 +678,7 @@ void extract_data_from_xls_config_file(std::string file_name)
     }
 
     std::unordered_map<uint8_t, struct device_struct*>::iterator it;
+    std::vector<std::string> range_strings;
     struct address_struct *addr;
     int device_sheet_num;
     int crt_dev_slave_id;
@@ -613,6 +686,8 @@ void extract_data_from_xls_config_file(std::string file_name)
     for (it = devices_map.begin(); it != devices_map.end(); it++) {
         crt_dev_slave_id = it->first;
         dev = it->second;
+
+        std::cout << "Device " << crt_dev_slave_id << std::endl;
 
         for (device_sheet_num = 0; device_sheet_num < num_of_sheets;
              device_sheet_num++) {
@@ -630,7 +705,7 @@ void extract_data_from_xls_config_file(std::string file_name)
             return;
         }
 
-        work_book.InitIterator(devices_sheet_num);
+        work_book.InitIterator(device_sheet_num);
 
         while (true) {
             xls::cellContent cell = work_book.GetNextCell();
@@ -654,16 +729,93 @@ void extract_data_from_xls_config_file(std::string file_name)
                     return;
                 }
 
+                sscanf(cell.str.c_str(), "%hu", &addr->address);
+
+                std::cout << "address: " << addr->address << std::endl;
+
+                dev->addresses_map[addr->address] = addr;
+
+                crt_row = cell.row;
+
                 break;
             case XLS_DEVICE_ADDRESSES_RW_COLUMN:
+                if (!addr || crt_row != cell.row) {
+                    std::cout << "No Address assigned" << std::endl;
+
+                    return;
+                }
+
+                if (cell.str == XLS_ADDRESS_READ) {
+                    addr->write = false;
+                } else if (cell.str == XLS_ADDRESS_READ_WRITE) {
+                    addr->write = true;
+                } else {
+                    std::cout << "Invalid R/W cell" << std::endl;
+
+                    return;
+                }
+
                 break;
             case XLS_DEVICE_ADDRESSES_DESCRIPTION_COLUMN:
+                if (!addr || crt_row != cell.row) {
+                    std::cout << "No Address assigned" << std::endl;
+
+                    return;
+                }
+
+                addr->description = cell.str;
+
                 break;
             case XLS_DEVICE_ADDRESSES_SIZE_COLUMN:
+                if (!addr || crt_row != cell.row) {
+                    std::cout << "No Address assigned" << std::endl;
+
+                    return;
+                }
+
+                if (cell.str == XLS_8BIT_ADDRESS_SIZE_STR) {
+                    addr->size = XLS_8BIT_ADDRESS_SIZE;
+                } else if (cell.str == XLS_16BIT_ADDRESS_SIZE_STR) {
+                    addr->size = XLS_16BIT_ADDRESS_SIZE;
+                } else {
+                    std::cout << "Invalid size" << std::endl;
+
+                    return;
+                }
+
                 break;
             case XLS_DEVICE_ADDRESSES_TYPE_COLUMN:
+                if (!addr || crt_row != cell.row) {
+                    std::cout << "No Address assigned" << std::endl;
+
+                    return;
+                }
+
+                if (cell.str == XLS_INT_TYPE_STR) {
+                    addr->type = XLS_INT_TYPE;
+                } else if (cell.str == XLS_UINT_TYPE_STR) {
+                    addr->type = XLS_UINT_TYPE;
+                } else if (cell.str == XLS_FLOAT_TYPE_STR) {
+                    addr->type = XLS_FLOAT_TYPE;
+                } else {
+                    std::cout << "Invalid Type" << std::endl;
+
+                    return;
+                }
+
                 break;
             case XLS_DEVICE_ADDRESSES_RANGE_COLUMN:
+                if (!addr || crt_row != cell.row) {
+                    std::cout << "No Address assigned" << std::endl;
+
+                    return;
+                }
+
+                range_strings = split_into_strings(cell.str, ",");
+
+                for (std::string str : range_strings)
+                    read_range(addr, str);
+
                 break;
             default:
                 std::cout << "Invalid column" << std::endl;
