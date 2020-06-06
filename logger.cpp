@@ -829,16 +829,42 @@ void extract_data_from_xls_config_file(std::string file_name)
 void display_devices()
 {
     std::unordered_map<uint8_t, struct device_struct*>::iterator it;
+    std::unordered_map<uint16_t, struct address_struct*>::iterator addresses_it;
 
     for (it = devices_map.begin(); it != devices_map.end(); it++) {
         std::cout << "Slave ID: " << unsigned(it->second->id) << std::endl;
+        std::cout << "Name: " << it->second->name << std::endl;
         std::cout << "Read Coils: " << it->second->read_coils << std::endl;
+        std::cout << "Write Coils: " << it->second->write_coils << std::endl;
+        std::cout << "Inputs: " << it->second->inputs << std::endl;
         std::cout << "Read Holding Registers: "
             << it->second->read_holding_registers << std::endl;
+        std::cout << "Write Holding Registers: "
+            << it->second->write_holding_registers << std::endl;
+
         std::cout << "Generic Supported Functions:" << std::endl;
 
         for (const uint8_t& function : it->second->generic_supported_functions)
             std::cout << unsigned(function) << ", ";
+
+        std::cout << std::endl;
+
+        std::cout << "Specific Supported Functions:" << std::endl;
+
+        for (const uint8_t& function : it->second->specific_supported_functions)
+            std::cout << unsigned(function) << ", ";
+
+        std::cout << std::endl;
+
+        for (addresses_it = it->second->addresses_map.begin();
+             addresses_it != it->second->addresses_map.end(); addresses_it++) {
+            std::cout << "Address: " << addresses_it->second->address
+                << std::endl;
+            std::cout << "Writable: " << addresses_it->second->write
+                << std::endl;
+            std::cout << "Description: " << addresses_it->second->description
+                << std::endl;
+        }
 
         std::cout << std::endl;
     }
