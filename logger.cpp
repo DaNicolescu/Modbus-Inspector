@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <net/ethernet.h>
 #include <sstream>
+#include <algorithm>
 
 #include "logger.h"
 #include "XlsReader.h"
@@ -382,6 +383,7 @@ void read_range(struct address_struct *addr, std::string str)
     char *token;
 
     strcpy(cstr, str.c_str());
+
     token = strtok(cstr, ":");
 
     std::cout << "read range: " << str << std::endl;
@@ -418,6 +420,7 @@ void read_range(struct address_struct *addr, std::string str)
     if (!token) {
         addr->possible_values.insert(first_num);
     } else {
+        std::cout << "token2:" << token << std::endl;
         switch (addr->type) {
         case XLS_INT_TYPE:
             sscanf(token, "%d", &second_num->i);
@@ -443,20 +446,33 @@ void read_range(struct address_struct *addr, std::string str)
         addr->possible_ranges.insert(pair);
     }
 
-    std::cout << "token2:" << token << std::endl;
 }
 
 std::vector<std::string> split_into_strings(std::string str,
                                             std::string delimiter)
 {
-    char *cstr = const_cast<char*>(str.c_str());
-    char *cdelimiter = const_cast<char*>(delimiter.c_str());
+    std::cout << str << std::endl;
+    std::string::iterator end_pos = std::remove(str.begin(), str.end(), ' ');
+    str.erase(end_pos, str.end());
+    std::cout << str << std::endl;
+    char *cstr = new char[str.length() + 1];
+    char *cdelimiter = new char[delimiter.length() + 1];
     char *current;
     std::vector<std::string> arr;
+
+    std::cout << "Split into strings" << std::endl;
+
+    strcpy(cstr, str.c_str());
+
+    strcpy(cdelimiter, delimiter.c_str());
+
+    std::cout << cstr << std::endl;
+    std::cout << cdelimiter << std::endl;
 
     current = strtok(cstr, cdelimiter);
 
     while (current) {
+        std::cout << current << std::endl;
         arr.push_back(current);
         current = strtok(NULL, cdelimiter);
     }
@@ -810,10 +826,20 @@ void extract_data_from_xls_config_file(std::string file_name)
                     return;
                 }
 
+                std::cout << std::endl;
+                std::cout << std::endl;
+                std::cout << std::endl;
+                std::cout << std::endl;
+                std::cout << std::endl;
+
+                std::cout << cell.str << std::endl;
+
                 range_strings = split_into_strings(cell.str, ",");
 
-                for (std::string str : range_strings)
+                for (std::string str : range_strings) {
+                    std::cout << "read range for " << str << std::endl;
                     read_range(addr, str);
+                }
 
                 break;
             default:
@@ -830,6 +856,8 @@ void display_devices()
 {
     std::unordered_map<uint8_t, struct device_struct*>::iterator it;
     std::unordered_map<uint16_t, struct address_struct*>::iterator addresses_it;
+    std::unordered_set<union value_type*>::iterator possible_values_it;
+    std::unordered_set<std::pair<union value_type, union value_type>*>::iterator possible_ranges_it;
 
     for (it = devices_map.begin(); it != devices_map.end(); it++) {
         std::cout << "Slave ID: " << unsigned(it->second->id) << std::endl;
@@ -864,6 +892,40 @@ void display_devices()
                 << std::endl;
             std::cout << "Description: " << addresses_it->second->description
                 << std::endl;
+            std::cout << "Size: " << unsigned(addresses_it->second->size)
+                << std::endl;
+            std::cout << "Type: " << unsigned(addresses_it->second->type)
+                << std::endl;
+
+            std::cout << "Possible values: " << std::endl;
+
+            for (possible_values_it = addresses_it->second->possible_values.begin();
+                 possible_values_it != addresses_it->second->possible_values.end();
+                 possible_values_it++) {
+
+                if (addresses_it->second->type == XLS_FLOAT_TYPE)
+                    std::cout << (*possible_values_it)->f << ", ";
+                else
+                    std::cout << (*possible_values_it)->i << ", ";
+            }
+
+            std::cout << std::endl;
+
+            std::cout << "Possible ranges: " << std::endl;
+
+            for (possible_ranges_it = addresses_it->second->possible_ranges.begin();
+                 possible_ranges_it != addresses_it->second->possible_ranges.end();
+                 possible_ranges_it++) {
+
+                if (addresses_it->second->type == XLS_FLOAT_TYPE)
+                    std::cout << (*possible_ranges_it)->first.f << ":"
+                        << (*possible_ranges_it)->second.f << std::endl;
+                else
+                    std::cout << (*possible_ranges_it)->first.i << ":"
+                        << (*possible_ranges_it)->second.i << std::endl;
+            }
+
+            std::cout << std::endl;
         }
 
         std::cout << std::endl;
