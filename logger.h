@@ -126,6 +126,9 @@ struct device_struct {
     std::vector<uint8_t> generic_supported_functions;
     std::vector<uint8_t> specific_supported_functions;
     std::unordered_map<uint16_t, struct address_struct*> addresses_map;
+
+    bool supported_function(uint8_t function);
+    struct address_struct *get_address(uint16_t address);
 };
 
 #endif

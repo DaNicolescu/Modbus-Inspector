@@ -117,6 +117,45 @@ void get_modbus_multiple_write_response(
     modbus_struct->num_of_points = htons(modbus_struct->num_of_points);
 }
 
+struct device_struct *get_device(uint8_t slave_id)
+{
+    std::unordered_map<uint8_t, struct device_struct*>::iterator it;
+
+    it = devices_map.find(slave_id);
+
+    if (it != devices_map.end())
+        return it->second;
+
+    return NULL;
+}
+
+bool device_struct::supported_function(uint8_t function)
+{
+    for (uint8_t crt_func : this->generic_supported_functions) {
+        if (crt_func == function)
+            return true;
+    }
+
+    for (uint8_t crt_func : this->specific_supported_functions) {
+        if (crt_func == function)
+            return true;
+    }
+
+    return false;
+}
+
+struct address_struct* device_struct::get_address(uint16_t address)
+{
+    std::unordered_map<uint16_t, struct address_struct*>::iterator it;
+
+    it = this->addresses_map.find(address);
+
+    if (it != this->addresses_map.end())
+        return it->second;
+
+    return NULL;
+}
+
 void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                        const uint8_t *packet)
 {
@@ -127,6 +166,8 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_single_write single_write_packet;
     struct modbus_multiple_write_query multiple_write_query;
     struct modbus_multiple_write_response multiple_write_response;
+    struct device_struct *dev;
+    struct address_struct *addr;
     const uint8_t *ip_header;
     const uint8_t *tcp_header;
     const uint8_t *payload;
@@ -211,6 +252,26 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     std::cout << "function code: " << unsigned(modbus->function_code)
         << std::endl;
 
+    dev = get_device(modbus->unit_id);
+
+    if (!dev) {
+        std::cout << "The device with slave id " << unsigned(modbus->unit_id)
+            << " does not exist" << std::endl;
+
+        std::cout << std::endl;
+
+        return;
+    }
+
+    if (!dev->supported_function(modbus->function_code)) {
+        std::cout << "Function code " << unsigned(modbus->function_code)
+            << " not supported" << std::endl;
+
+        std::cout << std::endl;
+
+        return;
+    }
+
     switch (modbus->function_code) {
     case READ_COIL_STATUS:
         std::cout << "READ COIL STATUS" << std::endl;
@@ -222,6 +283,16 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << std::endl;
             std::cout << "num of points: " << read_query.num_of_points
                 << std::endl;
+
+            addr = dev->get_address(read_query.starting_address);
+
+            if (!addr) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
         } else {
             get_modbus_read_response(&read_response, payload);
 
@@ -857,8 +928,6 @@ void display_devices()
 {
     std::unordered_map<uint8_t, struct device_struct*>::iterator it;
     std::unordered_map<uint16_t, struct address_struct*>::iterator addresses_it;
-    std::unordered_set<union value_type*>::iterator possible_values_it;
-    std::unordered_set<std::pair<union value_type, union value_type>*>::iterator possible_ranges_it;
 
     for (it = devices_map.begin(); it != devices_map.end(); it++) {
         std::cout << "Slave ID: " << unsigned(it->second->id) << std::endl;
@@ -947,8 +1016,6 @@ int main(int argc, char **argv)
     //display_xls_config_file(XLS_CONFIG_FILE_NAME);
     extract_data_from_xls_config_file(XLS_CONFIG_FILE_NAME);
     display_devices();
-
-    return 0;
 
     pcap_handler = pcap_open_live(device, snapshot_len, promiscuous, timeout,
                                   error_buffer);
