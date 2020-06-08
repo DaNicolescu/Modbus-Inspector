@@ -5,7 +5,6 @@
 #include <vector>
 #include <utility>
 #include <unordered_map>
-#include <unordered_set>
 
 #define ETH_HDR_LEN                 0x0E
 
@@ -111,9 +110,8 @@ struct address_struct {
     std::string description;
     uint8_t size;
     uint8_t type;
-    std::unordered_set<union value_type*> possible_values;
-    std::unordered_set<std::pair<union value_type, union value_type>*>
-        possible_ranges;
+    std::vector<union value_type> possible_values;
+    std::vector<std::pair<union value_type, union value_type>> possible_ranges;
 };
 
 struct device_struct {

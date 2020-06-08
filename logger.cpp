@@ -7,6 +7,7 @@
 #include <net/ethernet.h>
 #include <sstream>
 #include <algorithm>
+#include <unordered_set>
 
 #include "logger.h"
 #include "XlsReader.h"
@@ -376,9 +377,9 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
 void read_range(struct address_struct *addr, std::string str)
 {
-    std::pair<union value_type, union value_type> *pair;
-    union value_type *first_num = new value_type;
-    union value_type *second_num = new value_type;
+    std::pair<union value_type, union value_type> pair;
+    union value_type first_num;
+    union value_type second_num;
     char *cstr = new char[str.length() + 1];
     char *token;
 
@@ -396,15 +397,15 @@ void read_range(struct address_struct *addr, std::string str)
 
     switch (addr->type) {
     case XLS_INT_TYPE:
-        sscanf(token, "%d", &first_num->i);
+        sscanf(token, "%d", &first_num.i);
 
         break;
     case XLS_UINT_TYPE:
-        sscanf(token, "%d", &first_num->i);
+        sscanf(token, "%d", &first_num.i);
 
         break;
     case XLS_FLOAT_TYPE:
-        sscanf(token, "%f", &first_num->f);
+        sscanf(token, "%f", &first_num.f);
 
         break;
     default:
@@ -418,20 +419,20 @@ void read_range(struct address_struct *addr, std::string str)
     token = strtok(NULL, ":");
 
     if (!token) {
-        addr->possible_values.insert(first_num);
+        addr->possible_values.push_back(first_num);
     } else {
         std::cout << "token2:" << token << std::endl;
         switch (addr->type) {
         case XLS_INT_TYPE:
-            sscanf(token, "%d", &second_num->i);
+            sscanf(token, "%d", &second_num.i);
 
             break;
         case XLS_UINT_TYPE:
-            sscanf(token, "%d", &second_num->i);
+            sscanf(token, "%d", &second_num.i);
 
             break;
         case XLS_FLOAT_TYPE:
-            sscanf(token, "%f", &second_num->f);
+            sscanf(token, "%f", &second_num.f);
 
             break;
         default:
@@ -440,10 +441,10 @@ void read_range(struct address_struct *addr, std::string str)
             return;
         }
 
-        pair = new std::pair<union value_type, union value_type>(*first_num,
-                                                                 *second_num);
+        pair.first = first_num;
+        pair.second = second_num;
 
-        addr->possible_ranges.insert(pair);
+        addr->possible_ranges.push_back(pair);
     }
 
 }
@@ -899,30 +900,28 @@ void display_devices()
 
             std::cout << "Possible values: " << std::endl;
 
-            for (possible_values_it = addresses_it->second->possible_values.begin();
-                 possible_values_it != addresses_it->second->possible_values.end();
-                 possible_values_it++) {
+            for (union value_type value
+                 : addresses_it->second->possible_values) {
 
                 if (addresses_it->second->type == XLS_FLOAT_TYPE)
-                    std::cout << (*possible_values_it)->f << ", ";
+                    std::cout << value.f << ", ";
                 else
-                    std::cout << (*possible_values_it)->i << ", ";
+                    std::cout << value.i << ", ";
             }
 
             std::cout << std::endl;
 
             std::cout << "Possible ranges: " << std::endl;
 
-            for (possible_ranges_it = addresses_it->second->possible_ranges.begin();
-                 possible_ranges_it != addresses_it->second->possible_ranges.end();
-                 possible_ranges_it++) {
+            for (std::pair<union value_type, union value_type> pair
+                 : addresses_it->second->possible_ranges) {
 
                 if (addresses_it->second->type == XLS_FLOAT_TYPE)
-                    std::cout << (*possible_ranges_it)->first.f << ":"
-                        << (*possible_ranges_it)->second.f << std::endl;
+                    std::cout << pair.first.f << ":" << pair.second.f
+                        << std::endl;
                 else
-                    std::cout << (*possible_ranges_it)->first.i << ":"
-                        << (*possible_ranges_it)->second.i << std::endl;
+                    std::cout << pair.first.i << ":" << pair.second.i
+                        << std::endl;
             }
 
             std::cout << std::endl;
