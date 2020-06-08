@@ -117,8 +117,8 @@ struct address_struct {
 struct device_struct {
     uint8_t id;
     std::string name;
-    std::string read_coils;
-    std::string write_coils;
+    std::vector<std::pair<uint16_t, uint16_t>> read_coils;
+    std::vector<std::pair<uint16_t, uint16_t>> write_coils;
     std::string inputs;
     std::string read_holding_registers;
     std::string write_holding_registers;
@@ -127,8 +127,12 @@ struct device_struct {
     std::vector<uint8_t> specific_supported_functions;
     std::unordered_map<uint16_t, struct address_struct*> addresses_map;
 
+    static std::pair<uint16_t, uint16_t> make_uint16_pair(std::string str);
+
     bool supported_function(uint8_t function);
     struct address_struct *get_address(uint16_t address);
+    void add_read_coils_range(std::string str);
+    void add_write_coils_range(std::string str);
 };
 
 #endif

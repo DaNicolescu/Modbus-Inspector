@@ -156,6 +156,48 @@ struct address_struct* device_struct::get_address(uint16_t address)
     return NULL;
 }
 
+std::pair<uint16_t, uint16_t> device_struct::make_uint16_pair(std::string str)
+{
+    std::pair<uint16_t, uint16_t> pair;
+    uint16_t first_num;
+    uint16_t second_num;
+    char *cstr = new char[str.length() + 1];
+    char *token;
+
+    strcpy(cstr, str.c_str());
+
+    token = strtok(cstr, ":");
+
+    sscanf(token, "%hu", &first_num);
+
+    std::cout << "token1:" << token << std::endl;
+
+    token = strtok(NULL, ":");
+
+    if (!token) {
+        pair.first = first_num;
+        pair.second = first_num;
+    } else {
+        std::cout << "token2:" << token << std::endl;
+        sscanf(token, "%hu", &second_num);
+
+        pair.first = first_num;
+        pair.second = second_num;
+    }
+
+    return pair;
+}
+
+void device_struct::add_read_coils_range(std::string str)
+{
+    this->read_coils.push_back(device_struct::make_uint16_pair(str));
+}
+
+void device_struct::add_write_coils_range(std::string str)
+{
+    this->write_coils.push_back(device_struct::make_uint16_pair(str));
+}
+
 void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                        const uint8_t *packet)
 {
@@ -605,6 +647,7 @@ void extract_data_from_xls_config_file(std::string file_name)
     struct device_struct *dev = NULL;
     uint16_t crt_row = 0;
     int int_id;
+    std::vector<std::string> coils_ranges;
 
     for (devices_sheet_num = 0; devices_sheet_num < num_of_sheets;
          devices_sheet_num++) {
@@ -653,8 +696,6 @@ void extract_data_from_xls_config_file(std::string file_name)
             dev->id = (uint8_t) int_id;
             std::cout << "dev id: " << (unsigned) dev->id << std::endl;
             dev->name = "No devices name";
-            dev->read_coils = "No Read Coils";
-            dev->write_coils = "No Write Coils";
             dev->inputs = "No Inputs";
             dev->read_holding_registers = "No Read Holding Registers";
             dev->write_holding_registers = "No Write Holding Registers";
@@ -684,7 +725,12 @@ void extract_data_from_xls_config_file(std::string file_name)
                 return;
             }
 
-            dev->read_coils = cell.str;
+            coils_ranges = split_into_strings(cell.str, ",");
+
+            for (std::string str : coils_ranges) {
+                std::cout << "coil: " << str << std::endl;
+                dev->add_read_coils_range(str);
+            }
 
             break;
         case XLS_DEVICES_WRITE_COILS_COLUMN:
@@ -694,7 +740,12 @@ void extract_data_from_xls_config_file(std::string file_name)
                 return;
             }
 
-            dev->write_coils = cell.str;
+            coils_ranges = split_into_strings(cell.str, ",");
+
+            for (std::string str : coils_ranges) {
+                std::cout << "coil: " << str << std::endl;
+                dev->add_write_coils_range(str);
+            }
 
             break;
         case XLS_DEVICES_INPUTS_COLUMN:
@@ -932,8 +983,18 @@ void display_devices()
     for (it = devices_map.begin(); it != devices_map.end(); it++) {
         std::cout << "Slave ID: " << unsigned(it->second->id) << std::endl;
         std::cout << "Name: " << it->second->name << std::endl;
-        std::cout << "Read Coils: " << it->second->read_coils << std::endl;
-        std::cout << "Write Coils: " << it->second->write_coils << std::endl;
+        std::cout << "Read Coils: " << std::endl;
+
+        for (std::pair<uint16_t, uint16_t> pair : it->second->read_coils) {
+            std::cout << pair.first << ":" << pair.second << std::endl;
+        }
+
+        std::cout << "Write Coils: " << std::endl;
+
+        for (std::pair<uint16_t, uint16_t> pair : it->second->write_coils) {
+            std::cout << pair.first << ":" << pair.second << std::endl;
+        }
+
         std::cout << "Inputs: " << it->second->inputs << std::endl;
         std::cout << "Read Holding Registers: "
             << it->second->read_holding_registers << std::endl;
