@@ -117,6 +117,20 @@ void get_modbus_multiple_write_response(
     modbus_struct->num_of_points = htons(modbus_struct->num_of_points);
 }
 
+std::string byte_to_binary_string(uint8_t number)
+{
+    std::string binary_string;
+
+    for (uint8_t i = 0; i < 8; i++) {
+        if ((number >> (7 - i)) & 1)
+            binary_string.push_back('1');
+        else
+            binary_string.push_back('0');
+    }
+
+    return binary_string;
+}
+
 struct device_struct *get_device(uint8_t slave_id)
 {
     std::unordered_map<uint8_t, struct device_struct*>::iterator it;
@@ -236,9 +250,82 @@ void device_struct::display_addresses(uint16_t address, uint16_t num_of_points)
 bool device_struct::valid_read_coils_addresses(uint16_t address,
                                                uint16_t num_of_points)
 {
+    address += 1;
     uint16_t last_address = address + num_of_points - 1;
 
     for (const std::pair<uint16_t, uint16_t> &pair : this->read_coils) {
+        if (pair.first <= address && pair.second >= last_address)
+            return true;
+    }
+
+    return false;
+}
+
+bool device_struct::valid_write_coils_addresses(uint16_t address,
+                                                uint16_t num_of_points)
+{
+    address += 1;
+    uint16_t last_address = address + num_of_points - 1;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->write_coils) {
+        if (pair.first <= address && pair.second >= last_address)
+            return true;
+    }
+
+    return false;
+}
+
+bool device_struct::valid_inputs_addresses(uint16_t address,
+                                           uint16_t num_of_points)
+{
+    address += 10001;
+    uint16_t last_address = address + num_of_points - 1;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->inputs) {
+        if (pair.first <= address && pair.second >= last_address)
+            return true;
+    }
+
+    return false;
+}
+
+bool device_struct::valid_read_hld_regs_addresses(uint16_t address,
+                                                  uint16_t num_of_points)
+{
+    address += 40001;
+    uint16_t last_address = address + num_of_points - 1;
+
+    for (const std::pair<uint16_t, uint16_t> &pair
+         : this->read_holding_registers) {
+        if (pair.first <= address && pair.second >= last_address)
+            return true;
+    }
+
+    return false;
+}
+
+bool device_struct::valid_write_hld_regs_addresses(uint16_t address,
+                                                   uint16_t num_of_points)
+{
+    address += 40001;
+    uint16_t last_address = address + num_of_points - 1;
+
+    for (const std::pair<uint16_t, uint16_t> &pair
+         : this->write_holding_registers) {
+        if (pair.first <= address && pair.second >= last_address)
+            return true;
+    }
+
+    return false;
+}
+
+bool device_struct::valid_input_regs_addresses(uint16_t address,
+                                               uint16_t num_of_points)
+{
+    address += 30001;
+    uint16_t last_address = address + num_of_points - 1;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->input_registers) {
         if (pair.first <= address && pair.second >= last_address)
             return true;
     }
@@ -393,7 +480,8 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             for (uint8_t i = 0; i < read_response.byte_count; i++) {
                 std::cout << unsigned(i) << ": "
-                    << unsigned(read_response.data[i]) << std::endl;
+                    << byte_to_binary_string(read_response.data[i])
+                    << std::endl;
             }
         }
 
@@ -408,14 +496,28 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << std::endl;
             std::cout << "num of points: " << read_query.num_of_points
                 << std::endl;
+
+            if (!dev->valid_inputs_addresses(read_query.starting_address,
+                                             read_query.num_of_points)) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
+            dev->display_addresses(read_query.starting_address,
+                                   read_query.num_of_points);
         } else {
             get_modbus_read_response(&read_response, payload);
 
             std::cout << "byte count: " << unsigned(read_response.byte_count)
                 << std::endl;
 
-            std::cout << "first byte of data: "
-                << unsigned(read_response.data[0]) << std::endl;
+            for (uint8_t i = 0; i < read_response.byte_count; i++) {
+                std::cout << unsigned(i) << ": "
+                    << byte_to_binary_string(read_response.data[i])
+                    << std::endl;
+            }
         }
 
         break;
@@ -429,6 +531,17 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << std::endl;
             std::cout << "num of points: " << read_query.num_of_points
                 << std::endl;
+
+            if (!dev->valid_read_hld_regs_addresses(read_query.starting_address,
+                                                    read_query.num_of_points)) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
+            dev->display_addresses(read_query.starting_address,
+                                   read_query.num_of_points);
         } else {
             get_modbus_read_response(&read_response, payload);
 
@@ -450,6 +563,17 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << std::endl;
             std::cout << "num of points: " << read_query.num_of_points
                 << std::endl;
+
+            if (!dev->valid_input_regs_addresses(read_query.starting_address,
+                                                 read_query.num_of_points)) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
+            dev->display_addresses(read_query.starting_address,
+                                   read_query.num_of_points);
         } else {
             get_modbus_read_response(&read_response, payload);
 
@@ -469,6 +593,15 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "address: " << single_write_packet.address << std::endl;
         std::cout << "value: " << single_write_packet.value << std::endl;
 
+        if (!dev->valid_write_coils_addresses(single_write_packet.address, 1)) {
+            std::cout << "No such address exists" << std::endl;
+            std::cout << std::endl;
+
+            return;
+        }
+
+        dev->display_addresses(single_write_packet.address, 1);
+
         break;
     case PRESET_SINGLE_REGISTER:
         std::cout << "PRESET SINGLE REGISTER" << std::endl;
@@ -477,6 +610,16 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         std::cout << "address: " << single_write_packet.address << std::endl;
         std::cout << "value: " << single_write_packet.value << std::endl;
+
+        if (!dev->valid_write_hld_regs_addresses(single_write_packet.address,
+                                                 1)) {
+            std::cout << "No such address exists" << std::endl;
+            std::cout << std::endl;
+
+            return;
+        }
+
+        dev->display_addresses(single_write_packet.address, 1);
 
         break;
     case READ_EXCEPTION_STATUS:
@@ -495,6 +638,18 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << unsigned(multiple_write_query.byte_count) << std::endl;
             std::cout << "first byte of data: "
                 << unsigned(multiple_write_query.data[0]) << std::endl;
+
+            if (!dev->valid_write_coils_addresses(
+                    multiple_write_query.starting_address,
+                    multiple_write_query.num_of_points)) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
+            dev->display_addresses(multiple_write_query.starting_address,
+                                   multiple_write_query.num_of_points);
         } else {
             get_modbus_multiple_write_response(&multiple_write_response,
                                                payload);
@@ -503,6 +658,18 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << multiple_write_response.starting_address << std::endl;
             std::cout << "num of points: "
                 << multiple_write_response.num_of_points << std::endl;
+
+            if (!dev->valid_write_coils_addresses(
+                    multiple_write_response.starting_address,
+                    multiple_write_response.num_of_points)) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
+            dev->display_addresses(multiple_write_response.starting_address,
+                                   multiple_write_response.num_of_points);
         }
 
         break;
@@ -520,6 +687,18 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << unsigned(multiple_write_query.byte_count) << std::endl;
             std::cout << "first byte of data: "
                 << unsigned(multiple_write_query.data[0]) << std::endl;
+
+            if (!dev->valid_write_hld_regs_addresses(
+                    multiple_write_query.starting_address,
+                    multiple_write_query.num_of_points)) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
+            dev->display_addresses(multiple_write_query.starting_address,
+                                   multiple_write_query.num_of_points);
         } else {
             get_modbus_multiple_write_response(&multiple_write_response,
                                                payload);
@@ -528,6 +707,18 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << multiple_write_response.starting_address << std::endl;
             std::cout << "num of points: "
                 << multiple_write_response.num_of_points << std::endl;
+
+            if (!dev->valid_write_hld_regs_addresses(
+                    multiple_write_response.starting_address,
+                    multiple_write_response.num_of_points)) {
+                std::cout << "No such address exists" << std::endl;
+                std::cout << std::endl;
+
+                return;
+            }
+
+            dev->display_addresses(multiple_write_response.starting_address,
+                                   multiple_write_response.num_of_points);
         }
 
         break;
