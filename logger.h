@@ -124,10 +124,10 @@ struct device_struct {
     std::string name;
     std::vector<std::pair<uint16_t, uint16_t>> read_coils;
     std::vector<std::pair<uint16_t, uint16_t>> write_coils;
-    std::string inputs;
-    std::string read_holding_registers;
-    std::string write_holding_registers;
-    std::string input_registers;
+    std::vector<std::pair<uint16_t, uint16_t>> inputs;
+    std::vector<std::pair<uint16_t, uint16_t>> read_holding_registers;
+    std::vector<std::pair<uint16_t, uint16_t>> write_holding_registers;
+    std::vector<std::pair<uint16_t, uint16_t>> input_registers;
     std::vector<uint8_t> generic_supported_functions;
     std::vector<uint8_t> specific_supported_functions;
     std::unordered_map<uint16_t, struct address_struct*> addresses_map;
@@ -136,8 +136,13 @@ struct device_struct {
 
     bool supported_function(uint8_t function);
     struct address_struct *get_address(uint16_t address);
+
     void add_read_coils_range(std::string str);
     void add_write_coils_range(std::string str);
+    void add_inputs_range(std::string str);
+    void add_read_hld_regs_range(std::string str);
+    void add_write_hld_regs_range(std::string str);
+    void add_input_regs_range(std::string str);
 
     bool valid_read_coils_addresses(uint16_t address, uint16_t num_of_points);
 

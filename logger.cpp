@@ -198,6 +198,28 @@ void device_struct::add_write_coils_range(std::string str)
     this->write_coils.push_back(device_struct::make_uint16_pair(str));
 }
 
+void device_struct::add_inputs_range(std::string str)
+{
+    this->inputs.push_back(device_struct::make_uint16_pair(str));
+}
+
+void device_struct::add_read_hld_regs_range(std::string str)
+{
+    this->read_holding_registers.push_back(
+        device_struct::make_uint16_pair(str));
+}
+
+void device_struct::add_write_hld_regs_range(std::string str)
+{
+    this->write_holding_registers.push_back(
+        device_struct::make_uint16_pair(str));
+}
+
+void device_struct::add_input_regs_range(std::string str)
+{
+    this->input_registers.push_back(device_struct::make_uint16_pair(str));
+}
+
 void device_struct::display_addresses(uint16_t address, uint16_t num_of_points)
 {
     std::unordered_map<uint16_t, struct address_struct*>::iterator it;
@@ -678,6 +700,7 @@ void extract_data_from_xls_config_file(std::string file_name)
     uint16_t crt_row = 0;
     int int_id;
     std::vector<std::string> coils_ranges;
+    std::vector<std::string> strings_vec;
 
     for (devices_sheet_num = 0; devices_sheet_num < num_of_sheets;
          devices_sheet_num++) {
@@ -726,10 +749,6 @@ void extract_data_from_xls_config_file(std::string file_name)
             dev->id = (uint8_t) int_id;
             std::cout << "dev id: " << (unsigned) dev->id << std::endl;
             dev->name = "No devices name";
-            dev->inputs = "No Inputs";
-            dev->read_holding_registers = "No Read Holding Registers";
-            dev->write_holding_registers = "No Write Holding Registers";
-            dev->input_registers = "No Input Registers";
 
             std::cout << "set device strings" << std::endl;
 
@@ -785,7 +804,12 @@ void extract_data_from_xls_config_file(std::string file_name)
                 return;
             }
 
-            dev->inputs = cell.str;
+            strings_vec = split_into_strings(cell.str, ",");
+
+            for (std::string str : strings_vec) {
+                std::cout << "input: " << str << std::endl;
+                dev->add_inputs_range(str);
+            }
 
             break;
         case XLS_DEVICES_READ_HLD_REGS_COLUMN:
@@ -795,7 +819,12 @@ void extract_data_from_xls_config_file(std::string file_name)
                 return;
             }
 
-            dev->read_holding_registers = cell.str;
+            strings_vec = split_into_strings(cell.str, ",");
+
+            for (std::string str : strings_vec) {
+                std::cout << "read holding register: " << str << std::endl;
+                dev->add_read_hld_regs_range(str);
+            }
 
             break;
         case XLS_DEVICES_WRITE_HLD_REGS_COLUMN:
@@ -805,7 +834,12 @@ void extract_data_from_xls_config_file(std::string file_name)
                 return;
             }
 
-            dev->write_holding_registers = cell.str;
+            strings_vec = split_into_strings(cell.str, ",");
+
+            for (std::string str : strings_vec) {
+                std::cout << "write holding register: " << str << std::endl;
+                dev->add_write_hld_regs_range(str);
+            }
 
             break;
         case XLS_DEVICES_INPUT_REGS_COLUMN:
@@ -815,7 +849,12 @@ void extract_data_from_xls_config_file(std::string file_name)
                 return;
             }
 
-            dev->input_registers = cell.str;
+            strings_vec = split_into_strings(cell.str, ",");
+
+            for (std::string str : strings_vec) {
+                std::cout << "input register: " << str << std::endl;
+                dev->add_input_regs_range(str);
+            }
 
             break;
         case XLS_DEVICES_GENERIC_FUNCS_COLUMN:
@@ -1029,11 +1068,31 @@ void display_devices()
             std::cout << pair.first << ":" << pair.second << std::endl;
         }
 
-        std::cout << "Inputs: " << it->second->inputs << std::endl;
-        std::cout << "Read Holding Registers: "
-            << it->second->read_holding_registers << std::endl;
-        std::cout << "Write Holding Registers: "
-            << it->second->write_holding_registers << std::endl;
+        std::cout << "Inputs: " << std::endl;
+
+        for (std::pair<uint16_t, uint16_t> pair : it->second->inputs) {
+            std::cout << pair.first << ":" << pair.second << std::endl;
+        }
+
+        std::cout << "Read Holding Registers: " << std::endl;
+
+        for (std::pair<uint16_t, uint16_t> pair
+             : it->second->read_holding_registers) {
+            std::cout << pair.first << ":" << pair.second << std::endl;
+        }
+
+        std::cout << "Write Holding Registers: " << std::endl;
+
+        for (std::pair<uint16_t, uint16_t> pair
+             : it->second->write_holding_registers) {
+            std::cout << pair.first << ":" << pair.second << std::endl;
+        }
+
+        std::cout << "Input Registers: " << std::endl;
+
+        for (std::pair<uint16_t, uint16_t> pair : it->second->input_registers) {
+            std::cout << pair.first << ":" << pair.second << std::endl;
+        }
 
         std::cout << "Generic Supported Functions:" << std::endl;
 
