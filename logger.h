@@ -47,17 +47,22 @@
 #define XLS_ADDRESS_READ                            "R"
 #define XLS_ADDRESS_READ_WRITE                      "RW"
 
+
+#define XLS_BOOL_TYPE_STR                           "bool"
 #define XLS_INT_TYPE_STR                            "int"
 #define XLS_UINT_TYPE_STR                           "uint"
 #define XLS_FLOAT_TYPE_STR                          "float"
-#define XLS_INT_TYPE                                1
-#define XLS_UINT_TYPE                               2
+#define XLS_BOOL_TYPE                               1
+#define XLS_INT_TYPE                                2
+#define XLS_UINT_TYPE                               3
 #define XLS_FLOAT_TYPE                              4
 
+#define XLS_1BIT_ADDRESS_SIZE_STR                   "1"
 #define XLS_8BIT_ADDRESS_SIZE_STR                   "8"
 #define XLS_16BIT_ADDRESS_SIZE_STR                  "16"
-#define XLS_8BIT_ADDRESS_SIZE                       1
-#define XLS_16BIT_ADDRESS_SIZE                      2
+#define XLS_1BIT_ADDRESS_SIZE                       1
+#define XLS_8BIT_ADDRESS_SIZE                       2
+#define XLS_16BIT_ADDRESS_SIZE                      3
 
 struct modbus_tcp_generic {
     uint16_t transaction_id;
@@ -133,6 +138,10 @@ struct device_struct {
     struct address_struct *get_address(uint16_t address);
     void add_read_coils_range(std::string str);
     void add_write_coils_range(std::string str);
+
+    bool valid_read_coils_addresses(uint16_t address, uint16_t num_of_points);
+
+    void display_addresses(uint16_t address, uint16_t num_of_points);
 };
 
 #endif

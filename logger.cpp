@@ -198,6 +198,32 @@ void device_struct::add_write_coils_range(std::string str)
     this->write_coils.push_back(device_struct::make_uint16_pair(str));
 }
 
+void device_struct::display_addresses(uint16_t address, uint16_t num_of_points)
+{
+    std::unordered_map<uint16_t, struct address_struct*>::iterator it;
+    uint16_t last_address = address + num_of_points - 1;
+
+    std::cout << "Addresses: " << std::endl;
+
+    for (; address <= last_address; address++) {
+        it = this->addresses_map.find(address);
+        std::cout << address << ": " << it->second->description << std::endl;
+    }
+}
+
+bool device_struct::valid_read_coils_addresses(uint16_t address,
+                                               uint16_t num_of_points)
+{
+    uint16_t last_address = address + num_of_points - 1;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->read_coils) {
+        if (pair.first <= address && pair.second >= last_address)
+            return true;
+    }
+
+    return false;
+}
+
 void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                        const uint8_t *packet)
 {
@@ -326,14 +352,16 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             std::cout << "num of points: " << read_query.num_of_points
                 << std::endl;
 
-            addr = dev->get_address(read_query.starting_address);
-
-            if (!addr) {
+            if (!dev->valid_read_coils_addresses(read_query.starting_address,
+                                                 read_query.num_of_points)) {
                 std::cout << "No such address exists" << std::endl;
                 std::cout << std::endl;
 
                 return;
             }
+
+            dev->display_addresses(read_query.starting_address,
+                                   read_query.num_of_points);
 
         } else {
             get_modbus_read_response(&read_response, payload);
@@ -341,8 +369,10 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             std::cout << "byte count: " << unsigned(read_response.byte_count)
                 << std::endl;
 
-            std::cout << "first byte of data: "
-                << unsigned(read_response.data[0]) << std::endl;
+            for (uint8_t i = 0; i < read_response.byte_count; i++) {
+                std::cout << unsigned(i) << ": "
+                    << unsigned(read_response.data[i]) << std::endl;
+            }
         }
 
         break;
@@ -911,7 +941,9 @@ void extract_data_from_xls_config_file(std::string file_name)
                     return;
                 }
 
-                if (cell.str == XLS_8BIT_ADDRESS_SIZE_STR) {
+                if (cell.str == XLS_1BIT_ADDRESS_SIZE_STR) {
+                    addr->size = XLS_1BIT_ADDRESS_SIZE;
+                } else if (cell.str == XLS_8BIT_ADDRESS_SIZE_STR) {
                     addr->size = XLS_8BIT_ADDRESS_SIZE;
                 } else if (cell.str == XLS_16BIT_ADDRESS_SIZE_STR) {
                     addr->size = XLS_16BIT_ADDRESS_SIZE;
@@ -929,7 +961,9 @@ void extract_data_from_xls_config_file(std::string file_name)
                     return;
                 }
 
-                if (cell.str == XLS_INT_TYPE_STR) {
+                if (cell.str == XLS_BOOL_TYPE_STR) {
+                    addr->type = XLS_BOOL_TYPE;
+                } else if (cell.str == XLS_INT_TYPE_STR) {
                     addr->type = XLS_INT_TYPE;
                 } else if (cell.str == XLS_UINT_TYPE_STR) {
                     addr->type = XLS_UINT_TYPE;
