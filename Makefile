@@ -2,7 +2,7 @@ CXX=g++
 RM=rm -f
 LDLIBS=-lxlsreader -lpcap
 
-SRCS=logger.cpp XlsReader.cpp device_struct.cpp modbus.cpp
+SRCS=logger.cpp XlsReader.cpp device_struct.cpp modbus.cpp config.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: logger
@@ -17,6 +17,8 @@ XlsReader.o: XlsReader.cpp XlsReader.h
 device_struct.o: device_struct.cpp device_struct.h
 
 modbus.o: modbus.cpp modbus.h
+
+config.o: config.cpp config.h
 
 clean:
 	$(RM) $(OBJS)
