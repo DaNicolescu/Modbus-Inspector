@@ -15,6 +15,7 @@ struct address_struct {
     uint16_t address;
     bool write;
     std::string description;
+    std::string notes;
     uint8_t size;
     uint8_t type;
     std::vector<union value_type> possible_values;

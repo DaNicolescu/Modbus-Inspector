@@ -26,6 +26,7 @@
 #define XLS_DEVICE_ADDRESSES_SIZE_COLUMN            4
 #define XLS_DEVICE_ADDRESSES_TYPE_COLUMN            5
 #define XLS_DEVICE_ADDRESSES_RANGE_COLUMN           6
+#define XLS_DEVICE_ADDRESSES_NOTES_COLUMN           7
 
 #define XLS_ADDRESS_READ                            "R"
 #define XLS_ADDRESS_READ_WRITE                      "RW"

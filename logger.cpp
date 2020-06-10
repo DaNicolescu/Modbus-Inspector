@@ -548,6 +548,7 @@ void display_devices()
                 << std::endl;
             std::cout << "Type: " << unsigned(addresses_it->second->type)
                 << std::endl;
+            std::cout << "Notes: " << addresses_it->second->notes << std::endl;
 
             std::cout << "Possible values: " << std::endl;
 

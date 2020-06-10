@@ -508,6 +508,16 @@ void extract_data_from_xls_config_file(std::string file_name,
                 }
 
                 break;
+            case XLS_DEVICE_ADDRESSES_NOTES_COLUMN:
+                if (!addr || crt_row != cell.row) {
+                    std::cout << "No Address assigned" << std::endl;
+
+                    return;
+                }
+
+                addr->notes = cell.str;
+
+                break;
             default:
                 std::cout << "Invalid column" << std::endl;
 
