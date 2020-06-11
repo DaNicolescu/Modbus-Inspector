@@ -72,7 +72,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_tcp_generic *modbus;
     struct modbus_read_query *read_query;
     struct modbus_read_response *read_response;
-    struct modbus_single_write single_write_packet;
+    struct modbus_single_write *single_write_packet;
     struct modbus_multiple_write_query multiple_write_query;
     struct modbus_multiple_write_response multiple_write_response;
     struct modbus_aggregate *modbus_aggregated_frame;
@@ -364,30 +364,41 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     case FORCE_SINGLE_COIL:
         std::cout << "FORCE SINGLE COIL" << std::endl;
 
-        get_modbus_single_write(&single_write_packet, payload);
+        single_write_packet = get_modbus_single_write(payload);
 
-        std::cout << "address: " << single_write_packet.address << std::endl;
-        std::cout << "value: " << single_write_packet.value << std::endl;
+        std::cout << "address: " << single_write_packet->address << std::endl;
+        std::cout << "value: " << single_write_packet->value << std::endl;
 
-        if (!dev->valid_write_coils_addresses(single_write_packet.address, 1)) {
+        if (!dev->valid_write_coils_addresses(single_write_packet->address, 1)) {
             std::cout << "No such address exists" << std::endl;
             std::cout << std::endl;
 
             return;
         }
 
-        dev->display_addresses(single_write_packet.address, 1);
+        dev->display_addresses(single_write_packet->address + COILS_OFFSET, 1);
+
+        if (query_packet) {
+            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->query = single_write_packet;
+        } else {
+            modbus_aggregated_frame->response = single_write_packet;
+
+            std::cout << std::endl;
+
+            dev->display_addresses(modbus_aggregated_frame);
+        }
 
         break;
     case PRESET_SINGLE_REGISTER:
         std::cout << "PRESET SINGLE REGISTER" << std::endl;
 
-        get_modbus_single_write(&single_write_packet, payload);
+        single_write_packet = get_modbus_single_write(payload);
 
-        std::cout << "address: " << single_write_packet.address << std::endl;
-        std::cout << "value: " << single_write_packet.value << std::endl;
+        std::cout << "address: " << single_write_packet->address << std::endl;
+        std::cout << "value: " << single_write_packet->value << std::endl;
 
-        if (!dev->valid_write_hld_regs_addresses(single_write_packet.address,
+        if (!dev->valid_write_hld_regs_addresses(single_write_packet->address,
                                                  1)) {
             std::cout << "No such address exists" << std::endl;
             std::cout << std::endl;
@@ -395,7 +406,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             return;
         }
 
-        dev->display_addresses(single_write_packet.address, 1);
+        dev->display_addresses(single_write_packet->address + COILS_OFFSET, 1);
 
         break;
     case READ_EXCEPTION_STATUS:

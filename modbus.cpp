@@ -40,13 +40,18 @@ struct modbus_read_response *get_modbus_read_response(const uint8_t *payload)
     return modbus_struct;
 }
 
-void get_modbus_single_write(struct modbus_single_write *modbus_struct,
-                             const uint8_t *payload)
+struct modbus_single_write *get_modbus_single_write(const uint8_t *payload)
 {
+    struct modbus_single_write *modbus_struct;
+
+    modbus_struct = new modbus_single_write;
+
     memcpy(modbus_struct, payload, sizeof(struct modbus_single_write));
 
     modbus_struct->address = htons(modbus_struct->address);
     modbus_struct->value = htons(modbus_struct->value);
+
+    return modbus_struct;
 }
 
 void get_modbus_multiple_write_query(

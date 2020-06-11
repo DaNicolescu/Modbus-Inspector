@@ -115,6 +115,8 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
     std::unordered_map<uint16_t, struct address_struct*>::iterator it;
     struct modbus_read_query *read_query;
     struct modbus_read_response *read_response;
+    struct modbus_single_write *single_write_query;
+    struct modbus_single_write *single_write_response;
     uint16_t address;
     uint16_t last_address;
     uint16_t num_of_points;
@@ -272,7 +274,22 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
 
         break;
     case FORCE_SINGLE_COIL:
-        std::cout << "FORCE SINGLE COIL" << std::endl;
+        std::cout << "AGGREGATED FORCE SINGLE COIL" << std::endl;
+
+        single_write_query = (struct modbus_single_write*)
+            aggregated_frame->query;
+        single_write_response = (struct modbus_single_write*)
+            aggregated_frame->response;
+
+        address = single_write_query->address + COILS_OFFSET;
+
+        it = this->addresses_map.find(address);
+
+        std::cout << address << " (" << it->second->description
+            << ") was set to " << unsigned(single_write_query->value)
+            << std::endl;
+
+        std::cout << "notes: " << it->second->notes << std::endl;
 
         break;
     case PRESET_SINGLE_REGISTER:
