@@ -2,6 +2,8 @@
 #include <iostream>
 
 #include "device_struct.h"
+#include "modbus.h"
+#include "utils.h"
 
 bool device_struct::supported_function(uint8_t function)
 {
@@ -104,6 +106,92 @@ void device_struct::display_addresses(uint16_t address, uint16_t num_of_points)
     for (; address <= last_address; address++) {
         it = this->addresses_map.find(address);
         std::cout << address << ": " << it->second->description << std::endl;
+    }
+}
+
+void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
+{
+    std::unordered_map<uint16_t, struct address_struct*>::iterator it;
+    struct modbus_read_query *read_query;
+    struct modbus_read_response *read_response;
+    uint16_t address;
+    uint16_t last_address;
+    uint16_t num_of_points;
+    std::string binary_string;
+    uint8_t i;
+    uint8_t data_index;
+
+    switch (aggregated_frame->function_code) {
+    case READ_COIL_STATUS:
+        std::cout << "READ COIL STATUS" << std::endl;
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        std::cout << "starting address: " << read_query->starting_address
+            << std::endl;
+        std::cout << "num of points: " << read_query->num_of_points
+            << std::endl;
+
+        address = read_query->starting_address + 1;
+        last_address = address + read_query->num_of_points - 1;
+
+        i = 0;
+        data_index = 0;
+        binary_string = byte_to_binary_string(read_response->data[data_index]);
+
+        for (; address <= last_address; address++) {
+            if (i == 8) {
+                i = 0;
+                data_index++;
+                binary_string = byte_to_binary_string(
+                    read_response->data[data_index]);
+            }
+
+            it = this->addresses_map.find(address);
+            std::cout << address << " (" << it->second->description
+                << ") reading is " << binary_string[i] << std::endl;
+            std::cout << "Notes: " << it->second->notes << std::endl;
+
+            i++;
+        }
+
+        break;
+    case READ_INPUT_STATUS:
+        std::cout << "READ INPUT STATUS" << std::endl;
+
+        break;
+    case READ_HOLDING_REGISTERS:
+        std::cout << "READ HOLDING REGISTERS" << std::endl;
+
+        break;
+    case READ_INPUT_REGISTERS:
+        std::cout << "READ INPUT REGISTERS" << std::endl;
+
+        break;
+    case FORCE_SINGLE_COIL:
+        std::cout << "FORCE SINGLE COIL" << std::endl;
+
+        break;
+    case PRESET_SINGLE_REGISTER:
+        std::cout << "PRESET SINGLE REGISTER" << std::endl;
+
+        break;
+    case READ_EXCEPTION_STATUS:
+        break;
+    case FORCE_MULTIPLE_COILS:
+        std::cout << "FORCE MULTIPLE COILS" << std::endl;
+
+        break;
+    case PRESET_MULTIPLE_REGISTERS:
+        std::cout << "PRESET MULTIPLE REGISTERS" << std::endl;
+
+        break;
+    case REPORT_SLAVE_ID:
+        break;
+    default:
+        std::cout << "Function code decoding not yet implemented" << std::endl;
     }
 }
 

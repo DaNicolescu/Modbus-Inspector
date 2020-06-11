@@ -11,8 +11,9 @@
 #include "device_struct.h"
 #include "modbus.h"
 #include "config.h"
+#include "utils.h"
 
-std::unordered_set<uint16_t> modbus_queries;
+std::unordered_map<uint16_t, struct modbus_aggregate*> modbus_aggregated_frames;
 std::unordered_map<uint8_t, struct device_struct*> devices_map;
 
 void list_devs()
@@ -43,27 +44,13 @@ void list_devs()
         pcap_freealldevs(all_devs);
 }
 
-bool modbus_packet_is_query(uint16_t transaction_id)
+bool modbus_frame_is_query(uint16_t transaction_id)
 {
-    if (modbus_queries.find(transaction_id) == modbus_queries.end())
+    if (modbus_aggregated_frames.find(transaction_id)
+        == modbus_aggregated_frames.end())
         return true;
 
     return false;
-}
-
-
-std::string byte_to_binary_string(uint8_t number)
-{
-    std::string binary_string;
-
-    for (uint8_t i = 0; i < 8; i++) {
-        if ((number >> (7 - i)) & 1)
-            binary_string.push_back('1');
-        else
-            binary_string.push_back('0');
-    }
-
-    return binary_string;
 }
 
 struct device_struct *get_device(uint8_t slave_id)
@@ -83,11 +70,12 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 {
     struct ether_header *ethernet_header;
     struct modbus_tcp_generic *modbus;
-    struct modbus_read_query read_query;
-    struct modbus_read_response read_response;
+    struct modbus_read_query *read_query;
+    struct modbus_read_response *read_response;
     struct modbus_single_write single_write_packet;
     struct modbus_multiple_write_query multiple_write_query;
     struct modbus_multiple_write_response multiple_write_response;
+    struct modbus_aggregate *modbus_aggregated_frame;
     struct device_struct *dev;
     struct address_struct *addr;
     const uint8_t *ip_header;
@@ -157,12 +145,18 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
     modbus = (struct modbus_tcp_generic*) payload;
 
-    query_packet = modbus_packet_is_query(htons(modbus->transaction_id));
+    query_packet = modbus_frame_is_query(htons(modbus->transaction_id));
 
-    if (query_packet)
-        modbus_queries.insert(htons(modbus->transaction_id));
-    else
-        modbus_queries.erase(htons(modbus->transaction_id));
+    if (query_packet) {
+        modbus_aggregated_frame = new modbus_aggregate;   
+        modbus_aggregated_frames.insert(std::pair<uint16_t,
+            struct modbus_aggregate*>(htons(modbus->transaction_id),
+                                      modbus_aggregated_frame));
+    } else {
+        modbus_aggregated_frame = modbus_aggregated_frames.find(htons(
+            modbus->transaction_id))->second;
+        modbus_aggregated_frames.erase(htons(modbus->transaction_id));
+    }
 
     std::cout << "MODBUS " << (query_packet ? "query" : "response")
         << std::endl;
@@ -199,35 +193,43 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "READ COIL STATUS" << std::endl;
 
         if (query_packet) {
-            get_modbus_read_query(&read_query, payload);
+            read_query = get_modbus_read_query(payload);
 
-            std::cout << "starting address: " << read_query.starting_address
+            std::cout << "starting address: " << read_query->starting_address
                 << std::endl;
-            std::cout << "num of points: " << read_query.num_of_points
+            std::cout << "num of points: " << read_query->num_of_points
                 << std::endl;
 
-            if (!dev->valid_read_coils_addresses(read_query.starting_address,
-                                                 read_query.num_of_points)) {
+            if (!dev->valid_read_coils_addresses(read_query->starting_address,
+                                                 read_query->num_of_points)) {
                 std::cout << "No such address exists" << std::endl;
                 std::cout << std::endl;
 
                 return;
             }
 
-            dev->display_addresses(read_query.starting_address,
-                                   read_query.num_of_points);
+            dev->display_addresses(read_query->starting_address + 1,
+                                   read_query->num_of_points);
 
+            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->query = read_query;
         } else {
-            get_modbus_read_response(&read_response, payload);
+            read_response = get_modbus_read_response(payload);
 
-            std::cout << "byte count: " << unsigned(read_response.byte_count)
+            std::cout << "byte count: " << unsigned(read_response->byte_count)
                 << std::endl;
 
-            for (uint8_t i = 0; i < read_response.byte_count; i++) {
+            for (uint8_t i = 0; i < read_response->byte_count; i++) {
                 std::cout << unsigned(i) << ": "
-                    << byte_to_binary_string(read_response.data[i])
+                    << byte_to_binary_string(read_response->data[i])
                     << std::endl;
             }
+
+            modbus_aggregated_frame->response = read_response;
+
+            std::cout << std::endl;
+
+            dev->display_addresses(modbus_aggregated_frame);
         }
 
         break;
@@ -235,32 +237,32 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "READ INPUT STATUS" << std::endl;
 
         if (query_packet) {
-            get_modbus_read_query(&read_query, payload);
+            read_query = get_modbus_read_query(payload);
 
-            std::cout << "starting address: " << read_query.starting_address
+            std::cout << "starting address: " << read_query->starting_address
                 << std::endl;
-            std::cout << "num of points: " << read_query.num_of_points
+            std::cout << "num of points: " << read_query->num_of_points
                 << std::endl;
 
-            if (!dev->valid_inputs_addresses(read_query.starting_address,
-                                             read_query.num_of_points)) {
+            if (!dev->valid_inputs_addresses(read_query->starting_address,
+                                             read_query->num_of_points)) {
                 std::cout << "No such address exists" << std::endl;
                 std::cout << std::endl;
 
                 return;
             }
 
-            dev->display_addresses(read_query.starting_address,
-                                   read_query.num_of_points);
+            dev->display_addresses(read_query->starting_address,
+                                   read_query->num_of_points);
         } else {
-            get_modbus_read_response(&read_response, payload);
+            read_response = get_modbus_read_response(payload);
 
-            std::cout << "byte count: " << unsigned(read_response.byte_count)
+            std::cout << "byte count: " << unsigned(read_response->byte_count)
                 << std::endl;
 
-            for (uint8_t i = 0; i < read_response.byte_count; i++) {
+            for (uint8_t i = 0; i < read_response->byte_count; i++) {
                 std::cout << unsigned(i) << ": "
-                    << byte_to_binary_string(read_response.data[i])
+                    << byte_to_binary_string(read_response->data[i])
                     << std::endl;
             }
         }
@@ -270,31 +272,31 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "READ HOLDING REGISTERS" << std::endl;
 
         if (query_packet) {
-            get_modbus_read_query(&read_query, payload);
+            read_query = get_modbus_read_query(payload);
 
-            std::cout << "starting address: " << read_query.starting_address
+            std::cout << "starting address: " << read_query->starting_address
                 << std::endl;
-            std::cout << "num of points: " << read_query.num_of_points
+            std::cout << "num of points: " << read_query->num_of_points
                 << std::endl;
 
-            if (!dev->valid_read_hld_regs_addresses(read_query.starting_address,
-                                                    read_query.num_of_points)) {
+            if (!dev->valid_read_hld_regs_addresses(read_query->starting_address,
+                                                    read_query->num_of_points)) {
                 std::cout << "No such address exists" << std::endl;
                 std::cout << std::endl;
 
                 return;
             }
 
-            dev->display_addresses(read_query.starting_address,
-                                   read_query.num_of_points);
+            dev->display_addresses(read_query->starting_address,
+                                   read_query->num_of_points);
         } else {
-            get_modbus_read_response(&read_response, payload);
+            read_response = get_modbus_read_response(payload);
 
-            std::cout << "byte count: " << unsigned(read_response.byte_count)
+            std::cout << "byte count: " << unsigned(read_response->byte_count)
                 << std::endl;
 
             std::cout << "first byte of data: "
-                << unsigned(read_response.data[0]) << std::endl;
+                << unsigned(read_response->data[0]) << std::endl;
         }
 
         break;
@@ -302,31 +304,31 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "READ INPUT REGISTERS" << std::endl;
 
         if (query_packet) {
-            get_modbus_read_query(&read_query, payload);
+            read_query = get_modbus_read_query(payload);
 
-            std::cout << "starting address: " << read_query.starting_address
+            std::cout << "starting address: " << read_query->starting_address
                 << std::endl;
-            std::cout << "num of points: " << read_query.num_of_points
+            std::cout << "num of points: " << read_query->num_of_points
                 << std::endl;
 
-            if (!dev->valid_input_regs_addresses(read_query.starting_address,
-                                                 read_query.num_of_points)) {
+            if (!dev->valid_input_regs_addresses(read_query->starting_address,
+                                                 read_query->num_of_points)) {
                 std::cout << "No such address exists" << std::endl;
                 std::cout << std::endl;
 
                 return;
             }
 
-            dev->display_addresses(read_query.starting_address,
-                                   read_query.num_of_points);
+            dev->display_addresses(read_query->starting_address,
+                                   read_query->num_of_points);
         } else {
-            get_modbus_read_response(&read_response, payload);
+            read_response = get_modbus_read_response(payload);
 
-            std::cout << "byte count: " << unsigned(read_response.byte_count)
+            std::cout << "byte count: " << unsigned(read_response->byte_count)
                 << std::endl;
 
             std::cout << "first byte of data: "
-                << unsigned(read_response.data[0]) << std::endl;
+                << unsigned(read_response->data[0]) << std::endl;
         }
 
         break;

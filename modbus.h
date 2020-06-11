@@ -54,10 +54,14 @@ struct modbus_multiple_write_response {
     uint16_t num_of_points;
 } __attribute__((packed));
 
-void get_modbus_read_query(struct modbus_read_query *modbus_struct,
-                           const uint8_t *payload);
-void get_modbus_read_response(struct modbus_read_response *modbus_struct,
-                              const uint8_t *payload);
+struct modbus_aggregate {
+    uint8_t function_code;
+    void *query;
+    void *response;
+};
+
+struct modbus_read_query *get_modbus_read_query(const uint8_t *payload);
+struct modbus_read_response *get_modbus_read_response(const uint8_t *payload);
 void get_modbus_single_write(struct modbus_single_write *modbus_struct,
                              const uint8_t *payload);
 void get_modbus_multiple_write_query(
