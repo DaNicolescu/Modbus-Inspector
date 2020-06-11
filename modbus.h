@@ -14,6 +14,11 @@
 #define PRESET_MULTIPLE_REGISTERS   0x10
 #define REPORT_SLAVE_ID             0x11
 
+#define COILS_OFFSET                1
+#define INPUTS_OFFSET               10001
+#define INPUT_REGS_OFFSET           30001
+#define HLD_REGS_OFFSET             40001
+
 struct modbus_tcp_generic {
     uint16_t transaction_id;
     uint16_t protocol_id;

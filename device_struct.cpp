@@ -123,7 +123,7 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
 
     switch (aggregated_frame->function_code) {
     case READ_COIL_STATUS:
-        std::cout << "READ COIL STATUS" << std::endl;
+        std::cout << "AGGREGATED READ COIL STATUS" << std::endl;
 
         read_query = (struct modbus_read_query*) aggregated_frame->query;
         read_response = (struct modbus_read_response*)
@@ -134,7 +134,7 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
         std::cout << "num of points: " << read_query->num_of_points
             << std::endl;
 
-        address = read_query->starting_address + 1;
+        address = read_query->starting_address + COILS_OFFSET;
         last_address = address + read_query->num_of_points - 1;
 
         i = 0;
@@ -212,7 +212,7 @@ bool device_struct::valid_read_coils_addresses(uint16_t address,
 bool device_struct::valid_write_coils_addresses(uint16_t address,
                                                 uint16_t num_of_points)
 {
-    address += 1;
+    address += COILS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
 
     for (const std::pair<uint16_t, uint16_t> &pair : this->write_coils) {
@@ -226,7 +226,7 @@ bool device_struct::valid_write_coils_addresses(uint16_t address,
 bool device_struct::valid_inputs_addresses(uint16_t address,
                                            uint16_t num_of_points)
 {
-    address += 10001;
+    address += INPUTS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
 
     for (const std::pair<uint16_t, uint16_t> &pair : this->inputs) {
@@ -240,7 +240,7 @@ bool device_struct::valid_inputs_addresses(uint16_t address,
 bool device_struct::valid_read_hld_regs_addresses(uint16_t address,
                                                   uint16_t num_of_points)
 {
-    address += 40001;
+    address += HLD_REGS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
 
     for (const std::pair<uint16_t, uint16_t> &pair
@@ -255,7 +255,7 @@ bool device_struct::valid_read_hld_regs_addresses(uint16_t address,
 bool device_struct::valid_write_hld_regs_addresses(uint16_t address,
                                                    uint16_t num_of_points)
 {
-    address += 40001;
+    address += HLD_REGS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
 
     for (const std::pair<uint16_t, uint16_t> &pair
@@ -270,7 +270,7 @@ bool device_struct::valid_write_hld_regs_addresses(uint16_t address,
 bool device_struct::valid_input_regs_addresses(uint16_t address,
                                                uint16_t num_of_points)
 {
-    address += 30001;
+    address += INPUT_REGS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
 
     for (const std::pair<uint16_t, uint16_t> &pair : this->input_registers) {

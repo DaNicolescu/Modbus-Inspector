@@ -208,7 +208,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
-            dev->display_addresses(read_query->starting_address + 1,
+            dev->display_addresses(read_query->starting_address + COILS_OFFSET,
                                    read_query->num_of_points);
 
             modbus_aggregated_frame->function_code = modbus->function_code; 
@@ -252,7 +252,7 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
-            dev->display_addresses(read_query->starting_address,
+            dev->display_addresses(read_query->starting_address + INPUTS_OFFSET,
                                    read_query->num_of_points);
         } else {
             read_response = get_modbus_read_response(payload);
