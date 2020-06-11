@@ -4,6 +4,7 @@
 #include "device_struct.h"
 #include "modbus.h"
 #include "utils.h"
+#include "config.h"
 
 bool device_struct::supported_function(uint8_t function)
 {
@@ -188,18 +189,86 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
             it = this->addresses_map.find(address);
             std::cout << address << " (" << it->second->description
                 << ") reading is " << binary_string[i] << std::endl;
-            std::cout << "Notes: " << it->second->notes << std::endl;
+            std::cout << "notes: " << it->second->notes << std::endl;
 
             i++;
         }
 
         break;
     case READ_HOLDING_REGISTERS:
-        std::cout << "READ HOLDING REGISTERS" << std::endl;
+        std::cout << "AGGREGATED READ HOLDING REGISTERS" << std::endl;
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        std::cout << "starting address: " << read_query->starting_address
+            << std::endl;
+        std::cout << "num of points: " << read_query->num_of_points
+            << std::endl;
+
+        address = read_query->starting_address + HLD_REGS_OFFSET;
+        last_address = address + read_query->num_of_points - 1;
+
+        data_index = 0;
+
+        for (; address <= last_address; address++) {
+
+            it = this->addresses_map.find(address);
+            std::cout << address << " (" << it->second->description
+                << ") reading is ";
+           
+            if (it->second->type == XLS_FLOAT_TYPE) {
+                std::cout << bytes_to_float(read_response->data[data_index],
+                                            read_response->data[data_index + 1]);
+            } else {
+                std::cout << bytes_to_int(read_response->data[data_index],
+                                          read_response->data[data_index + 1]);
+            }
+
+            std::cout << std::endl;
+            std::cout << "notes: " << it->second->notes << std::endl;
+
+            data_index += 2;
+        }
 
         break;
     case READ_INPUT_REGISTERS:
-        std::cout << "READ INPUT REGISTERS" << std::endl;
+        std::cout << "AGGREGATED READ INPUT REGISTERS" << std::endl;
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        std::cout << "starting address: " << read_query->starting_address
+            << std::endl;
+        std::cout << "num of points: " << read_query->num_of_points
+            << std::endl;
+
+        address = read_query->starting_address + INPUT_REGS_OFFSET;
+        last_address = address + read_query->num_of_points - 1;
+
+        data_index = 0;
+
+        for (; address <= last_address; address++) {
+
+            it = this->addresses_map.find(address);
+            std::cout << address << " (" << it->second->description
+                << ") reading is ";
+           
+            if (it->second->type == XLS_FLOAT_TYPE) {
+                std::cout << bytes_to_float(read_response->data[data_index],
+                                            read_response->data[data_index + 1]);
+            } else {
+                std::cout << bytes_to_int(read_response->data[data_index],
+                                          read_response->data[data_index + 1]);
+            }
+
+            std::cout << std::endl;
+            std::cout << "notes: " << it->second->notes << std::endl;
+
+            data_index += 2;
+        }
 
         break;
     case FORCE_SINGLE_COIL:

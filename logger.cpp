@@ -296,8 +296,12 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
-            dev->display_addresses(read_query->starting_address,
+            dev->display_addresses(read_query->starting_address
+                                   + HLD_REGS_OFFSET,
                                    read_query->num_of_points);
+
+            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
 
@@ -306,6 +310,12 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             std::cout << "first byte of data: "
                 << unsigned(read_response->data[0]) << std::endl;
+
+            modbus_aggregated_frame->response = read_response;
+
+            std::cout << std::endl;
+
+            dev->display_addresses(modbus_aggregated_frame);
         }
 
         break;
@@ -328,8 +338,12 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
-            dev->display_addresses(read_query->starting_address,
+            dev->display_addresses(read_query->starting_address
+                                   + INPUT_REGS_OFFSET,
                                    read_query->num_of_points);
+
+            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
 
@@ -338,6 +352,12 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             std::cout << "first byte of data: "
                 << unsigned(read_response->data[0]) << std::endl;
+
+            modbus_aggregated_frame->response = read_response;
+
+            std::cout << std::endl;
+
+            dev->display_addresses(modbus_aggregated_frame);
         }
 
         break;
