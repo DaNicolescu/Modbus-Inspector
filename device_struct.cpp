@@ -293,7 +293,27 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
 
         break;
     case PRESET_SINGLE_REGISTER:
-        std::cout << "PRESET SINGLE REGISTER" << std::endl;
+        std::cout << "AGGREGATED PRESET SINGLE REGISTER" << std::endl;
+
+        single_write_query = (struct modbus_single_write*)
+            aggregated_frame->query;
+        single_write_response = (struct modbus_single_write*)
+            aggregated_frame->response;
+
+        address = single_write_query->address + HLD_REGS_OFFSET;
+
+        it = this->addresses_map.find(address);
+
+        std::cout << address << " (" << it->second->description
+            << ") was set to ";
+
+        if (it->second->type == XLS_FLOAT_TYPE) {
+            std::cout << float(single_write_query->value) << std::endl;
+        } else {
+            std::cout << single_write_query->value << std::endl;
+        }
+
+        std::cout << "notes: " << it->second->notes << std::endl;
 
         break;
     case READ_EXCEPTION_STATUS:

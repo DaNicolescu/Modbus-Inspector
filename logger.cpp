@@ -406,7 +406,19 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             return;
         }
 
-        dev->display_addresses(single_write_packet->address + COILS_OFFSET, 1);
+        dev->display_addresses(single_write_packet->address + HLD_REGS_OFFSET,
+                               1);
+
+        if (query_packet) {
+            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->query = single_write_packet;
+        } else {
+            modbus_aggregated_frame->response = single_write_packet;
+
+            std::cout << std::endl;
+
+            dev->display_addresses(modbus_aggregated_frame);
+        }
 
         break;
     case READ_EXCEPTION_STATUS:
