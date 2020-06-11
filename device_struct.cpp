@@ -159,7 +159,39 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
 
         break;
     case READ_INPUT_STATUS:
-        std::cout << "READ INPUT STATUS" << std::endl;
+        std::cout << "AGGREGATED READ INPUT STATUS" << std::endl;
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        std::cout << "starting address: " << read_query->starting_address
+            << std::endl;
+        std::cout << "num of points: " << read_query->num_of_points
+            << std::endl;
+
+        address = read_query->starting_address + INPUTS_OFFSET;
+        last_address = address + read_query->num_of_points - 1;
+
+        i = 0;
+        data_index = 0;
+        binary_string = byte_to_binary_string(read_response->data[data_index]);
+
+        for (; address <= last_address; address++) {
+            if (i == 8) {
+                i = 0;
+                data_index++;
+                binary_string = byte_to_binary_string(
+                    read_response->data[data_index]);
+            }
+
+            it = this->addresses_map.find(address);
+            std::cout << address << " (" << it->second->description
+                << ") reading is " << binary_string[i] << std::endl;
+            std::cout << "Notes: " << it->second->notes << std::endl;
+
+            i++;
+        }
 
         break;
     case READ_HOLDING_REGISTERS:
