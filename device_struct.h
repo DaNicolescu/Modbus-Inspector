@@ -20,6 +20,9 @@ struct address_struct {
     uint8_t type;
     std::vector<union value_type> possible_values;
     std::vector<std::pair<union value_type, union value_type>> possible_ranges;
+
+    bool check_int_range(uint16_t address, int value);
+    bool check_float_range(uint16_t address, float value);
 };
 
 struct device_struct {

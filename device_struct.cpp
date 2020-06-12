@@ -21,6 +21,38 @@ bool device_struct::supported_function(uint8_t function)
     return false;
 }
 
+bool address_struct::check_int_range(uint16_t address, int value)
+{
+    for (const std::pair<union value_type, union value_type> &pair
+         : this->possible_ranges) {
+        if (value >= pair.first.i && value <= pair.second.i)
+            return true;
+    }
+
+    for (const union value_type &possible_value : this->possible_values) {
+        if (value == possible_value.i)
+            return true;
+    }
+
+    return false;
+}
+
+bool address_struct::check_float_range(uint16_t address, float value)
+{
+    for (const std::pair<union value_type, union value_type> &pair
+         : this->possible_ranges) {
+        if (value >= pair.first.f && value <= pair.second.f)
+            return true;
+    }
+
+    for (const union value_type &possible_value : this->possible_values) {
+        if (value == possible_value.f)
+            return true;
+    }
+
+    return false;
+}
+
 struct address_struct* device_struct::get_address(uint16_t address)
 {
     std::unordered_map<uint16_t, struct address_struct*>::iterator it;
@@ -413,7 +445,7 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
 bool device_struct::valid_read_coils_addresses(uint16_t address,
                                                uint16_t num_of_points)
 {
-    address += 1;
+    address += COILS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
 
     for (const std::pair<uint16_t, uint16_t> &pair : this->read_coils) {
@@ -495,3 +527,4 @@ bool device_struct::valid_input_regs_addresses(uint16_t address,
 
     return false;
 }
+
