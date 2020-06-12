@@ -95,3 +95,15 @@ struct modbus_multiple_write_response *get_modbus_multiple_write_response(
     return modbus_struct;
 }
 
+struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
+    const uint8_t *payload)
+{
+    struct modbus_report_slave_id_response *modbus_struct;
+
+    modbus_struct = new modbus_report_slave_id_response;
+
+    memcpy(modbus_struct, payload, sizeof(struct modbus_tcp_generic) + 3);
+
+    return modbus_struct;
+}
+

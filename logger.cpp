@@ -16,7 +16,7 @@
 std::unordered_map<uint16_t, struct modbus_aggregate*> modbus_aggregated_frames;
 std::unordered_map<uint8_t, struct device_struct*> devices_map;
 
-void list_devs()
+void list_interfaces()
 {
     pcap_if_t *all_devs;
     pcap_if_t *current_dev;
@@ -76,6 +76,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_multiple_write_query *multiple_write_query;
     struct modbus_multiple_write_response *multiple_write_response;
     struct modbus_aggregate *modbus_aggregated_frame;
+    struct modbus_report_slave_id_response *report_slave_id_response;
     struct device_struct *dev;
     struct address_struct *addr;
     const uint8_t *ip_header;
@@ -148,7 +149,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     query_packet = modbus_frame_is_query(htons(modbus->transaction_id));
 
     if (query_packet) {
-        modbus_aggregated_frame = new modbus_aggregate;   
+        modbus_aggregated_frame = new modbus_aggregate;
         modbus_aggregated_frames.insert(std::pair<uint16_t,
             struct modbus_aggregate*>(htons(modbus->transaction_id),
                                       modbus_aggregated_frame));
@@ -255,7 +256,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             dev->display_addresses(read_query->starting_address + INPUTS_OFFSET,
                                    read_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
@@ -288,8 +289,9 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             std::cout << "num of points: " << read_query->num_of_points
                 << std::endl;
 
-            if (!dev->valid_read_hld_regs_addresses(read_query->starting_address,
-                                                    read_query->num_of_points)) {
+            if (!dev->valid_read_hld_regs_addresses(
+                    read_query->starting_address,
+                    read_query->num_of_points)) {
                 std::cout << "No such address exists" << std::endl;
                 std::cout << std::endl;
 
@@ -300,7 +302,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                    + HLD_REGS_OFFSET,
                                    read_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
@@ -342,7 +344,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                    + INPUT_REGS_OFFSET,
                                    read_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
@@ -369,7 +371,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "address: " << single_write_packet->address << std::endl;
         std::cout << "value: " << single_write_packet->value << std::endl;
 
-        if (!dev->valid_write_coils_addresses(single_write_packet->address, 1)) {
+        if (!dev->valid_write_coils_addresses(single_write_packet->address,
+                                              1)) {
             std::cout << "No such address exists" << std::endl;
             std::cout << std::endl;
 
@@ -379,7 +382,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         dev->display_addresses(single_write_packet->address + COILS_OFFSET, 1);
 
         if (query_packet) {
-            modbus_aggregated_frame->function_code = modbus->function_code; 
+            modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = single_write_packet;
         } else {
             modbus_aggregated_frame->response = single_write_packet;
@@ -544,6 +547,27 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case REPORT_SLAVE_ID:
+        std::cout << "REPORT SLAVE ID" << std::endl;
+
+        if (query_packet) {
+            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->query = NULL;
+        } else {
+            report_slave_id_response = get_modbus_report_slave_id_response(
+                payload);
+
+            std::cout << "byte count: " << report_slave_id_response->byte_count
+                << std::endl;
+            std::cout << "slave id: " << report_slave_id_response->slave_id
+                << std::endl;
+            std::cout << "run indicator status: "
+                << report_slave_id_response->run_indicator_status << std::endl;
+
+            modbus_aggregated_frame->response = report_slave_id_response;
+
+            std::cout << std::endl;
+        }
+
         break;
     default:
         std::cout << "Function code decoding not yet implemented" << std::endl;
@@ -572,7 +596,7 @@ int main(int argc, char **argv)
     int timeout = 1000;
     int res;
 
-    // list_devs();
+    // list_interfaces();
 
     //display_xls_config_file(XLS_CONFIG_FILE_NAME);
     extract_data_from_xls_config_file(XLS_CONFIG_FILE_NAME, devices_map);

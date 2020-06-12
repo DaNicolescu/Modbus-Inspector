@@ -59,6 +59,14 @@ struct modbus_multiple_write_response {
     uint16_t num_of_points;
 } __attribute__((packed));
 
+struct modbus_report_slave_id_response {
+    struct modbus_tcp_generic generic_header;
+    uint8_t byte_count;
+    uint8_t slave_id;
+    uint8_t run_indicator_status;
+    uint8_t *additional_data;
+} __attribute__((packed));
+
 struct modbus_aggregate {
     uint8_t function_code;
     void *query;
@@ -71,6 +79,8 @@ struct modbus_single_write *get_modbus_single_write(const uint8_t *payload);
 struct modbus_multiple_write_query *get_modbus_multiple_write_query(
     const uint8_t *payload);
 struct modbus_multiple_write_response *get_modbus_multiple_write_response(
+    const uint8_t *payload);
+struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     const uint8_t *payload);
 
 #endif
