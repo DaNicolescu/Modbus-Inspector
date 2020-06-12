@@ -68,10 +68,9 @@ struct modbus_aggregate {
 struct modbus_read_query *get_modbus_read_query(const uint8_t *payload);
 struct modbus_read_response *get_modbus_read_response(const uint8_t *payload);
 struct modbus_single_write *get_modbus_single_write(const uint8_t *payload);
-void get_modbus_multiple_write_query(
-    struct modbus_multiple_write_query *modbus_struct, const uint8_t *payload);
-void get_modbus_multiple_write_response(
-    struct modbus_multiple_write_response *modbus_struct,
+struct modbus_multiple_write_query *get_modbus_multiple_write_query(
+    const uint8_t *payload);
+struct modbus_multiple_write_response *get_modbus_multiple_write_response(
     const uint8_t *payload);
 
 #endif

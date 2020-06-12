@@ -117,6 +117,8 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
     struct modbus_read_response *read_response;
     struct modbus_single_write *single_write_query;
     struct modbus_single_write *single_write_response;
+    struct modbus_multiple_write_query *multiple_write_query;
+    struct modbus_multiple_write_response *multiple_write_response;
     uint16_t address;
     uint16_t last_address;
     uint16_t num_of_points;
@@ -319,8 +321,44 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
     case READ_EXCEPTION_STATUS:
         break;
     case FORCE_MULTIPLE_COILS:
-        std::cout << "FORCE MULTIPLE COILS" << std::endl;
+        std::cout << "AGGREGATED FORCE MULTIPLE COILS" << std::endl;
 
+        multiple_write_query = (struct modbus_multiple_write_query*)
+            aggregated_frame->query;
+        multiple_write_response = (struct modbus_multiple_write_response*)
+            aggregated_frame->response;
+
+        std::cout << "starting address: "
+            << multiple_write_query->starting_address << std::endl;
+        std::cout << "num of points: "
+            << multiple_write_query->num_of_points << std::endl;
+        std::cout << "byte count: "
+            << unsigned(multiple_write_query->byte_count) << std::endl;
+
+        address = multiple_write_query->starting_address + COILS_OFFSET;
+        last_address = address + multiple_write_query->num_of_points - 1;
+
+        i = 0;
+        data_index = 0;
+        binary_string = byte_to_binary_string(
+            multiple_write_query->data[data_index]);
+
+        for (; address <= last_address; address++) {
+            if (i == 8) {
+                i = 0;
+                data_index++;
+                binary_string = byte_to_binary_string(
+                    multiple_write_query->data[data_index]);
+            }
+
+            it = this->addresses_map.find(address);
+            std::cout << address << " (" << it->second->description
+                << ") was set to " << binary_string[i] << std::endl;
+            std::cout << "Notes: " << it->second->notes << std::endl;
+
+            i++;
+        }
+        
         break;
     case PRESET_MULTIPLE_REGISTERS:
         std::cout << "PRESET MULTIPLE REGISTERS" << std::endl;
