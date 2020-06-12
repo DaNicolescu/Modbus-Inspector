@@ -507,8 +507,12 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
-            dev->display_addresses(multiple_write_query->starting_address,
+            dev->display_addresses(multiple_write_query->starting_address
+                                   + HLD_REGS_OFFSET,
                                    multiple_write_query->num_of_points);
+
+            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->query = multiple_write_query;
         } else {
             multiple_write_response = get_modbus_multiple_write_response(
                 payload);
@@ -527,8 +531,15 @@ void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
-            dev->display_addresses(multiple_write_response->starting_address,
+            dev->display_addresses(multiple_write_response->starting_address
+                                   + HLD_REGS_OFFSET,
                                    multiple_write_response->num_of_points);
+
+            modbus_aggregated_frame->response = multiple_write_response;
+
+            std::cout << std::endl;
+
+            dev->display_addresses(modbus_aggregated_frame);
         }
 
         break;

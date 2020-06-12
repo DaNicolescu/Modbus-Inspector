@@ -361,7 +361,46 @@ void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
         
         break;
     case PRESET_MULTIPLE_REGISTERS:
-        std::cout << "PRESET MULTIPLE REGISTERS" << std::endl;
+        std::cout << "AGGREGATED PRESET MULTIPLE REGISTERS" << std::endl;
+
+        multiple_write_query = (struct modbus_multiple_write_query*)
+            aggregated_frame->query;
+        multiple_write_response = (struct modbus_multiple_write_response*)
+            aggregated_frame->response;
+
+        std::cout << "starting address: "
+            << multiple_write_query->starting_address << std::endl;
+        std::cout << "num of points: "
+            << multiple_write_query->num_of_points << std::endl;
+        std::cout << "byte count: "
+            << unsigned(multiple_write_query->byte_count) << std::endl;
+
+        address = multiple_write_query->starting_address + HLD_REGS_OFFSET;
+        last_address = address + multiple_write_query->num_of_points - 1;
+
+        data_index = 0;
+
+        for (; address <= last_address; address++) {
+
+            it = this->addresses_map.find(address);
+            std::cout << address << " (" << it->second->description
+                << ") was set to ";
+           
+            if (it->second->type == XLS_FLOAT_TYPE) {
+                std::cout << bytes_to_float(
+                    multiple_write_query->data[data_index],
+                    multiple_write_query->data[data_index + 1]);
+            } else {
+                std::cout << bytes_to_int(
+                    multiple_write_query->data[data_index],
+                    multiple_write_query->data[data_index + 1]);
+            }
+
+            std::cout << std::endl;
+            std::cout << "notes: " << it->second->notes << std::endl;
+
+            data_index += 2;
+        }
 
         break;
     case REPORT_SLAVE_ID:
