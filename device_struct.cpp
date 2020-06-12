@@ -6,6 +6,41 @@
 #include "utils.h"
 #include "config.h"
 
+void address_struct::display()
+{
+    std::cout << "Address: " << this->address << std::endl;
+    std::cout << "Writable: " << this->write << std::endl;
+    std::cout << "Description: " << this->description << std::endl;
+    std::cout << "Size: " << unsigned(this->size) << std::endl;
+    std::cout << "Type: " << unsigned(this->type) << std::endl;
+    std::cout << "Notes: " << this->notes << std::endl;
+
+    std::cout << "Possible values: " << std::endl;
+
+    for (const union value_type &value : this->possible_values) {
+
+        if (this->type == XLS_FLOAT_TYPE)
+            std::cout << value.f << ", ";
+        else
+            std::cout << value.i << ", ";
+    }
+
+    std::cout << std::endl;
+
+    std::cout << "Possible ranges: " << std::endl;
+
+    for (const std::pair<union value_type, union value_type> &pair
+         : this->possible_ranges) {
+
+        if (this->type == XLS_FLOAT_TYPE)
+            std::cout << pair.first.f << ":" << pair.second.f << std::endl;
+        else
+            std::cout << pair.first.i << ":" << pair.second.i << std::endl;
+    }
+
+    std::cout << std::endl;
+}
+
 bool device_struct::supported_function(uint8_t function)
 {
     for (uint8_t crt_func : this->generic_supported_functions) {
@@ -526,5 +561,72 @@ bool device_struct::valid_input_regs_addresses(uint16_t address,
     }
 
     return false;
+}
+
+void device_struct::display()
+{
+    std::unordered_map<uint16_t, struct address_struct*>::iterator addresses_it;
+
+    std::cout << "Slave ID: " << unsigned(this->id) << std::endl;
+    std::cout << "Name: " << this->name << std::endl;
+
+    std::cout << "Read Coils: " << std::endl;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->read_coils) {
+        std::cout << pair.first << ":" << pair.second << std::endl;
+    }
+
+    std::cout << "Write Coils: " << std::endl;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->write_coils) {
+        std::cout << pair.first << ":" << pair.second << std::endl;
+    }
+
+    std::cout << "Inputs: " << std::endl;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->inputs) {
+        std::cout << pair.first << ":" << pair.second << std::endl;
+    }
+
+    std::cout << "Read Holding Registers: " << std::endl;
+
+    for (const std::pair<uint16_t, uint16_t> &pair
+         : this->read_holding_registers) {
+        std::cout << pair.first << ":" << pair.second << std::endl;
+    }
+
+    std::cout << "Write Holding Registers: " << std::endl;
+
+    for (const std::pair<uint16_t, uint16_t> &pair
+         : this->write_holding_registers) {
+        std::cout << pair.first << ":" << pair.second << std::endl;
+    }
+
+    std::cout << "Input Registers: " << std::endl;
+
+    for (const std::pair<uint16_t, uint16_t> &pair : this->input_registers) {
+        std::cout << pair.first << ":" << pair.second << std::endl;
+    }
+
+    std::cout << "Generic Supported Functions:" << std::endl;
+
+    for (const uint8_t &function : this->generic_supported_functions)
+        std::cout << unsigned(function) << ", ";
+
+    std::cout << std::endl;
+
+    std::cout << "Specific Supported Functions:" << std::endl;
+
+    for (const uint8_t &function : this->specific_supported_functions)
+        std::cout << unsigned(function) << ", ";
+
+    std::cout << std::endl;
+
+    for (addresses_it = this->addresses_map.begin();
+        addresses_it != this->addresses_map.end(); addresses_it++) {
+        addresses_it->second->display();
+    }
+
+    std::cout << std::endl;
 }
 

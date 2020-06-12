@@ -23,6 +23,8 @@ struct address_struct {
 
     bool check_int_range(uint16_t address, int value);
     bool check_float_range(uint16_t address, float value);
+
+    void display();
 };
 
 struct device_struct {
@@ -61,6 +63,8 @@ struct device_struct {
 
     void display_addresses(uint16_t address, uint16_t num_of_points);
     void display_addresses(struct modbus_aggregate *aggregated_frame);
+
+    void display();
 };
 
 #endif
