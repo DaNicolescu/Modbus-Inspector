@@ -65,7 +65,7 @@ struct device_struct *get_device(uint8_t slave_id)
     return NULL;
 }
 
-void my_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
+void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                        const uint8_t *packet)
 {
     struct ether_header *ethernet_header;
@@ -705,7 +705,7 @@ int main(int argc, char **argv)
     //    return 1;
     //}
 
-    pcap_loop(pcap_handler, -1, my_packet_handler, NULL);
+    pcap_loop(pcap_handler, -1, modbus_packet_handler, NULL);
     pcap_close(pcap_handler);
 
     return 0;
