@@ -10,7 +10,7 @@ all: logger
 logger: $(OBJS)
 	$(CXX) -o logger $(OBJS) $(LDLIBS) -Wl,-R/usr/local/lib
 
-looger.o: logger.cpp logger.h
+logger.o: logger.cpp logger.h
 
 XlsReader.o: XlsReader.cpp XlsReader.h
 
