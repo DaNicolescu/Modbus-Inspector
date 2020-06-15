@@ -12,6 +12,7 @@
 #include "modbus.h"
 #include "config.h"
 #include "utils.h"
+#include "db.h"
 
 std::unordered_map<uint16_t, struct modbus_aggregate*> modbus_aggregated_frames;
 std::unordered_map<uint8_t, struct device_struct*> devices_map;
@@ -595,6 +596,14 @@ int main(int argc, char **argv)
     int promiscuous = 1;
     int timeout = 1000;
     int res;
+
+    struct db_manager db;
+
+    db.open();
+    db.create_database("modbus");
+    //db.close();
+
+    return 0;
 
     // list_interfaces();
 
