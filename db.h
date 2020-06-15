@@ -13,6 +13,8 @@ struct db_manager {
     bool open();
     void close();
     bool create_database(std::string db_name);
+    bool create_tables();
+    bool drop_tables();
 };
 
 #endif

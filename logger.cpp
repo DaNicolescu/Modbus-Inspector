@@ -601,7 +601,8 @@ int main(int argc, char **argv)
 
     db.open();
     db.create_database("modbus");
-    //db.close();
+    db.create_tables();
+    db.close();
 
     return 0;
 
