@@ -1,8 +1,8 @@
 CXX=g++
 RM=rm -f
-LDLIBS=-lxlsreader -lpcap
+LDLIBS=-lxlsreader -lpcap `mariadb_config --libs`
 
-SRCS=logger.cpp XlsReader.cpp device_struct.cpp modbus.cpp config.cpp utils.cpp
+SRCS=logger.cpp XlsReader.cpp device_struct.cpp modbus.cpp config.cpp utils.cpp db.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: logger
@@ -21,6 +21,9 @@ modbus.o: modbus.cpp modbus.h
 config.o: config.cpp config.h
 
 utils.o: utils.cpp utils.h
+
+db.o: db.cpp db.h
+	$(CXX) -c -o db.o db.cpp `mariadb_config --cflags`
 
 clean:
 	$(RM) $(OBJS)
