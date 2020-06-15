@@ -3,6 +3,7 @@
 #include <mysql.h>
 
 #include "db.h"
+#include "modbus.h"
 
 void db_manager::display_client_version()
 {
@@ -128,4 +129,12 @@ bool db_manager::drop_tables()
     }
 
     return true;
+}
+
+bool db_manager::add_read_query(struct modbus_read_query *modbus_struct)
+{
+    std::string query = "INSERT INTO `frames` (type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code)";
+
+    return false;
 }
