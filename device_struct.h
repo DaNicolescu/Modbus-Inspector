@@ -18,6 +18,7 @@ struct address_struct {
     std::string notes;
     uint8_t size;
     uint8_t type;
+    int db_id;
     std::vector<union value_type> possible_values;
     std::vector<std::pair<union value_type, union value_type>> possible_ranges;
 

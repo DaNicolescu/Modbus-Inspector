@@ -5,6 +5,7 @@
 #include "db.h"
 #include "device_struct.h"
 #include "modbus.h"
+#include "utils.h"
 
 void db_manager::display_client_version()
 {
@@ -197,19 +198,76 @@ bool db_manager::add_address(struct address_struct *address,
         return false;
     }
 
+    address->db_id = mysql_insert_id(this->connection);
+
     return true;
 }
 
 bool db_manager::add_read_query(struct modbus_read_query *modbus_struct)
 {
-    std::string query = "INSERT INTO `frames` (type, transaction_id, "
-                        "protocol_id, length, slave_id, function_code)";
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "starting_address, num_of_points) VALUES(0, "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->starting_address) + ", "
+                        + std::to_string(modbus_struct->num_of_points) + ")";
 
-    return false;
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
 }
 
 bool db_manager::add_read_response(struct modbus_read_response *modbus_struct)
 {
+    std::string response_data;
+    uint8_t byte_count;
 
-    return false;
+    byte_count = modbus_struct->byte_count;
+
+    if (byte_count > 0)
+        response_data = byte_to_binary_string(modbus_struct->data[0]);
+
+    for (uint8_t i = 1; i < byte_count; i++)
+        response_data += byte_to_binary_string(modbus_struct->data[i]);
+
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "byte_count, data) VALUES(1, "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->byte_count) + ", '"
+                        + response_data + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
 }

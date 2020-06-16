@@ -16,6 +16,7 @@
 
 std::unordered_map<uint16_t, struct modbus_aggregate*> modbus_aggregated_frames;
 std::unordered_map<uint8_t, struct device_struct*> devices_map;
+struct db_manager *db;
 
 void list_interfaces()
 {
@@ -213,6 +214,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             dev->display_addresses(read_query->starting_address + COILS_OFFSET,
                                    read_query->num_of_points);
 
+            db->add_read_query(read_query);
+
             modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
@@ -226,6 +229,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                     << byte_to_binary_string(read_response->data[i])
                     << std::endl;
             }
+
+            db->add_read_response(read_response);
 
             modbus_aggregated_frame->response = read_response;
 
@@ -615,7 +620,7 @@ int main(int argc, char **argv)
     int timeout = 1000;
     int res;
 
-    struct db_manager *db = new db_manager;
+    db = new db_manager;
 
     db->open();
     db->create_database("modbus");
@@ -629,10 +634,9 @@ int main(int argc, char **argv)
 
     add_addresses_to_db(db);
 
-    db->close();
-
     pcap_handler = pcap_open_live(device, snapshot_len, promiscuous, timeout,
                                   error_buffer);
+
 
     if (!pcap_handler) {
         std::cout << "Error while opening device" << std::endl;
@@ -662,6 +666,7 @@ int main(int argc, char **argv)
 
     pcap_loop(pcap_handler, -1, modbus_packet_handler, NULL);
     pcap_close(pcap_handler);
+    db->close();
 
     return 0;
 }
