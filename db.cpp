@@ -236,14 +236,32 @@ bool db_manager::add_read_response(struct modbus_read_response *modbus_struct)
 {
     std::string response_data;
     uint8_t byte_count;
+    uint8_t function_code;
 
     byte_count = modbus_struct->byte_count;
+    function_code = modbus_struct->generic_header.function_code;
 
-    if (byte_count > 0)
-        response_data = byte_to_binary_string(modbus_struct->data[0]);
+    if (function_code == READ_COIL_STATUS
+        || function_code == READ_INPUT_STATUS) {
+        if (byte_count > 0)
+            response_data = byte_to_binary_string(modbus_struct->data[0]);
 
-    for (uint8_t i = 1; i < byte_count; i++)
-        response_data += byte_to_binary_string(modbus_struct->data[i]);
+        for (uint8_t i = 1; i < byte_count; i++) {
+            response_data += ", "
+                + byte_to_binary_string(modbus_struct->data[i]);
+        }
+    } else if (function_code == READ_HOLDING_REGISTERS
+               || function_code == READ_INPUT_REGISTERS) {
+        if (byte_count > 1) {
+            response_data = std::to_string(bytes_to_int(modbus_struct->data[0],
+                                           modbus_struct->data[1]));
+        }
+
+        for (uint8_t i = 2; i < byte_count; i += 2) {
+            response_data += ", " + std::to_string(bytes_to_int(
+                    modbus_struct->data[i], modbus_struct->data[i + 1]));
+        }
+    }
 
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
                         "protocol_id, length, slave_id, function_code, "

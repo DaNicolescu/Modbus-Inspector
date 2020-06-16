@@ -211,10 +211,11 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
+            db->add_read_query(read_query);
+
             dev->display_addresses(read_query->starting_address + COILS_OFFSET,
                                    read_query->num_of_points);
 
-            db->add_read_query(read_query);
 
             modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = read_query;
@@ -259,6 +260,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
+            db->add_read_query(read_query);
+
             dev->display_addresses(read_query->starting_address + INPUTS_OFFSET,
                                    read_query->num_of_points);
 
@@ -275,6 +278,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                     << byte_to_binary_string(read_response->data[i])
                     << std::endl;
             }
+
+            db->add_read_response(read_response);
 
             modbus_aggregated_frame->response = read_response;
 
@@ -304,6 +309,10 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
+            db->add_read_query(read_query);
+
+            std::cout << "pulaaaaaaaaaaa" << std::endl;
+
             dev->display_addresses(read_query->starting_address
                                    + HLD_REGS_OFFSET,
                                    read_query->num_of_points);
@@ -318,6 +327,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             std::cout << "first byte of data: "
                 << unsigned(read_response->data[0]) << std::endl;
+
+            db->add_read_response(read_response);
 
             modbus_aggregated_frame->response = read_response;
 
@@ -346,6 +357,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
+            db->add_read_query(read_query);
+
             dev->display_addresses(read_query->starting_address
                                    + INPUT_REGS_OFFSET,
                                    read_query->num_of_points);
@@ -360,6 +373,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             std::cout << "first byte of data: "
                 << unsigned(read_response->data[0]) << std::endl;
+
+            db->add_read_response(read_response);
 
             modbus_aggregated_frame->response = read_response;
 
