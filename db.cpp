@@ -88,15 +88,43 @@ bool db_manager::create_tables()
         return false;
     }
 
-    query = "CREATE TABLE IF NOT EXISTS `aggregated_frames` ("
+    query = "CREATE TABLE IF NOT EXISTS `addresses` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
-            "`transaction_id` SMALLINT UNSIGNED,"
             "`slave_id` TINYINT UNSIGNED,"
             "`address` SMALLINT UNSIGNED,"
             "`description` TEXT,"
+            "`notes` TEXT)";
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    query = "CREATE TABLE IF NOT EXISTS `aggregated_frames` ("
+            "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
+            "`address_id` INTEGER,"
+            "`transaction_id` SMALLINT UNSIGNED,"
+            "`slave_id` TINYINT UNSIGNED,"
+            "`address` SMALLINT UNSIGNED,"
             "`operation` TINYINT,"
             "`value` VARCHAR(10),"
-            "`notes` TEXT)";
+            "CONSTRAINT `fk_address_id`"
+                "FOREIGN KEY (address_id) REFERENCES addresses (id)"
+                "ON DELETE CASCADE"
+            ")";
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    query = "CREATE TABLE IF NOT EXISTS `display_frames` ("
+            "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
+            "`data` TEXT)";
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -120,6 +148,24 @@ bool db_manager::drop_tables()
     }
 
     query = "DROP TABLE `aggregated_frames`";
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    query = "DROP TABLE `addresses`";
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    query = "DROP TABLE `display_frames`";
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
