@@ -480,6 +480,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
+            db->add_multiple_write_query(multiple_write_query);
+
             dev->display_addresses(multiple_write_query->starting_address
                                    + COILS_OFFSET,
                                    multiple_write_query->num_of_points);
@@ -494,6 +496,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 << multiple_write_response->starting_address << std::endl;
             std::cout << "num of points: "
                 << multiple_write_response->num_of_points << std::endl;
+
+            db->add_multiple_write_response(multiple_write_response);
 
             if (!dev->valid_write_coils_addresses(
                     multiple_write_response->starting_address,
@@ -540,6 +544,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                 return;
             }
 
+            db->add_multiple_write_query(multiple_write_query);
+
             dev->display_addresses(multiple_write_query->starting_address
                                    + HLD_REGS_OFFSET,
                                    multiple_write_query->num_of_points);
@@ -563,6 +569,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
                 return;
             }
+
+            db->add_multiple_write_response(multiple_write_response);
 
             dev->display_addresses(multiple_write_response->starting_address
                                    + HLD_REGS_OFFSET,

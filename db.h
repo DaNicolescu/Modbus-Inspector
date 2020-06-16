@@ -10,6 +10,8 @@ struct address_struct;
 struct modbus_read_query;
 struct modbus_read_response;
 struct modbus_single_write;
+struct modbus_multiple_write_query;
+struct modbus_multiple_write_response;
 
 struct db_manager {
     MYSQL *connection;
@@ -28,6 +30,10 @@ struct db_manager {
     bool add_read_response(struct modbus_read_response *modbus_struct);
     bool add_single_write(struct modbus_single_write *modbus_struct,
                           uint8_t type);
+    bool add_multiple_write_query(struct modbus_multiple_write_query
+                                  *modbus_struct);
+    bool add_multiple_write_response(struct modbus_multiple_write_response
+                                     *modbus_struct);
 };
 
 #endif
