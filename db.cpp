@@ -3,6 +3,7 @@
 #include <mysql.h>
 
 #include "db.h"
+#include "device_struct.h"
 #include "modbus.h"
 
 void db_manager::display_client_version()
@@ -177,10 +178,38 @@ bool db_manager::drop_tables()
     return true;
 }
 
+bool db_manager::add_address(struct address_struct *address,
+                             uint8_t slave_id)
+{
+    std::string query = "INSERT INTO `addresses`(slave_id, address, "
+                        "description, notes) VALUES("
+                        + std::to_string(slave_id) + ", "
+                        + std::to_string(address->address) + ", '"
+                        + address->description + "', '"
+                        + address->notes + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_read_query(struct modbus_read_query *modbus_struct)
 {
     std::string query = "INSERT INTO `frames` (type, transaction_id, "
                         "protocol_id, length, slave_id, function_code)";
+
+    return false;
+}
+
+bool db_manager::add_read_response(struct modbus_read_response *modbus_struct)
+{
 
     return false;
 }

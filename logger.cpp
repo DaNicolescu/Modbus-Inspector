@@ -586,6 +586,24 @@ void display_devices()
     }
 }
 
+void add_addresses_to_db(struct db_manager *db)
+{
+    uint8_t slave_id;
+    struct device_struct *dev;
+    std::unordered_map<uint8_t, struct device_struct*>::iterator it;
+    std::unordered_map<uint16_t, struct address_struct*>::iterator addresses_it;
+
+    for (it = devices_map.begin(); it != devices_map.end(); it++) {
+        slave_id = it->first;
+        dev = it->second;
+
+        for (addresses_it = dev->addresses_map.begin();
+            addresses_it != dev->addresses_map.end(); addresses_it++) {
+            db->add_address(addresses_it->second, slave_id);
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     pcap_t *pcap_handler;
@@ -597,20 +615,21 @@ int main(int argc, char **argv)
     int timeout = 1000;
     int res;
 
-    struct db_manager db;
+    struct db_manager *db = new db_manager;
 
-    db.open();
-    db.create_database("modbus");
-    db.create_tables();
-    db.close();
-
-    return 0;
+    db->open();
+    db->create_database("modbus");
+    db->create_tables();
 
     // list_interfaces();
 
     //display_xls_config_file(XLS_CONFIG_FILE_NAME);
     extract_data_from_xls_config_file(XLS_CONFIG_FILE_NAME, devices_map);
     display_devices();
+
+    add_addresses_to_db(db);
+
+    db->close();
 
     pcap_handler = pcap_open_live(device, snapshot_len, promiscuous, timeout,
                                   error_buffer);
