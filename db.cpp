@@ -289,3 +289,34 @@ bool db_manager::add_read_response(struct modbus_read_response *modbus_struct)
 
     return true;
 }
+
+bool db_manager::add_single_write(struct modbus_single_write *modbus_struct,
+                                  uint8_t type)
+{
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "starting_address, value) VALUES("
+                        + std::to_string(type) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->address) + ", "
+                        + std::to_string(modbus_struct->value) + ")";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}

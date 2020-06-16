@@ -403,9 +403,14 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         dev->display_addresses(single_write_packet->address + COILS_OFFSET, 1);
 
         if (query_packet) {
+            db->add_single_write(single_write_packet, 0);
+
             modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = single_write_packet;
+
         } else {
+            db->add_single_write(single_write_packet, 1);
+
             modbus_aggregated_frame->response = single_write_packet;
 
             std::cout << std::endl;
@@ -434,9 +439,13 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                1);
 
         if (query_packet) {
+            db->add_single_write(single_write_packet, 0);
+
             modbus_aggregated_frame->function_code = modbus->function_code;
             modbus_aggregated_frame->query = single_write_packet;
         } else {
+            db->add_single_write(single_write_packet, 1);
+
             modbus_aggregated_frame->response = single_write_packet;
 
             std::cout << std::endl;
