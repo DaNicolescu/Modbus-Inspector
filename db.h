@@ -12,6 +12,7 @@ struct modbus_read_response;
 struct modbus_single_write;
 struct modbus_multiple_write_query;
 struct modbus_multiple_write_response;
+struct modbus_aggregate;
 
 struct db_manager {
     MYSQL *connection;
@@ -34,6 +35,8 @@ struct db_manager {
                                   *modbus_struct);
     bool add_multiple_write_response(struct modbus_multiple_write_response
                                      *modbus_struct);
+
+    bool add_display_frame(struct modbus_aggregate *modbus_struct);
 };
 
 #endif

@@ -126,7 +126,9 @@ bool db_manager::create_tables()
 
     query = "CREATE TABLE IF NOT EXISTS `display_frames` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
-            "`data` TEXT)";
+            "`request` TEXT,"
+            "`response` TEXT",
+            "`aggregated` TEXT)";
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -406,6 +408,13 @@ bool db_manager::add_multiple_write_response(
 
         return false;
     }
+
+    return true;
+}
+
+bool db_manager::add_display_frame(struct modbus_aggregate *modbus_struct)
+{
+    
 
     return true;
 }
