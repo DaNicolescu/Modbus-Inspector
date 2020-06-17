@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string.h>
+#include <unordered_map>
 #include <mysql.h>
 
 #include "db.h"
@@ -126,6 +127,7 @@ bool db_manager::create_tables()
 
     query = "CREATE TABLE IF NOT EXISTS `display_frames` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
+            "`type` TEXT,"
             "`request` TEXT,"
             "`response` TEXT",
             "`aggregated` TEXT)";
@@ -412,9 +414,120 @@ bool db_manager::add_multiple_write_response(
     return true;
 }
 
-bool db_manager::add_display_frame(struct modbus_aggregate *modbus_struct)
+bool db_manager::add_display_frame(std::string type, std::string query,
+                                   std::string response, std::string aggregated)
 {
-    
+    std::string db_query = "INSERT INTO `display_frames`(type, request, "
+                           "response, aggregated) VALUES('" + type + "', '"
+                           + query + "', '" + response + "', '" + aggregated
+                           + "')";
+
+    std::cout << "db query: " << db_query << std::endl;
+
+    if (mysql_query(this->connection, db_query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool db_manager::add_display_frame(struct device_struct *dev,
+                                   struct modbus_aggregate *aggregated_frame)
+{
+    std::unordered_map<uint16_t, struct address_struct*>::iterator it;
+    struct modbus_read_query *read_query;
+    struct modbus_read_response *read_response;
+    struct modbus_single_write *single_write_query;
+    struct modbus_single_write *single_write_response;
+    struct modbus_multiple_write_query *multiple_write_query;
+    struct modbus_multiple_write_response *multiple_write_response;
+    std::string type;
+    std::string query;
+    std::string response;
+    std::string aggregated;
+    uint16_t address;
+    uint16_t last_address;
+    uint16_t num_of_points;
+    std::string binary_string;
+    uint8_t i;
+    uint8_t data_index;
+
+    switch (aggregated_frame->function_code) {
+    case READ_COIL_STATUS:
+        type = "READ COIL STATUS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        query = get_modbus_read_query_string(read_query);
+        response = get_modbus_read_response_string(read_response);
+        response += ", data: ";
+
+        address = read_query->starting_address + COILS_OFFSET;
+        last_address = address + read_query->num_of_points - 1;
+
+        i = 0;
+        data_index = 0;
+        binary_string = byte_to_binary_string(read_response->data[data_index]);
+        response += binary_string;
+
+        for (; address <= last_address; address++) {
+            if (i == 8) {
+                i = 0;
+                data_index++;
+                binary_string = byte_to_binary_string(
+                    read_response->data[data_index]);
+                response += ", " + binary_string;
+            }
+
+            it = dev->addresses_map.find(address);
+            std::cout << address << " (" << it->second->description
+                << ") reading is " << binary_string[i] << std::endl;
+            std::cout << "Notes: " << it->second->notes << std::endl;
+
+            i++;
+        }
+
+        break;
+    case READ_INPUT_STATUS:
+        std::cout << "AGGREGATED READ INPUT STATUS" << std::endl;
+
+        break;
+    case READ_HOLDING_REGISTERS:
+        std::cout << "AGGREGATED READ HOLDING REGISTERS" << std::endl;
+
+        break;
+    case READ_INPUT_REGISTERS:
+        std::cout << "AGGREGATED READ INPUT REGISTERS" << std::endl;
+
+        break;
+    case FORCE_SINGLE_COIL:
+        std::cout << "AGGREGATED FORCE SINGLE COIL" << std::endl;
+
+        break;
+    case PRESET_SINGLE_REGISTER:
+        std::cout << "AGGREGATED PRESET SINGLE REGISTER" << std::endl;
+
+        break;
+    case READ_EXCEPTION_STATUS:
+        break;
+    case FORCE_MULTIPLE_COILS:
+        std::cout << "AGGREGATED FORCE MULTIPLE COILS" << std::endl;
+
+        break;
+    case PRESET_MULTIPLE_REGISTERS:
+        std::cout << "AGGREGATED PRESET MULTIPLE REGISTERS" << std::endl;
+
+        break;
+    case REPORT_SLAVE_ID:
+        break;
+    default:
+        std::cout << "Function code decoding not yet implemented" << std::endl;
+    }
 
     return true;
 }

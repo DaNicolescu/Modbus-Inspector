@@ -2,6 +2,7 @@
 #define MODBUS_H
 
 #include <stdint.h>
+#include <string>
 
 #define READ_COIL_STATUS            0x01
 #define READ_INPUT_STATUS           0x02
@@ -82,5 +83,18 @@ struct modbus_multiple_write_response *get_modbus_multiple_write_response(
     const uint8_t *payload);
 struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     const uint8_t *payload);
+
+std::string get_modbus_tcp_generic_string(struct modbus_tcp_generic
+                                          *modbus_struct);
+std::string get_modbus_read_query_string(struct modbus_read_query
+                                         *modbus_struct);
+std::string get_modbus_read_response_string(struct modbus_read_response
+                                            *modbus_struct);
+std::string get_modbus_single_write_string(struct modbus_single_write
+                                           *modbus_struct);
+std::string get_modbus_multiple_write_query_string(
+    struct modbus_multiple_write_query *modbus_struct);
+std::string get_modbus_multiple_write_response_string(
+    struct modbus_multiple_write_response *modbus_struct);
 
 #endif

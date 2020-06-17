@@ -5,6 +5,7 @@
 
 typedef struct st_mysql MYSQL;
 
+struct device_struct;
 struct address_struct;
 
 struct modbus_read_query;
@@ -36,7 +37,10 @@ struct db_manager {
     bool add_multiple_write_response(struct modbus_multiple_write_response
                                      *modbus_struct);
 
-    bool add_display_frame(struct modbus_aggregate *modbus_struct);
+    bool add_display_frame(std::string type, std::string query,
+                           std::string response, std::string aggregated);
+    bool add_display_frame(struct device_struct *dev,
+                           struct modbus_aggregate *aggregated_frame);
 };
 
 #endif
