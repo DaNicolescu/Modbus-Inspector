@@ -110,7 +110,7 @@ bool db_manager::create_tables()
 
     std::cout << "addresses table created" << std::endl;
 
-    query = "CREATE TABLE IF NOT EXISTS `aggregated_frames` ("
+    query = "CREATE TABLE IF NOT EXISTS `aggregated_data` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
             "`address_id` INTEGER,"
             "`transaction_id` SMALLINT UNSIGNED,"
@@ -162,7 +162,7 @@ bool db_manager::drop_tables()
         return false;
     }
 
-    query = "DROP TABLE `aggregated_frames`";
+    query = "DROP TABLE `aggregated_data`";
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
