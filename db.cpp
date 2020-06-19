@@ -7,6 +7,7 @@
 #include "device_struct.h"
 #include "modbus.h"
 #include "utils.h"
+#include "config.h"
 
 void db_manager::display_client_version()
 {
@@ -91,6 +92,8 @@ bool db_manager::create_tables()
         return false;
     }
 
+    std::cout << "frames table created" << std::endl;
+
     query = "CREATE TABLE IF NOT EXISTS `addresses` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
             "`slave_id` TINYINT UNSIGNED,"
@@ -104,6 +107,8 @@ bool db_manager::create_tables()
 
         return false;
     }
+
+    std::cout << "addresses table created" << std::endl;
 
     query = "CREATE TABLE IF NOT EXISTS `aggregated_frames` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
@@ -125,11 +130,13 @@ bool db_manager::create_tables()
         return false;
     }
 
+    std::cout << "aggregated frames table created" << std::endl;
+
     query = "CREATE TABLE IF NOT EXISTS `display_frames` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
             "`type` TEXT,"
             "`request` TEXT,"
-            "`response` TEXT",
+            "`response` TEXT,"
             "`aggregated` TEXT)";
 
     if (mysql_query(this->connection, query.c_str())) {
@@ -138,6 +145,8 @@ bool db_manager::create_tables()
 
         return false;
     }
+
+    std::cout << "display frames table created" << std::endl;
 
     return true;
 }
@@ -452,6 +461,7 @@ bool db_manager::add_display_frame(struct device_struct *dev,
     uint16_t last_address;
     uint16_t num_of_points;
     std::string binary_string;
+    std::string data_string;
     uint8_t i;
     uint8_t data_index;
 
@@ -466,6 +476,7 @@ bool db_manager::add_display_frame(struct device_struct *dev,
         query = get_modbus_read_query_string(read_query);
         response = get_modbus_read_response_string(read_response);
         response += ", data: ";
+        aggregated = "";
 
         address = read_query->starting_address + COILS_OFFSET;
         last_address = address + read_query->num_of_points - 1;
@@ -485,42 +496,297 @@ bool db_manager::add_display_frame(struct device_struct *dev,
             }
 
             it = dev->addresses_map.find(address);
-            std::cout << address << " (" << it->second->description
-                << ") reading is " << binary_string[i] << std::endl;
-            std::cout << "Notes: " << it->second->notes << std::endl;
+            aggregated += "address: " + std::to_string(address) + " ("
+                + it->second->description + ") reading is " + binary_string[i]
+                + ", notes: " + it->second->notes + ", ";
 
             i++;
         }
 
+        add_display_frame(type, query, response, aggregated);
+
         break;
     case READ_INPUT_STATUS:
-        std::cout << "AGGREGATED READ INPUT STATUS" << std::endl;
+        type = "READ INPUT STATUS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        query = get_modbus_read_query_string(read_query);
+        response = get_modbus_read_response_string(read_response);
+        response += ", data: ";
+        aggregated = "";
+
+        address = read_query->starting_address + INPUTS_OFFSET;
+        last_address = address + read_query->num_of_points - 1;
+
+        i = 0;
+        data_index = 0;
+        binary_string = byte_to_binary_string(read_response->data[data_index]);
+        response += binary_string;
+
+        for (; address <= last_address; address++) {
+            if (i == 8) {
+                i = 0;
+                data_index++;
+                binary_string = byte_to_binary_string(
+                    read_response->data[data_index]);
+                response += ", " + binary_string;
+            }
+
+            it = dev->addresses_map.find(address);
+            aggregated += "address: " + std::to_string(address) + " ("
+                + it->second->description + ") reading is " + binary_string[i]
+                + ", notes: " + it->second->notes + ", ";
+
+            i++;
+        }
+
+        add_display_frame(type, query, response, aggregated);
 
         break;
     case READ_HOLDING_REGISTERS:
-        std::cout << "AGGREGATED READ HOLDING REGISTERS" << std::endl;
+        type = "READ HOLDING REGISTERS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        query = get_modbus_read_query_string(read_query);
+        response = get_modbus_read_response_string(read_response);
+        response += ", data: ";
+        aggregated = "";
+
+        address = read_query->starting_address + HLD_REGS_OFFSET;
+        last_address = address + read_query->num_of_points - 1;
+
+        data_index = 0;
+
+        for (; address <= last_address; address++) {
+
+            it = dev->addresses_map.find(address);
+            aggregated += "address: " + std::to_string(address) + " ("
+                + it->second->description + ") reading is ";
+
+            if (it->second->type == XLS_FLOAT_TYPE) {
+                data_string = std::to_string(bytes_to_float(
+                        read_response->data[data_index],
+                        read_response->data[data_index + 1]));
+                response += data_string + ", ";
+                aggregated += data_string;
+            } else {
+                data_string = std::to_string(
+                    bytes_to_int(read_response->data[data_index],
+                    read_response->data[data_index + 1]));
+                response += data_string + ", ";
+                aggregated += data_string;
+            }
+
+            aggregated += ", notes: " + it->second->notes + ", ";
+
+            data_index += 2;
+        }
+
+        add_display_frame(type, query, response, aggregated);
 
         break;
     case READ_INPUT_REGISTERS:
-        std::cout << "AGGREGATED READ INPUT REGISTERS" << std::endl;
+        type = "READ INPUT REGISTERS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+        read_response = (struct modbus_read_response*)
+            aggregated_frame->response;
+
+        query = get_modbus_read_query_string(read_query);
+        response = get_modbus_read_response_string(read_response);
+        response += ", data: ";
+        aggregated = "";
+
+        address = read_query->starting_address + INPUT_REGS_OFFSET;
+        last_address = address + read_query->num_of_points - 1;
+
+        data_index = 0;
+
+        for (; address <= last_address; address++) {
+
+            it = dev->addresses_map.find(address);
+            aggregated += "address: " + std::to_string(address) + " ("
+                + it->second->description + ") reading is ";
+
+            if (it->second->type == XLS_FLOAT_TYPE) {
+                data_string = std::to_string(bytes_to_float(
+                        read_response->data[data_index],
+                        read_response->data[data_index + 1]));
+                response += data_string + ", ";
+                aggregated += data_string;
+            } else {
+                data_string = std::to_string(
+                    bytes_to_int(read_response->data[data_index],
+                    read_response->data[data_index + 1]));
+                response += data_string + ", ";
+                aggregated += data_string;
+            }
+
+            aggregated += ", notes: " + it->second->notes + ", ";
+
+            data_index += 2;
+        }
+
+        add_display_frame(type, query, response, aggregated);
 
         break;
     case FORCE_SINGLE_COIL:
-        std::cout << "AGGREGATED FORCE SINGLE COIL" << std::endl;
+        type = "FORCE SINGLE COIL";
+
+        single_write_query = (struct modbus_single_write*)
+            aggregated_frame->query;
+        single_write_response = (struct modbus_single_write*)
+            aggregated_frame->response;
+
+        query = get_modbus_single_write_string(single_write_query);
+        response = get_modbus_single_write_string(single_write_response);
+        response += ", data: ";
+
+        address = single_write_query->address + COILS_OFFSET;
+
+        it = dev->addresses_map.find(address);
+
+        response += std::to_string(single_write_query->value);
+
+        aggregated = "address: " + std::to_string(address) + " ("
+            + it->second->description + ") was set to "
+            + std::to_string(single_write_query->value);
+
+        aggregated += ", notes: " + it->second->notes;
+
+        add_display_frame(type, query, response, aggregated);
 
         break;
     case PRESET_SINGLE_REGISTER:
-        std::cout << "AGGREGATED PRESET SINGLE REGISTER" << std::endl;
+        type = "PRESET SINGLE REGISTER";
+
+        single_write_query = (struct modbus_single_write*)
+            aggregated_frame->query;
+        single_write_response = (struct modbus_single_write*)
+            aggregated_frame->response;
+
+        query = get_modbus_single_write_string(single_write_query);
+        response = get_modbus_single_write_string(single_write_response);
+        response += ", data: ";
+
+        address = single_write_query->address + HLD_REGS_OFFSET;
+
+        it = dev->addresses_map.find(address);
+
+        aggregated = "address: " + std::to_string(address) + " ("
+            + it->second->description + ") was set to ";
+
+        if (it->second->type == XLS_FLOAT_TYPE) {
+            data_string = std::to_string(float(single_write_query->value));
+            response += data_string;
+            aggregated += data_string;
+        } else {
+            data_string = std::to_string(single_write_query->value);
+            response += data_string;
+            aggregated += data_string;
+        }
+
+        aggregated += ", notes: " + it->second->notes;
+
+        add_display_frame(type, query, response, aggregated);
 
         break;
     case READ_EXCEPTION_STATUS:
         break;
     case FORCE_MULTIPLE_COILS:
-        std::cout << "AGGREGATED FORCE MULTIPLE COILS" << std::endl;
+        type = "FORCE MULTIPLE COILS";
+
+        multiple_write_query = (struct modbus_multiple_write_query*)
+            aggregated_frame->query;
+        multiple_write_response = (struct modbus_multiple_write_response*)
+            aggregated_frame->response;
+
+        query = get_modbus_multiple_write_query_string(multiple_write_query);
+        response = get_modbus_multiple_write_response_string(
+            multiple_write_response);
+        response += ", data: ";
+        aggregated = "";
+
+        address = multiple_write_query->starting_address + COILS_OFFSET;
+        last_address = address + multiple_write_query->num_of_points - 1;
+
+        i = 0;
+        data_index = 0;
+        binary_string = byte_to_binary_string(
+            multiple_write_query->data[data_index]);
+        response += binary_string;
+
+        for (; address <= last_address; address++) {
+            if (i == 8) {
+                i = 0;
+                data_index++;
+                binary_string = byte_to_binary_string(
+                    multiple_write_query->data[data_index]);
+                response += ", " + binary_string;
+            }
+
+            it = dev->addresses_map.find(address);
+            aggregated += "address: " + std::to_string(address) + " ("
+                + it->second->description + ") was set to " + binary_string[i]
+                + ", notes: " + it->second->notes;
+
+            i++;
+        }
+
+        add_display_frame(type, query, response, aggregated);
 
         break;
     case PRESET_MULTIPLE_REGISTERS:
-        std::cout << "AGGREGATED PRESET MULTIPLE REGISTERS" << std::endl;
+        type = "PRESET MULTIPLE REGISTERS";
+
+        multiple_write_query = (struct modbus_multiple_write_query*)
+            aggregated_frame->query;
+        multiple_write_response = (struct modbus_multiple_write_response*)
+            aggregated_frame->response;
+
+        query = get_modbus_multiple_write_query_string(multiple_write_query);
+        response = get_modbus_multiple_write_response_string(
+            multiple_write_response);
+        response += ", data: ";
+        aggregated = "";
+
+        address = multiple_write_query->starting_address + HLD_REGS_OFFSET;
+        last_address = address + multiple_write_query->num_of_points - 1;
+
+        data_index = 0;
+
+        for (; address <= last_address; address++) {
+
+            it = dev->addresses_map.find(address);
+            aggregated += "address: " + std::to_string(address) + " ("
+                + it->second->description + ") was set to ";
+
+            if (it->second->type == XLS_FLOAT_TYPE) {
+                data_string = std::to_string(bytes_to_float(
+                    multiple_write_query->data[data_index],
+                    multiple_write_query->data[data_index + 1]));
+                response += data_string + ", ";
+                aggregated += data_string;
+            } else {
+                data_string = std::to_string(bytes_to_int(
+                    multiple_write_query->data[data_index],
+                    multiple_write_query->data[data_index + 1]));
+                response += data_string + ", ";
+                aggregated += data_string;
+            }
+
+            aggregated += ", notes: " + it->second->notes + ", ";
+
+            data_index += 2;
+        }
+
+        add_display_frame(type, query, response, aggregated);
 
         break;
     case REPORT_SLAVE_ID:
