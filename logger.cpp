@@ -71,7 +71,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                        const uint8_t *packet)
 {
     struct ether_header *ethernet_header;
-    struct modbus_tcp_generic *modbus;
+    struct modbus_tcp_generic *modbus_generic;
     struct modbus_read_query *read_query;
     struct modbus_read_response *read_response;
     struct modbus_single_write *single_write_packet;
@@ -146,44 +146,45 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         return;
     }
 
-    modbus = (struct modbus_tcp_generic*) payload;
+    modbus_generic = get_modbus_tcp_generic(payload);
 
-    query_packet = modbus_frame_is_query(htons(modbus->transaction_id));
+    query_packet = modbus_frame_is_query(modbus_generic->transaction_id);
 
     if (query_packet) {
         modbus_aggregated_frame = new modbus_aggregate;
+        uint16_t transaction_id = modbus_generic->transaction_id;
         modbus_aggregated_frames.insert(std::pair<uint16_t,
-            struct modbus_aggregate*>(htons(modbus->transaction_id),
-                                      modbus_aggregated_frame));
+            struct modbus_aggregate*>(transaction_id, modbus_aggregated_frame));
     } else {
-        modbus_aggregated_frame = modbus_aggregated_frames.find(htons(
-            modbus->transaction_id))->second;
-        modbus_aggregated_frames.erase(htons(modbus->transaction_id));
+        modbus_aggregated_frame = modbus_aggregated_frames.find(
+            modbus_generic->transaction_id)->second;
+        modbus_aggregated_frames.erase(modbus_generic->transaction_id);
     }
 
     std::cout << "MODBUS " << (query_packet ? "query" : "response")
         << std::endl;
-    std::cout << "transaction id: " << htons(modbus->transaction_id)
+    std::cout << "transaction id: " << modbus_generic->transaction_id
         << std::endl;
-    std::cout << "protocol id: " << htons(modbus->protocol_id) << std::endl;
-    std::cout << "length: " << htons(modbus->length) << std::endl;
-    std::cout << "slave id: " << unsigned(modbus->unit_id) << std::endl;
-    std::cout << "function code: " << unsigned(modbus->function_code)
+    std::cout << "protocol id: " << modbus_generic->protocol_id << std::endl;
+    std::cout << "length: " << modbus_generic->length << std::endl;
+    std::cout << "slave id: " << unsigned(modbus_generic->unit_id) << std::endl;
+    std::cout << "function code: " << unsigned(modbus_generic->function_code)
         << std::endl;
 
-    dev = get_device(modbus->unit_id);
+    dev = get_device(modbus_generic->unit_id);
 
     if (!dev) {
-        std::cout << "The device with slave id " << unsigned(modbus->unit_id)
-            << " does not exist" << std::endl;
+        std::cout << "The device with slave id "
+            << unsigned(modbus_generic->unit_id) << " does not exist"
+            << std::endl;
 
         std::cout << std::endl;
 
         return;
     }
 
-    if (!dev->supported_function(modbus->function_code)) {
-        std::cout << "Function code " << unsigned(modbus->function_code)
+    if (!dev->supported_function(modbus_generic->function_code)) {
+        std::cout << "Function code " << unsigned(modbus_generic->function_code)
             << " not supported" << std::endl;
 
         std::cout << std::endl;
@@ -191,7 +192,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         return;
     }
 
-    switch (modbus->function_code) {
+    switch (modbus_generic->function_code) {
     case READ_COIL_STATUS:
         std::cout << "READ COIL STATUS" << std::endl;
 
@@ -217,7 +218,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                    read_query->num_of_points);
 
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
@@ -267,7 +269,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             dev->display_addresses(read_query->starting_address + INPUTS_OFFSET,
                                    read_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
@@ -321,7 +324,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                    + HLD_REGS_OFFSET,
                                    read_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
@@ -369,7 +373,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                    + INPUT_REGS_OFFSET,
                                    read_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
@@ -413,7 +418,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         if (query_packet) {
             db->add_single_write(single_write_packet, 0);
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = single_write_packet;
 
         } else {
@@ -451,7 +457,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         if (query_packet) {
             db->add_single_write(single_write_packet, 0);
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = single_write_packet;
         } else {
             db->add_single_write(single_write_packet, 1);
@@ -498,7 +505,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                    + COILS_OFFSET,
                                    multiple_write_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = multiple_write_query;
         } else {
             multiple_write_response = get_modbus_multiple_write_response(
@@ -564,7 +572,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                                    + HLD_REGS_OFFSET,
                                    multiple_write_query->num_of_points);
 
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = multiple_write_query;
         } else {
             multiple_write_response = get_modbus_multiple_write_response(
@@ -604,7 +613,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "REPORT SLAVE ID" << std::endl;
 
         if (query_packet) {
-            modbus_aggregated_frame->function_code = modbus->function_code;
+            modbus_aggregated_frame->function_code =
+                modbus_generic->function_code;
             modbus_aggregated_frame->query = NULL;
         } else {
             report_slave_id_response = get_modbus_report_slave_id_response(

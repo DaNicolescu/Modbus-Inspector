@@ -11,6 +11,19 @@ void reorder_modbus_tcp_generic_bytes(struct modbus_tcp_generic *modbus_struct)
     modbus_struct->length = htons(modbus_struct->length);
 }
 
+struct modbus_tcp_generic *get_modbus_tcp_generic(const uint8_t *payload)
+{
+    struct modbus_tcp_generic *modbus_struct;
+
+    modbus_struct = new modbus_tcp_generic;
+
+    memcpy(modbus_struct, payload, sizeof(struct modbus_tcp_generic));
+
+    reorder_modbus_tcp_generic_bytes(modbus_struct);
+
+    return modbus_struct;
+}
+
 struct modbus_read_query *get_modbus_read_query(const uint8_t *payload)
 {
     struct modbus_read_query *modbus_struct;

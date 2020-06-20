@@ -74,6 +74,7 @@ struct modbus_aggregate {
     void *response;
 };
 
+struct modbus_tcp_generic *get_modbus_tcp_generic(const uint8_t *payload);
 struct modbus_read_query *get_modbus_read_query(const uint8_t *payload);
 struct modbus_read_response *get_modbus_read_response(const uint8_t *payload);
 struct modbus_single_write *get_modbus_single_write(const uint8_t *payload);
