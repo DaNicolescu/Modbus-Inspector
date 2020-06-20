@@ -98,4 +98,16 @@ std::string get_modbus_multiple_write_query_string(
 std::string get_modbus_multiple_write_response_string(
     const struct modbus_multiple_write_response *modbus_struct);
 
+void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
+                                bool query_packet);
+void display_modbus_read_query(const struct modbus_read_query *modbus_struct);
+void display_modbus_read_response(const struct modbus_read_response
+                                  *modbus_struct);
+void display_modbus_single_write(const struct modbus_single_write
+                                 *modbus_struct, bool query_packet);
+void display_modbus_multiple_write_query(
+    const struct modbus_multiple_write_query *modbus_struct);
+void display_modbus_multiple_write_response(
+    const struct modbus_multiple_write_response *modbus_struct);
+
 #endif

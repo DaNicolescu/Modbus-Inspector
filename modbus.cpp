@@ -192,3 +192,66 @@ std::string get_modbus_multiple_write_response_string(
         + ", number of points: "
         + std::to_string(modbus_struct->num_of_points);
 }
+
+void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
+                                bool query_packet)
+{
+    std::cout << "MODBUS " << (query_packet ? "query" : "response")
+        << std::endl;
+    std::cout << "transaction id: " << modbus_struct->transaction_id
+        << std::endl;
+    std::cout << "protocol id: " << modbus_struct->protocol_id << std::endl;
+    std::cout << "length: " << modbus_struct->length << std::endl;
+    std::cout << "slave id: " << unsigned(modbus_struct->unit_id) << std::endl;
+    std::cout << "function code: " << unsigned(modbus_struct->function_code)
+        << std::endl;
+}
+
+void display_modbus_read_query(const struct modbus_read_query *modbus_struct)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), true);
+
+    std::cout << "starting address: " << modbus_struct->starting_address
+        << std::endl;
+    std::cout << "num of points: " << modbus_struct->num_of_points << std::endl;
+}
+
+void display_modbus_read_response(const struct modbus_read_response
+                                  *modbus_struct)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+
+    std::cout << "byte count: " << unsigned(modbus_struct->byte_count)
+        << std::endl;
+}
+
+void display_modbus_single_write(const struct modbus_single_write
+                                 *modbus_struct, bool query_packet)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), query_packet);
+
+    std::cout << "address: " << modbus_struct->address << std::endl;
+    std::cout << "value: " << modbus_struct->value << std::endl;
+}
+
+void display_modbus_multiple_write_query(
+    const struct modbus_multiple_write_query *modbus_struct)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), true);
+
+    std::cout << "starting address: " << modbus_struct->starting_address
+        << std::endl;
+    std::cout << "num of points: " << modbus_struct->num_of_points << std::endl;
+    std::cout << "byte count: " << unsigned(modbus_struct->byte_count)
+        << std::endl;
+}
+
+void display_modbus_multiple_write_response(
+    const struct modbus_multiple_write_response *modbus_struct)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+
+    std::cout << "starting address: " << modbus_struct->starting_address
+        << std::endl;
+    std::cout << "num of points: " << modbus_struct->num_of_points << std::endl;
+}
