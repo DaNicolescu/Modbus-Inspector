@@ -89,6 +89,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     int tcp_header_length;
     int payload_length;
     bool query_packet;
+    std::string errors;
 
     // std::cout << "entered handler" << std::endl;
 
@@ -152,6 +153,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
     if (query_packet) {
         modbus_aggregated_frame = new modbus_aggregate;
+        modbus_aggregated_frame->query = NULL;
+        modbus_aggregated_frame->response = NULL;
         uint16_t transaction_id = modbus_generic->transaction_id;
         modbus_aggregated_frames.insert(std::pair<uint16_t,
             struct modbus_aggregate*>(transaction_id, modbus_aggregated_frame));
@@ -161,32 +164,29 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         modbus_aggregated_frames.erase(modbus_generic->transaction_id);
     }
 
-    std::cout << "MODBUS " << (query_packet ? "query" : "response")
-        << std::endl;
-    std::cout << "transaction id: " << modbus_generic->transaction_id
-        << std::endl;
-    std::cout << "protocol id: " << modbus_generic->protocol_id << std::endl;
-    std::cout << "length: " << modbus_generic->length << std::endl;
-    std::cout << "slave id: " << unsigned(modbus_generic->unit_id) << std::endl;
-    std::cout << "function code: " << unsigned(modbus_generic->function_code)
-        << std::endl;
-
     dev = get_device(modbus_generic->unit_id);
 
     if (!dev) {
-        std::cout << "The device with slave id "
-            << unsigned(modbus_generic->unit_id) << " does not exist"
-            << std::endl;
+        errors = "The device with slave id "
+            + std::to_string(modbus_generic->unit_id)
+            + " does not exist";
 
+        db->add_modbus_generic(modbus_generic, errors);
+        
+        std::cout << errors << std::endl;
         std::cout << std::endl;
 
         return;
     }
 
     if (!dev->supported_function(modbus_generic->function_code)) {
-        std::cout << "Function code " << unsigned(modbus_generic->function_code)
-            << " not supported" << std::endl;
+        errors = "Function code "
+            + std::to_string(modbus_generic->function_code)
+            + " not supported";
 
+        db->add_modbus_generic(modbus_generic, errors);
+
+        std::cout << errors << std::endl;
         std::cout << std::endl;
 
         return;
@@ -201,34 +201,37 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             if (!dev->valid_read_coils_addresses(read_query->starting_address,
                                                  read_query->num_of_points)) {
-                std::cout << "No such address exists" << std::endl;
+                errors = "Invalid addresses";
+
+                db->add_read_query(read_query, errors);
+
+                std::cout << errors << std::endl;
                 std::cout << std::endl;
 
-                return;
+                display_modbus_read_query(read_query);
+            } else {
+                db->add_read_query(read_query);
+
+                display_modbus_read_query(read_query);
+                dev->display_addresses(read_query->starting_address
+                                       + COILS_OFFSET,
+                                       read_query->num_of_points);
+
+                modbus_aggregated_frame->function_code =
+                    modbus_generic->function_code;
+                modbus_aggregated_frame->query = read_query;
             }
-
-            db->add_read_query(read_query);
-
-            display_modbus_read_query(read_query);
-            dev->display_addresses(read_query->starting_address + COILS_OFFSET,
-                                   read_query->num_of_points);
-
-            modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
 
             db->add_read_response(read_response);
-
-            modbus_aggregated_frame->response = read_response;
-
-            std::cout << std::endl;
-
             display_modbus_read_response(read_response);
-            dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = read_response;
+                dev->display_addresses(modbus_aggregated_frame);
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;
@@ -240,34 +243,37 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             if (!dev->valid_inputs_addresses(read_query->starting_address,
                                              read_query->num_of_points)) {
-                std::cout << "No such address exists" << std::endl;
+                errors = "Invalid addresses";
+
+                db->add_read_query(read_query, errors);
+
+                std::cout << errors << std::endl;
                 std::cout << std::endl;
 
-                return;
+                display_modbus_read_query(read_query);
+            } else {
+                db->add_read_query(read_query);
+
+                display_modbus_read_query(read_query);
+                dev->display_addresses(read_query->starting_address
+                                       + INPUTS_OFFSET,
+                                       read_query->num_of_points);
+
+                modbus_aggregated_frame->function_code =
+                    modbus_generic->function_code;
+                modbus_aggregated_frame->query = read_query;
             }
-
-            db->add_read_query(read_query);
-
-            display_modbus_read_query(read_query);
-            dev->display_addresses(read_query->starting_address + INPUTS_OFFSET,
-                                   read_query->num_of_points);
-
-            modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
 
             db->add_read_response(read_response);
-
-            modbus_aggregated_frame->response = read_response;
-
-            std::cout << std::endl;
-
             display_modbus_read_response(read_response);
-            dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = read_response;
+                dev->display_addresses(modbus_aggregated_frame);
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;

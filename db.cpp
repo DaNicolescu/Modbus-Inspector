@@ -80,7 +80,6 @@ bool db_manager::create_tables()
                         "`starting_address` SMALLINT UNSIGNED,"
                         "`num_of_points` SMALLINT UNSIGNED,"
                         "`byte_count` TINYINT UNSIGNED,"
-                        "`run_indicator_status` TINYINT UNSIGNED,"
                         "`value` VARCHAR(10),"
                         "`data` TEXT,"
                         "`errors` TEXT)";
@@ -215,6 +214,54 @@ bool db_manager::add_address(struct address_struct *address, uint8_t slave_id)
     return true;
 }
 
+bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
+                                    *modbus_struct)
+{
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code) VALUES("
+                        + std::to_string(modbus_struct->transaction_id) + ", "
+                        + std::to_string(modbus_struct->protocol_id) + ", "
+                        + std::to_string(modbus_struct->length) + ", "
+                        + std::to_string(modbus_struct->unit_id) + ", "
+                        + std::to_string(modbus_struct->function_code) + ")";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
+                                    *modbus_struct, const std::string &errors)
+{
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, errors) "
+                        "VALUES("
+                        + std::to_string(modbus_struct->transaction_id) + ", "
+                        + std::to_string(modbus_struct->protocol_id) + ", "
+                        + std::to_string(modbus_struct->length) + ", "
+                        + std::to_string(modbus_struct->unit_id) + ", "
+                        + std::to_string(modbus_struct->function_code) + ", '"
+                        + errors + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
@@ -231,6 +278,37 @@ bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct)
                             modbus_struct->generic_header.function_code) + ", "
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ")";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct,
+                                const std::string &errors)
+{
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "starting_address, num_of_points, errors) VALUES(0, "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->starting_address) + ", "
+                        + std::to_string(modbus_struct->num_of_points) + ", '"
+                        + errors + "')";
 
     std::cout << "db query: " << query << std::endl;
 
@@ -423,8 +501,10 @@ bool db_manager::add_multiple_write_response(
     return true;
 }
 
-bool db_manager::add_display_frame(std::string type, std::string query,
-                                   std::string response, std::string aggregated)
+bool db_manager::add_display_frame(const std::string &type,
+                                   const std::string &query,
+                                   const std::string &response,
+                                   const std::string &aggregated)
 {
     std::string db_query = "INSERT INTO `display_frames`(type, request, "
                            "response, aggregated) VALUES('" + type + "', '"
@@ -445,7 +525,7 @@ bool db_manager::add_display_frame(std::string type, std::string query,
 
 bool db_manager::add_aggregated_data(int address_id, uint16_t transaction_id,
                          uint8_t slave_id, uint16_t address, uint8_t operation,
-                         std::string value)
+                         const std::string &value)
 {
     std::string db_query = "INSERT INTO `aggregated_data`(address_id, "
                            "transaction_id, slave_id, address, operation, "
