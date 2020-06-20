@@ -412,6 +412,39 @@ bool db_manager::add_single_write(
     return true;
 }
 
+bool db_manager::add_single_write(
+    const struct modbus_single_write *modbus_struct, uint8_t type,
+    const std::string &errors)
+{
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "starting_address, value, errors) VALUES("
+                        + std::to_string(type) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->address) + ", "
+                        + std::to_string(modbus_struct->value) + ", '"
+                        + errors + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_multiple_write_query(
     const struct modbus_multiple_write_query *modbus_struct)
 {
@@ -471,6 +504,66 @@ bool db_manager::add_multiple_write_query(
     return true;
 }
 
+bool db_manager::add_multiple_write_query(
+    const struct modbus_multiple_write_query *modbus_struct,
+    const std::string &errors)
+{
+    std::string request_data;
+    uint8_t byte_count;
+    uint8_t function_code;
+
+    byte_count = modbus_struct->byte_count;
+    function_code = modbus_struct->generic_header.function_code;
+
+    if (function_code == FORCE_MULTIPLE_COILS) {
+        if (byte_count > 0)
+            request_data = byte_to_binary_string(modbus_struct->data[0]);
+
+        for (uint8_t i = 1; i < byte_count; i++) {
+            request_data += ", "
+                + byte_to_binary_string(modbus_struct->data[i]);
+        }
+    } else if (function_code == PRESET_MULTIPLE_REGISTERS) {
+        if (byte_count > 1) {
+            request_data = std::to_string(bytes_to_int(modbus_struct->data[0],
+                                          modbus_struct->data[1]));
+        }
+
+        for (uint8_t i = 2; i < byte_count; i += 2) {
+            request_data += ", " + std::to_string(bytes_to_int(
+                    modbus_struct->data[i], modbus_struct->data[i + 1]));
+        }
+    }
+
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "starting_address, num_of_points, byte_count, data, "
+                        "errors) VALUES(0, " + std::to_string(
+                                modbus_struct->generic_header.transaction_id)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->starting_address) + ", "
+                        + std::to_string(modbus_struct->num_of_points) + ", "
+                        + std::to_string(modbus_struct->byte_count) + ", '"
+                        + request_data + "', '" + errors  + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_multiple_write_response(
     const struct modbus_multiple_write_response *modbus_struct)
 {
@@ -488,6 +581,38 @@ bool db_manager::add_multiple_write_response(
                             modbus_struct->generic_header.function_code) + ", "
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ")";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool db_manager::add_multiple_write_response(
+    const struct modbus_multiple_write_response *modbus_struct,
+    const std::string &errors)
+{
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "starting_address, num_of_points, errors) VALUES(1, "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->starting_address) + ", "
+                        + std::to_string(modbus_struct->num_of_points) + ", '"
+                        + errors + "')";
 
     std::cout << "db query: " << query << std::endl;
 

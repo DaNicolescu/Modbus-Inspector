@@ -38,10 +38,16 @@ struct db_manager {
     bool add_read_response(const struct modbus_read_response *modbus_struct);
     bool add_single_write(const struct modbus_single_write *modbus_struct,
                           uint8_t type);
+    bool add_single_write(const struct modbus_single_write *modbus_struct,
+                          uint8_t type, const std::string &errors);
     bool add_multiple_write_query(const struct modbus_multiple_write_query
                                   *modbus_struct);
+    bool add_multiple_write_query(const struct modbus_multiple_write_query
+                                  *modbus_struct, const std::string &errors);
     bool add_multiple_write_response(const struct modbus_multiple_write_response
                                      *modbus_struct);
+    bool add_multiple_write_response(const struct modbus_multiple_write_response
+                                     *modbus_struct, const std::string &errors);
 
     bool add_display_frame(const std::string &type, const std::string &query,
                            const std::string &response,

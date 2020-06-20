@@ -286,33 +286,37 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             if (!dev->valid_read_hld_regs_addresses(
                     read_query->starting_address,
                     read_query->num_of_points)) {
-                std::cout << "No such address exists" << std::endl;
+                errors = "Invalid addresses";
+
+                db->add_read_query(read_query, errors);
+
+                std::cout << errors << std::endl;
                 std::cout << std::endl;
 
-                return;
+                display_modbus_read_query(read_query);
+            } else {
+                db->add_read_query(read_query);
+
+                display_modbus_read_query(read_query);
+                dev->display_addresses(read_query->starting_address
+                                       + HLD_REGS_OFFSET,
+                                       read_query->num_of_points);
+
+                modbus_aggregated_frame->function_code =
+                    modbus_generic->function_code;
+                modbus_aggregated_frame->query = read_query;
             }
-
-            db->add_read_query(read_query);
-
-            display_modbus_read_query(read_query);
-            dev->display_addresses(read_query->starting_address
-                                   + HLD_REGS_OFFSET,
-                                   read_query->num_of_points);
-
-            modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
 
             db->add_read_response(read_response);
-
-            modbus_aggregated_frame->response = read_response;
-
             display_modbus_read_response(read_response);
-            dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = read_response;
+                dev->display_addresses(modbus_aggregated_frame);
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;
@@ -324,33 +328,37 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             if (!dev->valid_input_regs_addresses(read_query->starting_address,
                                                  read_query->num_of_points)) {
-                std::cout << "No such address exists" << std::endl;
+                errors = "Invalid addresses";
+
+                db->add_read_query(read_query, errors);
+
+                std::cout << errors << std::endl;
                 std::cout << std::endl;
 
-                return;
+                display_modbus_read_query(read_query);
+            } else {
+                db->add_read_query(read_query);
+
+                display_modbus_read_query(read_query);
+                dev->display_addresses(read_query->starting_address
+                                       + INPUT_REGS_OFFSET,
+                                       read_query->num_of_points);
+
+                modbus_aggregated_frame->function_code =
+                    modbus_generic->function_code;
+                modbus_aggregated_frame->query = read_query;
             }
-
-            db->add_read_query(read_query);
-
-            display_modbus_read_query(read_query);
-            dev->display_addresses(read_query->starting_address
-                                   + INPUT_REGS_OFFSET,
-                                   read_query->num_of_points);
-
-            modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = read_query;
         } else {
             read_response = get_modbus_read_response(payload);
 
             db->add_read_response(read_response);
-
-            modbus_aggregated_frame->response = read_response;
-
             display_modbus_read_response(read_response);
-            dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = read_response;
+                dev->display_addresses(modbus_aggregated_frame);
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;
@@ -359,34 +367,38 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         single_write_packet = get_modbus_single_write(payload);
 
-        if (!dev->valid_write_coils_addresses(single_write_packet->address,
-                                              1)) {
-            std::cout << "No such address exists" << std::endl;
-            std::cout << std::endl;
-
-            return;
-        }
-
         if (query_packet) {
-            db->add_single_write(single_write_packet, 0);
+            if (!dev->valid_write_coils_addresses(single_write_packet->address,
+                                                  1)) {
+                errors = "Invalid address";
 
-            modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = single_write_packet;
+                db->add_single_write(single_write_packet, 0, errors);
 
-            display_modbus_single_write(single_write_packet, true);
-            dev->display_addresses(single_write_packet->address + COILS_OFFSET,
-                                   1);
+                std::cout << errors << std::endl;
+                std::cout << std::endl;
 
+                display_modbus_single_write(single_write_packet, true);
+            } else {
+                db->add_single_write(single_write_packet, 0);
+
+                display_modbus_single_write(single_write_packet, true);
+                dev->display_addresses(single_write_packet->address
+                                       + COILS_OFFSET,
+                                       1);
+
+                modbus_aggregated_frame->function_code =
+                    modbus_generic->function_code;
+                modbus_aggregated_frame->query = single_write_packet;
+            }
         } else {
             db->add_single_write(single_write_packet, 1);
-
-            modbus_aggregated_frame->response = single_write_packet;
-
             display_modbus_single_write(single_write_packet, false);
-            dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = single_write_packet;
+                dev->display_addresses(modbus_aggregated_frame);
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;
@@ -395,33 +407,37 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         single_write_packet = get_modbus_single_write(payload);
 
-        if (!dev->valid_write_hld_regs_addresses(single_write_packet->address,
-                                                 1)) {
-            std::cout << "No such address exists" << std::endl;
-            std::cout << std::endl;
-
-            return;
-        }
-
         if (query_packet) {
-            db->add_single_write(single_write_packet, 0);
+            if (!dev->valid_write_hld_regs_addresses(
+                    single_write_packet->address, 1)) {
+                errors = "Invalid address";
 
-            modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = single_write_packet;
+                db->add_single_write(single_write_packet, 0, errors);
 
-            display_modbus_single_write(single_write_packet, true);
-            dev->display_addresses(single_write_packet->address
-                                   + HLD_REGS_OFFSET, 1);
+                std::cout << errors << std::endl;
+                std::cout << std::endl;
+
+                display_modbus_single_write(single_write_packet, true);
+            } else {
+                db->add_single_write(single_write_packet, 0);
+
+                display_modbus_single_write(single_write_packet, true);
+                dev->display_addresses(single_write_packet->address
+                                       + HLD_REGS_OFFSET, 1);
+
+                modbus_aggregated_frame->function_code =
+                    modbus_generic->function_code;
+                modbus_aggregated_frame->query = single_write_packet;
+            }
         } else {
             db->add_single_write(single_write_packet, 1);
-
-            modbus_aggregated_frame->response = single_write_packet;
-
             display_modbus_single_write(single_write_packet, false);
-            dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = single_write_packet;
+                dev->display_addresses(modbus_aggregated_frame);
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;
@@ -436,35 +452,37 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             if (!dev->valid_write_coils_addresses(
                     multiple_write_query->starting_address,
                     multiple_write_query->num_of_points)) {
-                std::cout << "No such address exists" << std::endl;
+                errors = "Invalid addresses";
+
+                db->add_multiple_write_query(multiple_write_query, errors);
+
+                std::cout << errors << std::endl;
                 std::cout << std::endl;
 
-                return;
+                display_modbus_multiple_write_query(multiple_write_query);
+            } else {
+                db->add_multiple_write_query(multiple_write_query);
+
+                display_modbus_multiple_write_query(multiple_write_query);
+                dev->display_addresses(multiple_write_query->starting_address
+                                       + COILS_OFFSET,
+                                       multiple_write_query->num_of_points);
+
+                modbus_aggregated_frame->function_code =
+                    modbus_generic->function_code;
+                modbus_aggregated_frame->query = multiple_write_query;
             }
-
-            db->add_multiple_write_query(multiple_write_query);
-
-            display_modbus_multiple_write_query(multiple_write_query);
-            dev->display_addresses(multiple_write_query->starting_address
-                                   + COILS_OFFSET,
-                                   multiple_write_query->num_of_points);
-
-            modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = multiple_write_query;
         } else {
             multiple_write_response = get_modbus_multiple_write_response(
                 payload);
 
-            db->add_multiple_write_response(multiple_write_response);
 
             if (!dev->valid_write_coils_addresses(
                     multiple_write_response->starting_address,
                     multiple_write_response->num_of_points)) {
-                std::cout << "No such address exists" << std::endl;
-                std::cout << std::endl;
+                errors = "Invalid addresses";
 
-                return;
+                db->add_multiple_write_response(multiple_write_response, errors);
             }
 
             modbus_aggregated_frame->response = multiple_write_response;
