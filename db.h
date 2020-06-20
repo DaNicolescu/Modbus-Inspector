@@ -39,8 +39,11 @@ struct db_manager {
 
     bool add_display_frame(std::string type, std::string query,
                            std::string response, std::string aggregated);
-    bool add_display_frame(struct device_struct *dev,
-                           struct modbus_aggregate *aggregated_frame);
+    bool add_aggregated_data(int address_id, uint16_t transaction_id,
+                             uint8_t slave_id, uint16_t address,
+                             uint8_t operation, std::string value);
+    bool add_aggregated_frame(struct device_struct *dev,
+                              struct modbus_aggregate *aggregated_frame);
 };
 
 #endif

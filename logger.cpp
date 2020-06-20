@@ -239,7 +239,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_display_frame(dev, modbus_aggregated_frame);
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
@@ -289,7 +289,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_display_frame(dev, modbus_aggregated_frame);
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
@@ -340,7 +340,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_display_frame(dev, modbus_aggregated_frame);
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
@@ -388,7 +388,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_display_frame(dev, modbus_aggregated_frame);
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
@@ -425,7 +425,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_display_frame(dev, modbus_aggregated_frame);
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
@@ -462,7 +462,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             dev->display_addresses(modbus_aggregated_frame);
 
-            db->add_display_frame(dev, modbus_aggregated_frame);
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
@@ -529,6 +529,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             std::cout << std::endl;
 
             dev->display_addresses(modbus_aggregated_frame);
+
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
@@ -593,6 +595,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             std::cout << std::endl;
 
             dev->display_addresses(modbus_aggregated_frame);
+
+            db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
 
         break;
