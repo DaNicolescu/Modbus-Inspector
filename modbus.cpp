@@ -126,7 +126,7 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     return modbus_struct;
 }
 
-std::string get_modbus_tcp_generic_string(struct modbus_tcp_generic
+std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
                                           *modbus_struct)
 {
     return "transaction id: " +  std::to_string(modbus_struct->transaction_id)
@@ -136,7 +136,7 @@ std::string get_modbus_tcp_generic_string(struct modbus_tcp_generic
         + ", function code: " + std::to_string(modbus_struct->function_code);
 }
 
-std::string get_modbus_read_query_string(struct modbus_read_query
+std::string get_modbus_read_query_string(const struct modbus_read_query
                                          *modbus_struct)
 {
     return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
@@ -145,14 +145,14 @@ std::string get_modbus_read_query_string(struct modbus_read_query
         + ", number of points: " + std::to_string(modbus_struct->num_of_points);
 }
 
-std::string get_modbus_read_response_string(struct modbus_read_response
+std::string get_modbus_read_response_string(const struct modbus_read_response
                                             *modbus_struct)
 {
     return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
         + ", byte count: " +  std::to_string(modbus_struct->byte_count);
 }
 
-std::string get_modbus_single_write_string(struct modbus_single_write
+std::string get_modbus_single_write_string(const struct modbus_single_write
                                            *modbus_struct)
 {
     return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
@@ -160,7 +160,7 @@ std::string get_modbus_single_write_string(struct modbus_single_write
 }
 
 std::string get_modbus_multiple_write_query_string(
-    struct modbus_multiple_write_query *modbus_struct)
+    const struct modbus_multiple_write_query *modbus_struct)
 {
     return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
         + ", starting address: "
@@ -171,7 +171,7 @@ std::string get_modbus_multiple_write_query_string(
 }
 
 std::string get_modbus_multiple_write_response_string(
-    struct modbus_multiple_write_response *modbus_struct)
+    const struct modbus_multiple_write_response *modbus_struct)
 {
     return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
         + ", starting address: "

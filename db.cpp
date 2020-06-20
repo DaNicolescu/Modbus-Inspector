@@ -192,8 +192,7 @@ bool db_manager::drop_tables()
     return true;
 }
 
-bool db_manager::add_address(struct address_struct *address,
-                             uint8_t slave_id)
+bool db_manager::add_address(struct address_struct *address, uint8_t slave_id)
 {
     std::string query = "INSERT INTO `addresses`(slave_id, address, "
                         "description, notes) VALUES("
@@ -216,7 +215,7 @@ bool db_manager::add_address(struct address_struct *address,
     return true;
 }
 
-bool db_manager::add_read_query(struct modbus_read_query *modbus_struct)
+bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
                         "protocol_id, length, slave_id, function_code, "
@@ -245,7 +244,8 @@ bool db_manager::add_read_query(struct modbus_read_query *modbus_struct)
     return true;
 }
 
-bool db_manager::add_read_response(struct modbus_read_response *modbus_struct)
+bool db_manager::add_read_response(
+    const struct modbus_read_response *modbus_struct)
 {
     std::string response_data;
     uint8_t byte_count;
@@ -303,8 +303,8 @@ bool db_manager::add_read_response(struct modbus_read_response *modbus_struct)
     return true;
 }
 
-bool db_manager::add_single_write(struct modbus_single_write *modbus_struct,
-                                  uint8_t type)
+bool db_manager::add_single_write(
+    const struct modbus_single_write *modbus_struct, uint8_t type)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
                         "protocol_id, length, slave_id, function_code, "
@@ -334,8 +334,8 @@ bool db_manager::add_single_write(struct modbus_single_write *modbus_struct,
     return true;
 }
 
-bool db_manager::add_multiple_write_query(struct modbus_multiple_write_query
-                                          *modbus_struct)
+bool db_manager::add_multiple_write_query(
+    const struct modbus_multiple_write_query *modbus_struct)
 {
     std::string request_data;
     uint8_t byte_count;
@@ -394,7 +394,7 @@ bool db_manager::add_multiple_write_query(struct modbus_multiple_write_query
 }
 
 bool db_manager::add_multiple_write_response(
-    struct modbus_multiple_write_response *modbus_struct)
+    const struct modbus_multiple_write_response *modbus_struct)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
                         "protocol_id, length, slave_id, function_code, "
@@ -468,8 +468,8 @@ bool db_manager::add_aggregated_data(int address_id, uint16_t transaction_id,
     return true;
 }
 
-bool db_manager::add_aggregated_frame(struct device_struct *dev,
-                                      struct modbus_aggregate *aggregated_frame)
+bool db_manager::add_aggregated_frame(const struct device_struct *dev,
+    const struct modbus_aggregate *aggregated_frame)
 {
     struct address_struct *addr_data;
     struct modbus_read_query *read_query;

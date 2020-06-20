@@ -177,7 +177,8 @@ void device_struct::display_addresses(uint16_t address, uint16_t num_of_points)
     }
 }
 
-void device_struct::display_addresses(struct modbus_aggregate *aggregated_frame)
+void device_struct::display_addresses(
+    const struct modbus_aggregate *aggregated_frame)
 {
     std::unordered_map<uint16_t, struct address_struct*>::iterator it;
     struct modbus_read_query *read_query;

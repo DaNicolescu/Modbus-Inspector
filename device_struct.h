@@ -63,7 +63,7 @@ struct device_struct {
     bool valid_input_regs_addresses(uint16_t address, uint16_t num_of_points);
 
     void display_addresses(uint16_t address, uint16_t num_of_points);
-    void display_addresses(struct modbus_aggregate *aggregated_frame);
+    void display_addresses(const struct modbus_aggregate *aggregated_frame);
 
     void display();
 };
