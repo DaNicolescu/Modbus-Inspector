@@ -79,6 +79,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_exception_response *exception_response;
     struct modbus_tcp_generic *event_counter_request;
     struct modbus_event_counter_response *event_counter_response;
+    struct modbus_tcp_generic *event_log_request;
+    struct modbus_event_log_response *event_log_response;
     struct modbus_multiple_write_query *multiple_write_query;
     struct modbus_multiple_write_response *multiple_write_response;
     struct modbus_aggregate *modbus_aggregated_frame;
@@ -474,6 +476,22 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             db->add_event_counter_response(event_counter_response);
             display_modbus_event_counter_response(event_counter_response);
+        }
+
+        break;
+    case FETCH_COMM_EVENT_LOG:
+        std::cout << "FETCH COMM EVENT LOG" << std::endl;
+
+        if (query_packet) {
+            event_log_request = get_modbus_tcp_generic(payload);
+            db->add_modbus_generic(event_log_request);
+
+            display_modbus_tcp_generic(event_log_request, true);
+        } else {
+            event_log_response = get_modbus_event_log_response(payload);
+
+            db->add_event_log_response(event_log_response);
+            display_modbus_event_log_response(event_log_response);
         }
 
         break;

@@ -14,6 +14,7 @@ struct modbus_read_response;
 struct modbus_single_write;
 struct modbus_exception_response;
 struct modbus_event_counter_response;
+struct modbus_event_log_response;
 struct modbus_multiple_write_query;
 struct modbus_multiple_write_response;
 struct modbus_aggregate;
@@ -46,6 +47,8 @@ struct db_manager {
                                 *modbus_struct);
     bool add_event_counter_response(const struct modbus_event_counter_response
                                     *modbus_struct);
+    bool add_event_log_response(const struct modbus_event_log_response
+                                *modbus_struct);
     bool add_multiple_write_query(const struct modbus_multiple_write_query
                                   *modbus_struct);
     bool add_multiple_write_query(const struct modbus_multiple_write_query

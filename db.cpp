@@ -512,6 +512,44 @@ bool db_manager::add_event_counter_response(
     return true;
 }
 
+bool db_manager::add_event_log_response(const struct modbus_event_log_response
+                                        *modbus_struct)
+{
+    std::string response_data;
+
+    response_data = std::to_string(modbus_struct->status) + ", "
+        + std::to_string(modbus_struct->event_count) + ", "
+        + std::to_string(modbus_struct->message_count) + ", "
+        + std::to_string(modbus_struct->event0) + ", "
+        + std::to_string(modbus_struct->event1);
+
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "byte_count, data) VALUES(1, "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->byte_count) + ", '"
+                        + response_data + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_multiple_write_query(
     const struct modbus_multiple_write_query *modbus_struct)
 {

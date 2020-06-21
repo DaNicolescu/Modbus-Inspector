@@ -12,6 +12,7 @@
 #define PRESET_SINGLE_REGISTER      0x06
 #define READ_EXCEPTION_STATUS       0x07
 #define FETCH_COMM_EVENT_COUNTER    0x0B
+#define FETCH_COMM_EVENT_LOG        0x0C
 #define FORCE_MULTIPLE_COILS        0x0F
 #define PRESET_MULTIPLE_REGISTERS   0x10
 #define REPORT_SLAVE_ID             0x11
@@ -58,6 +59,16 @@ struct modbus_event_counter_response {
     uint16_t event_count;
 } __attribute__((packed));
 
+struct modbus_event_log_response {
+    struct modbus_tcp_generic generic_header;
+    uint8_t byte_count;
+    uint16_t status;
+    uint16_t event_count;
+    uint16_t message_count;
+    uint8_t event0;
+    uint8_t event1;
+} __attribute__((packed));
+
 struct modbus_multiple_write_query {
     struct modbus_tcp_generic generic_header;
     uint16_t starting_address;
@@ -94,6 +105,8 @@ struct modbus_exception_response *get_modbus_exception_response(
     const uint8_t *payload);
 struct modbus_event_counter_response *get_modbus_event_counter_response(
     const uint8_t *payload);
+struct modbus_event_log_response *get_modbus_event_log_response(const uint8_t
+                                                                *payload);
 struct modbus_multiple_write_query *get_modbus_multiple_write_query(
     const uint8_t *payload);
 struct modbus_multiple_write_response *get_modbus_multiple_write_response(
@@ -119,10 +132,12 @@ void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
 void display_modbus_read_query(const struct modbus_read_query *modbus_struct);
 void display_modbus_read_response(const struct modbus_read_response
                                   *modbus_struct);
-void display_modbus_event_counter_response(
-    const struct modbus_event_counter_response *modbus_struct);
 void display_modbus_single_write(const struct modbus_single_write
                                  *modbus_struct, bool query_packet);
+void display_modbus_event_counter_response(
+    const struct modbus_event_counter_response *modbus_struct);
+void display_modbus_event_log_response(const struct modbus_event_log_response
+                                       *modbus_struct);
 void display_modbus_exception_response(const struct modbus_exception_response
                                        *modbus_struct);
 void display_modbus_multiple_write_query(
