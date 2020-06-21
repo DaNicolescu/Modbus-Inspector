@@ -12,6 +12,7 @@ struct modbus_tcp_generic;
 struct modbus_read_query;
 struct modbus_read_response;
 struct modbus_single_write;
+struct modbus_exception_response;
 struct modbus_multiple_write_query;
 struct modbus_multiple_write_response;
 struct modbus_aggregate;
@@ -40,6 +41,8 @@ struct db_manager {
                           uint8_t type);
     bool add_single_write(const struct modbus_single_write *modbus_struct,
                           uint8_t type, const std::string &errors);
+    bool add_exception_response(const struct modbus_exception_response
+                                *modbus_struct);
     bool add_multiple_write_query(const struct modbus_multiple_write_query
                                   *modbus_struct);
     bool add_multiple_write_query(const struct modbus_multiple_write_query

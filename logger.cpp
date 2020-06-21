@@ -75,6 +75,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_read_query *read_query;
     struct modbus_read_response *read_response;
     struct modbus_single_write *single_write_packet;
+    struct modbus_tcp_generic *exception_request;
+    struct modbus_exception_response *exception_response;
     struct modbus_multiple_write_query *multiple_write_query;
     struct modbus_multiple_write_response *multiple_write_response;
     struct modbus_aggregate *modbus_aggregated_frame;
@@ -172,7 +174,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             + " does not exist";
 
         db->add_modbus_generic(modbus_generic, errors);
-        
+
         std::cout << errors << std::endl;
         std::cout << std::endl;
 
@@ -442,6 +444,20 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case READ_EXCEPTION_STATUS:
+        std::cout << "READ EXCEPTION STATUS" << std::endl;
+
+        if (query_packet) {
+            exception_request = get_modbus_tcp_generic(payload);
+            db->add_modbus_generic(exception_request);
+
+            display_modbus_tcp_generic(exception_request, true);
+        } else {
+            exception_response = get_modbus_exception_response(payload);
+
+            db->add_exception_response(exception_response);
+            display_modbus_exception_response(exception_response);
+        }
+
         break;
     case FORCE_MULTIPLE_COILS:
         std::cout << "FORCE MULTIPLE COILS" << std::endl;
