@@ -93,6 +93,21 @@ struct modbus_exception_response *get_modbus_exception_response(
     return modbus_struct;
 }
 
+struct modbus_event_counter_response *get_modbus_event_counter_response(
+    const uint8_t *payload)
+{
+    struct modbus_event_counter_response *modbus_struct;
+
+    modbus_struct = new modbus_event_counter_response;
+
+    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+
+    modbus_struct->status = htons(modbus_struct->status);
+    modbus_struct->event_count = htons(modbus_struct->event_count);
+
+    return modbus_struct;
+}
+
 struct modbus_multiple_write_query *get_modbus_multiple_write_query(
     const uint8_t *payload)
 {
@@ -254,6 +269,15 @@ void display_modbus_exception_response(const struct modbus_exception_response
 
     std::cout << "coils data: "
         << byte_to_binary_string(modbus_struct->coil_data) << std::endl;
+}
+
+void display_modbus_event_counter_response(
+    const struct modbus_event_counter_response *modbus_struct)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+
+    std::cout << "status: " << modbus_struct->status << std::endl;
+    std::cout << "event count: " << modbus_struct->event_count << std::endl;
 }
 
 void display_modbus_multiple_write_query(
