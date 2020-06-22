@@ -455,11 +455,20 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             db->add_modbus_generic(exception_request);
 
             display_modbus_tcp_generic(exception_request, true);
+
+            modbus_aggregated_frame->function_code =
+                exception_request->function_code;
+            modbus_aggregated_frame->query = exception_request;
         } else {
             exception_response = get_modbus_exception_response(payload);
 
             db->add_exception_response(exception_response);
             display_modbus_exception_response(exception_response);
+
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = exception_response;
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;

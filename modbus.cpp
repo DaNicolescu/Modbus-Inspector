@@ -220,6 +220,14 @@ std::string get_modbus_single_write_string(const struct modbus_single_write
         + std::to_string(modbus_struct->address);
 }
 
+std::string get_modbus_exception_response_string(
+    const struct modbus_exception_response *modbus_struct, char separator)
+{
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "coil data: "
+        + std::to_string(modbus_struct->coil_data);
+}
+
 std::string get_modbus_multiple_write_query_string(
     const struct modbus_multiple_write_query *modbus_struct, char separator)
 {

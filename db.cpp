@@ -1097,17 +1097,17 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     case READ_EXCEPTION_STATUS:
         type = "READ EXCEPTION STATUS";
 
-        /*if (query_packet) {
-            exception_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(exception_request);
+        exception_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+        exception_response = (struct modbus_exception_response*)
+            aggregated_frame->response;
 
-            display_modbus_tcp_generic(exception_request, true);
-        } else {
-            exception_response = get_modbus_exception_response(payload);
+        query = get_modbus_tcp_generic_string(exception_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        response = get_modbus_exception_response_string(exception_response,
+            DISPLAY_FRAME_SEPARATOR);
 
-            db->add_exception_response(exception_response);
-            display_modbus_exception_response(exception_response);
-        }*/
+        add_display_frame(type, query, response, "");
 
         break;
     case FETCH_COMM_EVENT_COUNTER:
