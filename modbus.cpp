@@ -183,6 +183,38 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     return modbus_struct;
 }
 
+std::string get_event_log_event_string(uint8_t event)
+{
+    std::string event_string = byte_to_binary_string(event);
+    std::string result;
+
+    if (event == 0) {
+        return "Slave Initiated Communication Restart: " + event_string;
+    } else if (event == 0x04) {
+        return "Slave Entered Listen Only Mode: " + event_string;
+    } else if ((event & 0x80) == 1) {
+        return std::string("Slave Modbus Receive Event: ") + event_string[0]
+            + " (Not Used), " + event_string[1] + " (Communications Error), "
+            + event_string[2] + " (Not Used), " + event_string[3]
+            + " (Not Used), " + event_string[4] + " (Character Overrun), "
+            + event_string[5] + " (Currently in Listen Only Mode), "
+            + event_string[6] + " (Broadcast Received), " + event_string[7];
+    } else if ((event & 0x40) == 1) {
+        return std::string("Slave Modbus Send Event: ") + event_string[0]
+            + " (Read Exception Sent (Exception Codes 1-3)), " + event_string[1]
+            + " (Slave Abort Exception Sent (Exception Code 4)), "
+            + event_string[2]
+            + " (Slave Busy Exception Sent (Exception Codes 5-6)), "
+            + event_string[3]
+            + " (Slave Program NAK Exception Sent (Exception Code 7)), "
+            + event_string[4] + " (Write Timeout Error Occured), "
+            + event_string[5] + " (Currently in Listen Only Mode), "
+            + event_string[6] + ", " + event_string[7];
+    } else {
+        return "Invalid Event: " + event_string;
+    }
+}
+
 std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
                                           *modbus_struct, char separator)
 {
@@ -235,6 +267,19 @@ std::string get_modbus_event_counter_response_string(
         separator) + separator + "status: "
         + std::to_string(modbus_struct->status) + separator + "event count: "
         + std::to_string(modbus_struct->event_count);
+}
+
+std::string get_modbus_event_log_response_string(
+    const struct modbus_event_log_response *modbus_struct, char separator)
+{
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "status: "
+        + std::to_string(modbus_struct->status) + separator + "event count: "
+        + std::to_string(modbus_struct->event_count) + separator
+        + "message count: " + std::to_string(modbus_struct->message_count)
+        + separator + "event 0: "
+        + get_event_log_event_string(modbus_struct->event0) + separator
+        + "event 1: " + get_event_log_event_string(modbus_struct->event1);
 }
 
 std::string get_modbus_multiple_write_query_string(

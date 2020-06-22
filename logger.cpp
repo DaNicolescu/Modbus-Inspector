@@ -505,11 +505,20 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             db->add_modbus_generic(event_log_request);
 
             display_modbus_tcp_generic(event_log_request, true);
+
+            modbus_aggregated_frame->function_code =
+                event_log_request->function_code;
+            modbus_aggregated_frame->query = event_log_request;
         } else {
             event_log_response = get_modbus_event_log_response(payload);
 
             db->add_event_log_response(event_log_response);
             display_modbus_event_log_response(event_log_response);
+
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = event_log_response;
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;

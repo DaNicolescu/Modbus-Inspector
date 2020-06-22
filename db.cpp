@@ -1127,19 +1127,19 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
 
         break;
     case FETCH_COMM_EVENT_LOG:
-        std::cout << "FETCH COMM EVENT LOG" << std::endl;
+        type = "FETCH COMM EVENT LOG";
 
-        /*if (query_packet) {
-            event_log_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(event_log_request);
+        event_log_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+        event_log_response = (struct modbus_event_log_response*)
+            aggregated_frame->response;
 
-            display_modbus_tcp_generic(event_log_request, true);
-        } else {
-            event_log_response = get_modbus_event_log_response(payload);
+        query = get_modbus_tcp_generic_string(event_log_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        response = get_modbus_event_log_response_string(event_log_response,
+            DISPLAY_FRAME_SEPARATOR);
 
-            db->add_event_log_response(event_log_response);
-            display_modbus_event_log_response(event_log_response);
-        }*/
+        add_display_frame(type, query, response, "");
 
         break;
     case FORCE_MULTIPLE_COILS:

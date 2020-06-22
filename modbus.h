@@ -114,6 +114,8 @@ struct modbus_multiple_write_response *get_modbus_multiple_write_response(
 struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     const uint8_t *payload);
 
+std::string get_event_log_event_string(uint8_t event);
+
 std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
                                           *modbus_struct, char serparator);
 std::string get_modbus_read_query_string(const struct modbus_read_query
@@ -126,6 +128,8 @@ std::string get_modbus_exception_response_string(
     const struct modbus_exception_response *modbus_struct, char separator);
 std::string get_modbus_event_counter_response_string(
     const struct modbus_event_counter_response *modbus_struct, char separator);
+std::string get_modbus_event_log_response_string(
+    const struct modbus_event_log_response *modbus_struct, char separator);
 std::string get_modbus_multiple_write_query_string(
     const struct modbus_multiple_write_query *modbus_struct, char separator);
 std::string get_modbus_multiple_write_response_string(
