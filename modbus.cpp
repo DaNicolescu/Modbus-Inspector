@@ -180,6 +180,19 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
 
     reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
 
+    modbus_struct->additional_data = (uint8_t*)
+        malloc(modbus_struct->byte_count - 2);
+
+    if (!modbus_struct->additional_data) {
+        std::cout << "Failed to allocate memory" << std::endl;
+
+        return NULL;
+    }
+
+    memcpy(modbus_struct->additional_data, payload
+           + sizeof(struct modbus_tcp_generic) + 3,
+           modbus_struct->byte_count - 2);
+
     return modbus_struct;
 }
 
@@ -304,6 +317,18 @@ std::string get_modbus_multiple_write_response_string(
         + std::to_string(modbus_struct->num_of_points);
 }
 
+std::string get_modbus_report_slave_id_response_string(
+    const struct modbus_report_slave_id_response *modbus_struct,
+    char separator)
+{
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "byte count: "
+        + std::to_string(modbus_struct->byte_count)
+        + separator + "slave ID: " + std::to_string(modbus_struct->slave_id)
+        + separator + "run indicator status: "
+        + std::to_string(modbus_struct->run_indicator_status);
+}
+
 void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
                                 bool query_packet)
 {
@@ -371,8 +396,10 @@ void display_modbus_event_log_response(const struct modbus_event_log_response
     std::cout << "status: " << modbus_struct->status << std::endl;
     std::cout << "event count: " << modbus_struct->event_count << std::endl;
     std::cout << "message count: " << modbus_struct->message_count << std::endl;
-    std::cout << "event 0: " << modbus_struct->event0 << std::endl;
-    std::cout << "event 1: " << modbus_struct->event1 << std::endl;
+    std::cout << "event 0: "
+        << get_event_log_event_string(modbus_struct->event0) << std::endl;
+    std::cout << "event 1: "
+        << get_event_log_event_string(modbus_struct->event1) << std::endl;
 }
 
 void display_modbus_multiple_write_query(
@@ -395,4 +422,26 @@ void display_modbus_multiple_write_response(
     std::cout << "starting address: " << modbus_struct->starting_address
         << std::endl;
     std::cout << "num of points: " << modbus_struct->num_of_points << std::endl;
+}
+
+void display_modbus_report_slave_id_response(
+    const struct modbus_report_slave_id_response *modbus_struct)
+{
+    uint8_t byte_count;
+
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+
+    std::cout << "byte count: " << unsigned(modbus_struct->byte_count)
+        << std::endl;
+    std::cout << "slave id: " << unsigned(modbus_struct->slave_id) << std::endl;
+    std::cout << "run indicator status: "
+        << unsigned(modbus_struct->run_indicator_status) << std::endl;
+    std::cout << "additional data: " << std::endl;
+
+    byte_count = modbus_struct->byte_count - 2;
+
+    for (uint8_t i = 0; i < byte_count; i++)
+        std::cout << modbus_struct->additional_data[i] << ", ";
+
+    std::cout << std::endl; 
 }

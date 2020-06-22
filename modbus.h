@@ -134,6 +134,9 @@ std::string get_modbus_multiple_write_query_string(
     const struct modbus_multiple_write_query *modbus_struct, char separator);
 std::string get_modbus_multiple_write_response_string(
     const struct modbus_multiple_write_response *modbus_struct, char separator);
+std::string get_modbus_report_slave_id_response_string(
+    const struct modbus_report_slave_id_response *modbus_struct,
+    char separator);
 
 void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
                                 bool query_packet);
@@ -152,5 +155,7 @@ void display_modbus_multiple_write_query(
     const struct modbus_multiple_write_query *modbus_struct);
 void display_modbus_multiple_write_response(
     const struct modbus_multiple_write_response *modbus_struct);
+void display_modbus_report_slave_id_response(
+    const struct modbus_report_slave_id_response *modbus_struct);
 
 #endif

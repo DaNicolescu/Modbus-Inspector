@@ -731,6 +731,49 @@ bool db_manager::add_multiple_write_response(
     return true;
 }
 
+bool db_manager::add_report_slave_id_response(
+    const struct modbus_report_slave_id_response *modbus_struct)
+{
+    std::string response_data;
+    uint8_t byte_count;
+
+    byte_count = modbus_struct->byte_count - 2;
+
+    response_data = std::to_string(modbus_struct->slave_id) + ", "
+        + std::to_string(modbus_struct->run_indicator_status);
+
+    for (uint8_t i = 0; i < byte_count; i++) {
+        response_data += ", "
+            + std::to_string(modbus_struct->additional_data[i]);
+    }
+
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "byte_count, data) VALUES(1, "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", "
+                        + std::to_string(modbus_struct->byte_count) + ", '"
+                        + response_data + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_display_frame(const std::string &type,
                                    const std::string &query,
                                    const std::string &response,
@@ -794,6 +837,8 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     struct modbus_event_log_response *event_log_response;
     struct modbus_multiple_write_query *multiple_write_query;
     struct modbus_multiple_write_response *multiple_write_response;
+    struct modbus_tcp_generic *report_slave_id_request;
+    struct modbus_report_slave_id_response *report_slave_id_response;
     std::string type;
     std::string query;
     std::string response;
@@ -1248,6 +1293,20 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
 
         break;
     case REPORT_SLAVE_ID:
+        type = "REPORT SLAVE ID";
+
+        report_slave_id_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+        report_slave_id_response = (struct modbus_report_slave_id_response*)
+            aggregated_frame->response;
+
+        query = get_modbus_tcp_generic_string(report_slave_id_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        response = get_modbus_report_slave_id_response_string(
+            report_slave_id_response, DISPLAY_FRAME_SEPARATOR);
+
+        add_display_frame(type, query, response, "");
+
         break;
     default:
         std::cout << "Function code decoding not yet implemented" << std::endl;

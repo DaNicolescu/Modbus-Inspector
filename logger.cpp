@@ -84,6 +84,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_multiple_write_query *multiple_write_query;
     struct modbus_multiple_write_response *multiple_write_response;
     struct modbus_aggregate *modbus_aggregated_frame;
+    struct modbus_tcp_generic *report_slave_id_request;
     struct modbus_report_slave_id_response *report_slave_id_response;
     struct device_struct *dev;
     struct address_struct *addr;
@@ -640,23 +641,27 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "REPORT SLAVE ID" << std::endl;
 
         if (query_packet) {
+            report_slave_id_request = get_modbus_tcp_generic(payload);
+            db->add_modbus_generic(report_slave_id_request);
+
+            display_modbus_tcp_generic(report_slave_id_request, true);
+
             modbus_aggregated_frame->function_code =
-                modbus_generic->function_code;
-            modbus_aggregated_frame->query = NULL;
+                report_slave_id_request->function_code;
+            modbus_aggregated_frame->query = report_slave_id_request;
         } else {
             report_slave_id_response = get_modbus_report_slave_id_response(
                 payload);
 
-            std::cout << "byte count: " << report_slave_id_response->byte_count
-                << std::endl;
-            std::cout << "slave id: " << report_slave_id_response->slave_id
-                << std::endl;
-            std::cout << "run indicator status: "
-                << report_slave_id_response->run_indicator_status << std::endl;
+            db->add_report_slave_id_response(report_slave_id_response);
+            display_modbus_report_slave_id_response(report_slave_id_response);
 
             modbus_aggregated_frame->response = report_slave_id_response;
 
-            std::cout << std::endl;
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = report_slave_id_response;
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;
