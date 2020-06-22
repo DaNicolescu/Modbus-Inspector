@@ -115,17 +115,17 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     const uint8_t *payload);
 
 std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
-                                          *modbus_struct);
+                                          *modbus_struct, char serparator);
 std::string get_modbus_read_query_string(const struct modbus_read_query
-                                         *modbus_struct);
+                                         *modbus_struct, char separator);
 std::string get_modbus_read_response_string(const struct modbus_read_response
-                                            *modbus_struct);
+                                            *modbus_struct, char separator);
 std::string get_modbus_single_write_string(const struct modbus_single_write
-                                           *modbus_struct);
+                                           *modbus_struct, char separator);
 std::string get_modbus_multiple_write_query_string(
-    const struct modbus_multiple_write_query *modbus_struct);
+    const struct modbus_multiple_write_query *modbus_struct, char separator);
 std::string get_modbus_multiple_write_response_string(
-    const struct modbus_multiple_write_response *modbus_struct);
+    const struct modbus_multiple_write_response *modbus_struct, char separator);
 
 void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
                                 bool query_packet);

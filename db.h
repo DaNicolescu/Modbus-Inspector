@@ -3,6 +3,8 @@
 
 #include <string>
 
+#define DISPLAY_FRAME_SEPARATOR     '|'
+
 typedef struct st_mysql MYSQL;
 
 struct device_struct;

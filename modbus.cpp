@@ -184,56 +184,61 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
 }
 
 std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
-                                          *modbus_struct)
+                                          *modbus_struct, char separator)
 {
     return "transaction id: " +  std::to_string(modbus_struct->transaction_id)
-        + ", protocol id: " + std::to_string(modbus_struct->protocol_id)
-        + ", length: " + std::to_string(modbus_struct->length)
-        + ", slave id: " + std::to_string(modbus_struct->unit_id)
-        + ", function code: " + std::to_string(modbus_struct->function_code);
+        + separator + "protocol id: "
+        + std::to_string(modbus_struct->protocol_id)
+        + separator + "length: " + std::to_string(modbus_struct->length)
+        + separator + "slave id: " + std::to_string(modbus_struct->unit_id)
+        + separator + "function code: "
+        + std::to_string(modbus_struct->function_code);
 }
 
 std::string get_modbus_read_query_string(const struct modbus_read_query
-                                         *modbus_struct)
+                                         *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
-        + ", starting address: " +  std::to_string(
-            modbus_struct->starting_address)
-        + ", number of points: " + std::to_string(modbus_struct->num_of_points);
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "starting address: "
+        + std::to_string(modbus_struct->starting_address) + separator
+        + "number of points: " + std::to_string(modbus_struct->num_of_points);
 }
 
 std::string get_modbus_read_response_string(const struct modbus_read_response
-                                            *modbus_struct)
+                                            *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
-        + ", byte count: " +  std::to_string(modbus_struct->byte_count);
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "byte count: "
+        + std::to_string(modbus_struct->byte_count);
 }
 
 std::string get_modbus_single_write_string(const struct modbus_single_write
-                                           *modbus_struct)
+                                           *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
-        + ", address: " +  std::to_string(modbus_struct->address);
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "address: "
+        + std::to_string(modbus_struct->address);
 }
 
 std::string get_modbus_multiple_write_query_string(
-    const struct modbus_multiple_write_query *modbus_struct)
+    const struct modbus_multiple_write_query *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
-        + ", starting address: "
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "starting address: "
         + std::to_string(modbus_struct->starting_address)
-        + ", number of points: "
+        + separator + "number of points: "
         + std::to_string(modbus_struct->num_of_points)
-        + ", byte count: " + std::to_string(modbus_struct->byte_count);
+        + separator + "byte count: "
+        + std::to_string(modbus_struct->byte_count);
 }
 
 std::string get_modbus_multiple_write_response_string(
-    const struct modbus_multiple_write_response *modbus_struct)
+    const struct modbus_multiple_write_response *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header))
-        + ", starting address: "
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "starting address: "
         + std::to_string(modbus_struct->starting_address)
-        + ", number of points: "
+        + separator + "number of points: "
         + std::to_string(modbus_struct->num_of_points);
 }
 
