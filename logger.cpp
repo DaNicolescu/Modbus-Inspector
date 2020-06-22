@@ -480,11 +480,20 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             db->add_modbus_generic(event_counter_request);
 
             display_modbus_tcp_generic(event_counter_request, true);
+
+            modbus_aggregated_frame->function_code =
+                event_counter_request->function_code;
+            modbus_aggregated_frame->query = event_counter_request;
         } else {
             event_counter_response = get_modbus_event_counter_response(payload);
 
             db->add_event_counter_response(event_counter_response);
             display_modbus_event_counter_response(event_counter_response);
+
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = event_counter_response;
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
         }
 
         break;

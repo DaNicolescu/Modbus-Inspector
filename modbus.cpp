@@ -228,6 +228,15 @@ std::string get_modbus_exception_response_string(
         + std::to_string(modbus_struct->coil_data);
 }
 
+std::string get_modbus_event_counter_response_string(
+    const struct modbus_event_counter_response *modbus_struct, char separator)
+{
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "status: "
+        + std::to_string(modbus_struct->status) + separator + "event count: "
+        + std::to_string(modbus_struct->event_count);
+}
+
 std::string get_modbus_multiple_write_query_string(
     const struct modbus_multiple_write_query *modbus_struct, char separator)
 {

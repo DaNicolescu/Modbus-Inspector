@@ -124,6 +124,8 @@ std::string get_modbus_single_write_string(const struct modbus_single_write
                                            *modbus_struct, char separator);
 std::string get_modbus_exception_response_string(
     const struct modbus_exception_response *modbus_struct, char separator);
+std::string get_modbus_event_counter_response_string(
+    const struct modbus_event_counter_response *modbus_struct, char separator);
 std::string get_modbus_multiple_write_query_string(
     const struct modbus_multiple_write_query *modbus_struct, char separator);
 std::string get_modbus_multiple_write_response_string(

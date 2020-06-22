@@ -1111,19 +1111,19 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
 
         break;
     case FETCH_COMM_EVENT_COUNTER:
-        std::cout << "FETCH COMM EVENT COUNTER" << std::endl;
+        type = "FETCH COMM EVENT COUNTER";
 
-        /*if (query_packet) {
-            event_counter_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(event_counter_request);
+        event_counter_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+        event_counter_response = (struct modbus_event_counter_response*)
+            aggregated_frame->response;
 
-            display_modbus_tcp_generic(event_counter_request, true);
-        } else {
-            event_counter_response = get_modbus_event_counter_response(payload);
+        query = get_modbus_tcp_generic_string(event_counter_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        response = get_modbus_event_counter_response_string(
+            event_counter_response, DISPLAY_FRAME_SEPARATOR);
 
-            db->add_event_counter_response(event_counter_response);
-            display_modbus_event_counter_response(event_counter_response);
-        }*/
+        add_display_frame(type, query, response, "");
 
         break;
     case FETCH_COMM_EVENT_LOG:
