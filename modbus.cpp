@@ -81,12 +81,12 @@ struct modbus_single_write *get_modbus_single_write(const uint8_t *payload)
     return modbus_struct;
 }
 
-struct modbus_exception_response *get_modbus_exception_response(
+struct modbus_exception_status_response *get_modbus_exception_status_response(
     const uint8_t *payload)
 {
-    struct modbus_exception_response *modbus_struct;
+    struct modbus_exception_status_response *modbus_struct;
 
-    modbus_struct = new modbus_exception_response;
+    modbus_struct = new modbus_exception_status_response;
 
     reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
 
@@ -321,8 +321,9 @@ std::string get_modbus_single_write_string(const struct modbus_single_write
         + std::to_string(modbus_struct->address);
 }
 
-std::string get_modbus_exception_response_string(
-    const struct modbus_exception_response *modbus_struct, char separator)
+std::string get_modbus_exception_status_response_string(
+    const struct modbus_exception_status_response *modbus_struct,
+    char separator)
 {
     return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "coil data: "
@@ -436,8 +437,8 @@ void display_modbus_single_write(const struct modbus_single_write
     std::cout << "value: " << modbus_struct->value << std::endl;
 }
 
-void display_modbus_exception_response(const struct modbus_exception_response
-                                       *modbus_struct)
+void display_modbus_exception_status_response(
+    const struct modbus_exception_status_response *modbus_struct)
 {
     display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
 

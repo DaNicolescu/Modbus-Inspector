@@ -67,7 +67,7 @@ struct modbus_single_write {
     uint16_t value;
 } __attribute__((packed));
 
-struct modbus_exception_response {
+struct modbus_exception_status_response {
     struct modbus_tcp_generic generic_header;
     uint8_t coil_data;
 } __attribute__((packed));
@@ -126,7 +126,7 @@ struct modbus_tcp_generic *get_modbus_tcp_generic(const uint8_t *payload);
 struct modbus_read_query *get_modbus_read_query(const uint8_t *payload);
 struct modbus_read_response *get_modbus_read_response(const uint8_t *payload);
 struct modbus_single_write *get_modbus_single_write(const uint8_t *payload);
-struct modbus_exception_response *get_modbus_exception_response(
+struct modbus_exception_status_response *get_modbus_exception_status_response(
     const uint8_t *payload);
 struct modbus_diagnostics *get_modbus_diagnostics(const uint8_t *payload);
 struct modbus_event_counter_response *get_modbus_event_counter_response(
@@ -151,8 +151,9 @@ std::string get_modbus_read_response_string(const struct modbus_read_response
                                             *modbus_struct, char separator);
 std::string get_modbus_single_write_string(const struct modbus_single_write
                                            *modbus_struct, char separator);
-std::string get_modbus_exception_response_string(
-    const struct modbus_exception_response *modbus_struct, char separator);
+std::string get_modbus_exception_status_response_string(
+    const struct modbus_exception_status_response *modbus_struct,
+    char separator);
 std::string get_modbus_diagnostics_string(const struct modbus_diagnostics
     *modbus_struct, char separator);
 std::string get_modbus_event_counter_response_string(
@@ -178,8 +179,8 @@ void display_modbus_event_counter_response(
     const struct modbus_event_counter_response *modbus_struct);
 void display_modbus_event_log_response(const struct modbus_event_log_response
                                        *modbus_struct);
-void display_modbus_exception_response(const struct modbus_exception_response
-                                       *modbus_struct);
+void display_modbus_exception_status_response(
+    const struct modbus_exception_status_response *modbus_struct);
 void display_modbus_diagnostics(const struct modbus_diagnostics *modbus_struct,
                                 bool query_packet);
 void display_modbus_multiple_write_query(

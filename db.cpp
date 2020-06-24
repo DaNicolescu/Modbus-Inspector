@@ -447,8 +447,8 @@ bool db_manager::add_single_write(
     return true;
 }
 
-bool db_manager::add_exception_response(const struct modbus_exception_response
-                                        *modbus_struct)
+bool db_manager::add_exception_status_response(
+    const struct modbus_exception_status_response *modbus_struct)
 {
     std::string response_data;
 
@@ -863,8 +863,8 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     struct modbus_read_response *read_response;
     struct modbus_single_write *single_write_query;
     struct modbus_single_write *single_write_response;
-    struct modbus_tcp_generic *exception_request;
-    struct modbus_exception_response *exception_response;
+    struct modbus_tcp_generic *exception_status_request;
+    struct modbus_exception_status_response *exception_status_response;
     struct modbus_diagnostics *diagnostics_query;
     struct modbus_diagnostics *diagnostics_response;
     struct modbus_tcp_generic *event_counter_request;
@@ -1178,15 +1178,15 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     case READ_EXCEPTION_STATUS:
         type = "READ EXCEPTION STATUS";
 
-        exception_request = (struct modbus_tcp_generic*)
+        exception_status_request = (struct modbus_tcp_generic*)
             aggregated_frame->query;
-        exception_response = (struct modbus_exception_response*)
+        exception_status_response = (struct modbus_exception_status_response*)
             aggregated_frame->response;
 
-        query = get_modbus_tcp_generic_string(exception_request,
+        query = get_modbus_tcp_generic_string(exception_status_request,
                                               DISPLAY_FRAME_SEPARATOR);
-        response = get_modbus_exception_response_string(exception_response,
-            DISPLAY_FRAME_SEPARATOR);
+        response = get_modbus_exception_status_response_string(
+            exception_status_response, DISPLAY_FRAME_SEPARATOR);
 
         add_display_frame(type, query, response, "");
 

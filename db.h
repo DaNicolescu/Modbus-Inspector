@@ -14,7 +14,7 @@ struct modbus_tcp_generic;
 struct modbus_read_query;
 struct modbus_read_response;
 struct modbus_single_write;
-struct modbus_exception_response;
+struct modbus_exception_status_response;
 struct modbus_diagnostics;
 struct modbus_event_counter_response;
 struct modbus_event_log_response;
@@ -48,8 +48,8 @@ struct db_manager {
                           uint8_t type);
     bool add_single_write(const struct modbus_single_write *modbus_struct,
                           uint8_t type, const std::string &errors);
-    bool add_exception_response(const struct modbus_exception_response
-                                *modbus_struct);
+    bool add_exception_status_response(
+        const struct modbus_exception_status_response *modbus_struct);
     bool add_diagnostics(const struct modbus_diagnostics *modbus_struct,
                          uint8_t type);
     bool add_event_counter_response(const struct modbus_event_counter_response

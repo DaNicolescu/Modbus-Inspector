@@ -75,8 +75,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_read_query *read_query;
     struct modbus_read_response *read_response;
     struct modbus_single_write *single_write_packet;
-    struct modbus_tcp_generic *exception_request;
-    struct modbus_exception_response *exception_response;
+    struct modbus_tcp_generic *exception_status_request;
+    struct modbus_exception_status_response *exception_status_response;
     struct modbus_diagnostics *diagnostics_request;
     struct modbus_diagnostics *diagnostics_response;
     struct modbus_tcp_generic *event_counter_request;
@@ -454,22 +454,23 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         std::cout << "READ EXCEPTION STATUS" << std::endl;
 
         if (query_packet) {
-            exception_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(exception_request, 0);
+            exception_status_request = get_modbus_tcp_generic(payload);
+            db->add_modbus_generic(exception_status_request, 0);
 
-            display_modbus_tcp_generic(exception_request, true);
+            display_modbus_tcp_generic(exception_status_request, true);
 
             modbus_aggregated_frame->function_code =
-                exception_request->function_code;
-            modbus_aggregated_frame->query = exception_request;
+                exception_status_request->function_code;
+            modbus_aggregated_frame->query = exception_status_request;
         } else {
-            exception_response = get_modbus_exception_response(payload);
+            exception_status_response =
+                get_modbus_exception_status_response(payload);
 
-            db->add_exception_response(exception_response);
-            display_modbus_exception_response(exception_response);
+            db->add_exception_status_response(exception_status_response);
+            display_modbus_exception_status_response(exception_status_response);
 
             if (modbus_aggregated_frame->query != NULL) {
-                modbus_aggregated_frame->response = exception_response;
+                modbus_aggregated_frame->response = exception_status_response;
                 db->add_aggregated_frame(dev, modbus_aggregated_frame);
             }
         }
