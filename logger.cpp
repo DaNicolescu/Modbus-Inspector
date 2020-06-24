@@ -68,7 +68,7 @@ struct device_struct *get_device(uint8_t slave_id)
 }
 
 void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
-                       const uint8_t *packet)
+                           const uint8_t *packet)
 {
     struct ether_header *ethernet_header;
     struct modbus_tcp_generic *modbus_generic;
@@ -77,6 +77,8 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_single_write *single_write_packet;
     struct modbus_tcp_generic *exception_request;
     struct modbus_exception_response *exception_response;
+    struct modbus_diagnostics *diagnostics_request;
+    struct modbus_diagnostics *diagnostics_response;
     struct modbus_tcp_generic *event_counter_request;
     struct modbus_event_counter_response *event_counter_response;
     struct modbus_tcp_generic *event_log_request;
@@ -178,7 +180,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             + std::to_string(modbus_generic->unit_id)
             + " does not exist";
 
-        db->add_modbus_generic(modbus_generic, errors);
+        db->add_modbus_generic(modbus_generic, 0, errors);
 
         std::cout << errors << std::endl;
         std::cout << std::endl;
@@ -191,7 +193,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
             + std::to_string(modbus_generic->function_code)
             + " not supported";
 
-        db->add_modbus_generic(modbus_generic, errors);
+        db->add_modbus_generic(modbus_generic, 0, errors);
 
         std::cout << errors << std::endl;
         std::cout << std::endl;
@@ -453,7 +455,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         if (query_packet) {
             exception_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(exception_request);
+            db->add_modbus_generic(exception_request, 0);
 
             display_modbus_tcp_generic(exception_request, true);
 
@@ -473,12 +475,37 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
         }
 
         break;
+    case DIAGNOSTICS:
+        std::cout << "DIAGNOSTICS" << std::endl;
+
+        if (query_packet) {
+            diagnostics_request = get_modbus_diagnostics(payload);
+            db->add_diagnostics(diagnostics_request, 0);
+
+            display_modbus_diagnostics(diagnostics_request, true);
+
+            modbus_aggregated_frame->function_code =
+                diagnostics_request->generic_header.function_code;
+            modbus_aggregated_frame->query = diagnostics_request;
+        } else {
+            diagnostics_response = get_modbus_diagnostics(payload);
+            db->add_diagnostics(diagnostics_response, 1);
+
+            display_modbus_diagnostics(diagnostics_response, false);
+
+            if (modbus_aggregated_frame->query != NULL) {
+                modbus_aggregated_frame->response = diagnostics_response;
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
+            }
+        }
+
+        break;
     case FETCH_COMM_EVENT_COUNTER:
         std::cout << "FETCH COMM EVENT COUNTER" << std::endl;
 
         if (query_packet) {
             event_counter_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(event_counter_request);
+            db->add_modbus_generic(event_counter_request, 0);
 
             display_modbus_tcp_generic(event_counter_request, true);
 
@@ -503,7 +530,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         if (query_packet) {
             event_log_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(event_log_request);
+            db->add_modbus_generic(event_log_request, 0);
 
             display_modbus_tcp_generic(event_log_request, true);
 
@@ -642,7 +669,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         if (query_packet) {
             report_slave_id_request = get_modbus_tcp_generic(payload);
-            db->add_modbus_generic(report_slave_id_request);
+            db->add_modbus_generic(report_slave_id_request, 0);
 
             display_modbus_tcp_generic(report_slave_id_request, true);
 

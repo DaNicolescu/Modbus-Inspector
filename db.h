@@ -15,6 +15,7 @@ struct modbus_read_query;
 struct modbus_read_response;
 struct modbus_single_write;
 struct modbus_exception_response;
+struct modbus_diagnostics;
 struct modbus_event_counter_response;
 struct modbus_event_log_response;
 struct modbus_multiple_write_query;
@@ -35,9 +36,10 @@ struct db_manager {
 
     bool add_address(struct address_struct *address, uint8_t slave_id);
 
-    bool add_modbus_generic(const struct modbus_tcp_generic *modbus_struct);
     bool add_modbus_generic(const struct modbus_tcp_generic *modbus_struct,
-                            const std::string &errors);
+                            uint8_t type);
+    bool add_modbus_generic(const struct modbus_tcp_generic *modbus_struct,
+                            uint8_t type, const std::string &errors);
     bool add_read_query(const struct modbus_read_query *modbus_struct);
     bool add_read_query(const struct modbus_read_query *modbus_struct,
                         const std::string &errors);
@@ -48,6 +50,8 @@ struct db_manager {
                           uint8_t type, const std::string &errors);
     bool add_exception_response(const struct modbus_exception_response
                                 *modbus_struct);
+    bool add_diagnostics(const struct modbus_diagnostics *modbus_struct,
+                         uint8_t type);
     bool add_event_counter_response(const struct modbus_event_counter_response
                                     *modbus_struct);
     bool add_event_log_response(const struct modbus_event_log_response

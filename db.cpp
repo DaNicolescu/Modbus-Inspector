@@ -215,10 +215,11 @@ bool db_manager::add_address(struct address_struct *address, uint8_t slave_id)
 }
 
 bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
-                                    *modbus_struct)
+                                    *modbus_struct, uint8_t type)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
                         "protocol_id, length, slave_id, function_code) VALUES("
+                        + std::to_string(type) + ", "
                         + std::to_string(modbus_struct->transaction_id) + ", "
                         + std::to_string(modbus_struct->protocol_id) + ", "
                         + std::to_string(modbus_struct->length) + ", "
@@ -238,11 +239,12 @@ bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
 }
 
 bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
-                                    *modbus_struct, const std::string &errors)
+                                    *modbus_struct, uint8_t type,
+                                    const std::string &errors)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
                         "protocol_id, length, slave_id, function_code, errors) "
-                        "VALUES("
+                        "VALUES(" + std::to_string(type) + ", "
                         + std::to_string(modbus_struct->transaction_id) + ", "
                         + std::to_string(modbus_struct->protocol_id) + ", "
                         + std::to_string(modbus_struct->length) + ", "
@@ -465,6 +467,38 @@ bool db_manager::add_exception_response(const struct modbus_exception_response
                         + std::to_string(
                             modbus_struct->generic_header.function_code) + ", '"
                         + response_data + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool db_manager::add_diagnostics(const struct modbus_diagnostics *modbus_struct,
+                                 uint8_t type)
+{
+    std::string data = std::to_string(modbus_struct->subfunction) + ", "
+        + std::to_string(modbus_struct->data);
+
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, data)"
+                        " VALUES(" + std::to_string(type) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", '"
+                        + data + "')";
 
     std::cout << "db query: " << query << std::endl;
 
@@ -831,6 +865,8 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     struct modbus_single_write *single_write_response;
     struct modbus_tcp_generic *exception_request;
     struct modbus_exception_response *exception_response;
+    struct modbus_diagnostics *diagnostics_query;
+    struct modbus_diagnostics *diagnostics_response;
     struct modbus_tcp_generic *event_counter_request;
     struct modbus_event_counter_response *event_counter_response;
     struct modbus_tcp_generic *event_log_request;
@@ -1151,6 +1187,23 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
                                               DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_exception_response_string(exception_response,
             DISPLAY_FRAME_SEPARATOR);
+
+        add_display_frame(type, query, response, "");
+
+        break;
+    case DIAGNOSTICS:
+        type = "DIAGNOSTICS";
+
+        diagnostics_query = (struct modbus_diagnostics*)
+            aggregated_frame->query;
+        diagnostics_response = (struct modbus_diagnostics*)
+            aggregated_frame->response;
+
+        query = get_modbus_diagnostics_string(diagnostics_query,
+                                              DISPLAY_FRAME_SEPARATOR);
+
+        response = get_modbus_diagnostics_string(diagnostics_response,
+                                                 DISPLAY_FRAME_SEPARATOR);
 
         add_display_frame(type, query, response, "");
 

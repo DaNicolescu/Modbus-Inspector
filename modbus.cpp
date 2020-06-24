@@ -93,6 +93,20 @@ struct modbus_exception_response *get_modbus_exception_response(
     return modbus_struct;
 }
 
+struct modbus_diagnostics *get_modbus_diagnostics(const uint8_t *payload)
+{
+    struct modbus_diagnostics *modbus_struct;
+
+    modbus_struct = new modbus_diagnostics;
+
+    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+
+    modbus_struct->subfunction = htons(modbus_struct->subfunction);
+    modbus_struct->data = htons(modbus_struct->data);
+
+    return modbus_struct;
+}
+
 struct modbus_event_counter_response *get_modbus_event_counter_response(
     const uint8_t *payload)
 {
@@ -228,6 +242,48 @@ std::string get_event_log_event_string(uint8_t event)
     }
 }
 
+std::string get_diagnostics_subfunction_string(uint16_t subfunction)
+{
+    switch (subfunction) {
+    case DIAG_RET_QUERY_DATA:
+        return "Read Query Data";
+    case DIAG_RESTART_COMM_OPTION:
+        return "Restart Communications Option";
+    case DIAG_RET_DIAG_REG:
+        return "Return Diagnostic Register";
+    case DIAG_CHG_ASCII_DEL:
+        return "Change ASCII Input Delimiter";
+    case DIAG_FORCE_LISTEN_ONLY_MODE:
+        return "Force Listen Only Mode";
+    case DIAG_CLR_CTRS_DIAG_REGS:
+        return "Clear Counters and Diagnostic Register";
+    case DIAG_RET_BUS_MSG_COUNT:
+        return "Return Bus Message Count";
+    case DIAG_RET_BUS_COMM_ERR_COUNT:
+        return "Return Bus Communication Error Count";
+    case DIAG_RET_BUS_EXC_ERR_COUNT:
+        return "Return Bus Exception Error Count";
+    case DIAG_RET_SLAVE_MSG_COUNT:
+        return "Return Slave Message Count";
+    case DIAG_RET_SLAVE_NO_RESP_COUNT:
+        return "Return Slave No Response Count";
+    case DIAG_RET_SLAVE_NAK_COUNT:
+        return "Return Slave NAK Count";
+    case DIAG_RET_SLAVE_BUSY_COUNT:
+        return "Return Slave Busy Count";
+    case DIAG_RET_BUS_CHAR_OVERRUN_COUNT:
+        return "Return Bus Character Overrun Count";
+    case DIAG_RET_OVERRUN_ERR_COUNT:
+        return "Return IOP Overrun Count";
+    case DIAG_CLR_OVERRUN_COUNTER_FLAG:
+        return "Clear Overrun Counter and Flag";
+    case DIAG_MODBUS_PLUS_STATS:
+        return "Get/Clear Modbus Plus Statistics";
+    default:
+        return "Unknown Subfunction";
+    }
+}
+
 std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
                                           *modbus_struct, char separator)
 {
@@ -271,6 +327,16 @@ std::string get_modbus_exception_response_string(
     return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "coil data: "
         + std::to_string(modbus_struct->coil_data);
+}
+
+std::string get_modbus_diagnostics_string(const struct modbus_diagnostics
+    *modbus_struct, char separator)
+{
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "subfunction: "
+        + std::to_string(modbus_struct->subfunction) + " ("
+        + get_diagnostics_subfunction_string(modbus_struct->subfunction) + ")"
+        + separator + "data: " + std::to_string(modbus_struct->data);
 }
 
 std::string get_modbus_event_counter_response_string(
@@ -377,6 +443,18 @@ void display_modbus_exception_response(const struct modbus_exception_response
 
     std::cout << "coils data: "
         << byte_to_binary_string(modbus_struct->coil_data) << std::endl;
+}
+
+void display_modbus_diagnostics(const struct modbus_diagnostics *modbus_struct,
+                                bool query_packet)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), query_packet);
+
+    std::cout << "subfunction: "
+        << get_diagnostics_subfunction_string(modbus_struct->subfunction)
+        << std::endl;
+
+    std::cout << "data: " << modbus_struct->data << std::endl;
 }
 
 void display_modbus_event_counter_response(
