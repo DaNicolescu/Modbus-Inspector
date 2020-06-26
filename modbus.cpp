@@ -361,6 +361,43 @@ std::string get_exception_code_description(uint8_t exception_code)
     }
 }
 
+std::string get_function_code_string(uint8_t function_code)
+{
+    if (function_code > 0x80)
+        return "EXCEPTION";
+
+    switch (function_code) {
+    case READ_COIL_STATUS:
+        return "READ COIL STATUS";
+    case READ_INPUT_STATUS:
+        return "READ INPUT STATUS";
+    case READ_HOLDING_REGISTERS:
+        return "READ HOLDING REGISTERS";
+    case READ_INPUT_REGISTERS:
+        return "READ INPUT REGISTERS";
+    case FORCE_SINGLE_COIL:
+        return "FORCE SINGLE COIL";
+    case PRESET_SINGLE_REGISTER:
+        return "PRESET SINGLE REGISTER";
+    case READ_EXCEPTION_STATUS:
+        return "READ EXCEPTION STATUS";
+    case DIAGNOSTICS:
+        return "DIAGNOSTICS";
+    case FETCH_COMM_EVENT_COUNTER:
+        return "FETCH COMMUNICATION EVENT COUNTER";
+    case FETCH_COMM_EVENT_LOG:
+        return "FETCH COMMUNICATION EVENT LOG";
+    case FORCE_MULTIPLE_COILS:
+        return "FORCE MULTIPLE COILS";
+    case PRESET_MULTIPLE_REGISTERS:
+        return "PRESET MULTIPLE REGISTERS";
+    case REPORT_SLAVE_ID:
+        return "REPORT SLAVE ID";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
                                           *modbus_struct, char separator)
 {
@@ -487,6 +524,8 @@ void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
                                 bool query_packet)
 {
     std::cout << "MODBUS " << (query_packet ? "query" : "response")
+        << std::endl;
+    std::cout << get_function_code_string(modbus_struct->function_code)
         << std::endl;
     std::cout << "transaction id: " << modbus_struct->transaction_id
         << std::endl;

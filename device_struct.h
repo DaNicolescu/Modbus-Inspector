@@ -53,19 +53,23 @@ struct device_struct {
     void add_write_hld_regs_range(std::string str);
     void add_input_regs_range(std::string str);
 
-    bool valid_read_coils_addresses(uint16_t address, uint16_t num_of_points);
-    bool valid_write_coils_addresses(uint16_t address, uint16_t num_of_points);
-    bool valid_inputs_addresses(uint16_t address, uint16_t num_of_points);
+    bool valid_read_coils_addresses(uint16_t address, uint16_t num_of_points)
+        const;
+    bool valid_write_coils_addresses(uint16_t address, uint16_t num_of_points)
+        const;
+    bool valid_inputs_addresses(uint16_t address, uint16_t num_of_points) const;
     bool valid_read_hld_regs_addresses(uint16_t address,
-                                       uint16_t num_of_points);
+                                       uint16_t num_of_points) const;
     bool valid_write_hld_regs_addresses(uint16_t address,
-                                        uint16_t num_of_points);
-    bool valid_input_regs_addresses(uint16_t address, uint16_t num_of_points);
+                                        uint16_t num_of_points) const;
+    bool valid_input_regs_addresses(uint16_t address, uint16_t num_of_points)
+        const;
 
-    void display_addresses(uint16_t address, uint16_t num_of_points);
-    void display_addresses(const struct modbus_aggregate *aggregated_frame);
+    void display_addresses(uint16_t address, uint16_t num_of_points) const;
+    void display_addresses(const struct modbus_aggregate *aggregated_frame)
+        const;
 
-    void display();
+    void display() const;
 };
 
 #endif

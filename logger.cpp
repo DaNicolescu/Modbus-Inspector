@@ -67,6 +67,47 @@ struct device_struct *get_device(uint8_t slave_id)
     return NULL;
 }
 
+void handle_read_query(const struct device_struct *dev,
+                       struct modbus_read_query *read_query,
+                       struct modbus_aggregate *modbus_aggregated_frame,
+                       uint16_t address_offset)
+{
+    db->add_read_query(read_query);
+
+    display_modbus_read_query(read_query);
+    dev->display_addresses(read_query->starting_address + address_offset,
+                           read_query->num_of_points);
+
+    modbus_aggregated_frame->function_code =
+        read_query->generic_header.function_code;
+    modbus_aggregated_frame->query = read_query;
+}
+
+void handle_read_query(const struct modbus_read_query *read_query,
+                       const std::string &errors)
+{
+    db->add_read_query(read_query, errors);
+
+    std::cout << errors << std::endl;
+    std::cout << std::endl;
+
+    display_modbus_read_query(read_query);
+}
+
+void handle_read_response(const struct device_struct *dev,
+                          struct modbus_read_response *read_response,
+                          struct modbus_aggregate *modbus_aggregated_frame)
+{
+    db->add_read_response(read_response);
+    display_modbus_read_response(read_response);
+
+    if (modbus_aggregated_frame->query != NULL) {
+        modbus_aggregated_frame->response = read_response;
+        dev->display_addresses(modbus_aggregated_frame);
+        db->add_aggregated_frame(dev, modbus_aggregated_frame);
+    }
+}
+
 void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                            const uint8_t *packet)
 {
@@ -100,6 +141,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     int payload_length;
     bool query_packet;
     std::string errors;
+    bool valid_frame;
 
     // std::cout << "entered handler" << std::endl;
 
@@ -219,44 +261,22 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
     switch (modbus_generic->function_code) {
     case READ_COIL_STATUS:
-        std::cout << "READ COIL STATUS" << std::endl;
-
         if (query_packet) {
             read_query = get_modbus_read_query(payload);
 
-            if (!dev->valid_read_coils_addresses(read_query->starting_address,
-                                                 read_query->num_of_points)) {
-                errors = "Invalid addresses";
+            valid_frame = dev->valid_read_coils_addresses(
+                read_query->starting_address, read_query->num_of_points);
 
-                db->add_read_query(read_query, errors);
-
-                std::cout << errors << std::endl;
-                std::cout << std::endl;
-
-                display_modbus_read_query(read_query);
+            if (valid_frame) {
+                handle_read_query(dev, read_query, modbus_aggregated_frame,
+                                  COILS_OFFSET);
             } else {
-                db->add_read_query(read_query);
-
-                display_modbus_read_query(read_query);
-                dev->display_addresses(read_query->starting_address
-                                       + COILS_OFFSET,
-                                       read_query->num_of_points);
-
-                modbus_aggregated_frame->function_code =
-                    modbus_generic->function_code;
-                modbus_aggregated_frame->query = read_query;
+                handle_read_query(read_query, "Invalid addresses");
             }
         } else {
             read_response = get_modbus_read_response(payload);
 
-            db->add_read_response(read_response);
-            display_modbus_read_response(read_response);
-
-            if (modbus_aggregated_frame->query != NULL) {
-                modbus_aggregated_frame->response = read_response;
-                dev->display_addresses(modbus_aggregated_frame);
-                db->add_aggregated_frame(dev, modbus_aggregated_frame);
-            }
+            handle_read_response(dev, read_response, modbus_aggregated_frame);
         }
 
         break;

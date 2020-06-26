@@ -165,8 +165,9 @@ void device_struct::add_input_regs_range(std::string str)
 }
 
 void device_struct::display_addresses(uint16_t address, uint16_t num_of_points)
+    const
 {
-    std::unordered_map<uint16_t, struct address_struct*>::iterator it;
+    std::unordered_map<uint16_t, struct address_struct*>::const_iterator it;
     uint16_t last_address = address + num_of_points - 1;
 
     std::cout << "Addresses: " << std::endl;
@@ -178,9 +179,9 @@ void device_struct::display_addresses(uint16_t address, uint16_t num_of_points)
 }
 
 void device_struct::display_addresses(
-    const struct modbus_aggregate *aggregated_frame)
+    const struct modbus_aggregate *aggregated_frame) const
 {
-    std::unordered_map<uint16_t, struct address_struct*>::iterator it;
+    std::unordered_map<uint16_t, struct address_struct*>::const_iterator it;
     struct modbus_read_query *read_query;
     struct modbus_read_response *read_response;
     struct modbus_single_write *single_write_query;
@@ -479,7 +480,7 @@ void device_struct::display_addresses(
 }
 
 bool device_struct::valid_read_coils_addresses(uint16_t address,
-                                               uint16_t num_of_points)
+                                               uint16_t num_of_points) const
 {
     address += COILS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
@@ -493,7 +494,7 @@ bool device_struct::valid_read_coils_addresses(uint16_t address,
 }
 
 bool device_struct::valid_write_coils_addresses(uint16_t address,
-                                                uint16_t num_of_points)
+                                                uint16_t num_of_points) const
 {
     address += COILS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
@@ -507,7 +508,7 @@ bool device_struct::valid_write_coils_addresses(uint16_t address,
 }
 
 bool device_struct::valid_inputs_addresses(uint16_t address,
-                                           uint16_t num_of_points)
+                                           uint16_t num_of_points) const
 {
     address += INPUTS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
@@ -521,7 +522,7 @@ bool device_struct::valid_inputs_addresses(uint16_t address,
 }
 
 bool device_struct::valid_read_hld_regs_addresses(uint16_t address,
-                                                  uint16_t num_of_points)
+                                                  uint16_t num_of_points) const
 {
     address += HLD_REGS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
@@ -536,7 +537,7 @@ bool device_struct::valid_read_hld_regs_addresses(uint16_t address,
 }
 
 bool device_struct::valid_write_hld_regs_addresses(uint16_t address,
-                                                   uint16_t num_of_points)
+                                                   uint16_t num_of_points) const
 {
     address += HLD_REGS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
@@ -551,7 +552,7 @@ bool device_struct::valid_write_hld_regs_addresses(uint16_t address,
 }
 
 bool device_struct::valid_input_regs_addresses(uint16_t address,
-                                               uint16_t num_of_points)
+                                               uint16_t num_of_points) const
 {
     address += INPUT_REGS_OFFSET;
     uint16_t last_address = address + num_of_points - 1;
@@ -564,9 +565,10 @@ bool device_struct::valid_input_regs_addresses(uint16_t address,
     return false;
 }
 
-void device_struct::display()
+void device_struct::display() const
 {
-    std::unordered_map<uint16_t, struct address_struct*>::iterator addresses_it;
+    std::unordered_map<uint16_t, struct address_struct*>::const_iterator
+        addresses_it;
 
     std::cout << "Slave ID: " << unsigned(this->id) << std::endl;
     std::cout << "Name: " << this->name << std::endl;

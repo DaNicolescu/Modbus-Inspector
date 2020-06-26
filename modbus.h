@@ -155,6 +155,7 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     const uint8_t *payload);
 struct modbus_exception *get_modbus_exception(const uint8_t *payload);
 
+std::string get_function_code_string(uint8_t function_code);
 std::string get_event_log_event_string(uint8_t event);
 std::string get_diagnostics_subfunction_string(uint16_t subfunction);
 std::string get_exception_code_string(uint8_t exception_code);
