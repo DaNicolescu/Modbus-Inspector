@@ -41,6 +41,15 @@
 #define INPUT_REGS_OFFSET               30001
 #define HLD_REGS_OFFSET                 40001
 
+#define ILLEGAL_FUNCTION                0x01
+#define ILLEGAL_DATA_ADDRESS            0x02
+#define ILLEGAL_DATA_VALUE              0x03
+#define SLAVE_DEVICE_FAILURE            0x04
+#define ACKNOWLEDGE                     0x05
+#define SLAVE_DEVICE_BUSY               0x06
+#define NEGATIVE_ACKNOWLEDGE            0x07
+#define MEMORY_PARITY_ERROR             0x08
+
 struct modbus_tcp_generic {
     uint16_t transaction_id;
     uint16_t protocol_id;
@@ -116,6 +125,11 @@ struct modbus_report_slave_id_response {
     uint8_t *additional_data;
 } __attribute__((packed));
 
+struct modbus_exception {
+    struct modbus_tcp_generic generic_header;
+    uint8_t exception_code;
+} __attribute__((packed));
+
 struct modbus_aggregate {
     uint8_t function_code;
     void *query;
@@ -139,9 +153,12 @@ struct modbus_multiple_write_response *get_modbus_multiple_write_response(
     const uint8_t *payload);
 struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     const uint8_t *payload);
+struct modbus_exception *get_modbus_exception(const uint8_t *payload);
 
 std::string get_event_log_event_string(uint8_t event);
 std::string get_diagnostics_subfunction_string(uint16_t subfunction);
+std::string get_exception_code_string(uint8_t exception_code);
+std::string get_exception_code_description(uint8_t exception_code);
 
 std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
                                           *modbus_struct, char serparator);
@@ -167,6 +184,8 @@ std::string get_modbus_multiple_write_response_string(
 std::string get_modbus_report_slave_id_response_string(
     const struct modbus_report_slave_id_response *modbus_struct,
     char separator);
+std::string get_modbus_exception_string(const struct modbus_exception
+    *modbus_struct, char separator);
 
 void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
                                 bool query_packet);
@@ -189,5 +208,6 @@ void display_modbus_multiple_write_response(
     const struct modbus_multiple_write_response *modbus_struct);
 void display_modbus_report_slave_id_response(
     const struct modbus_report_slave_id_response *modbus_struct);
+void display_modbus_exception(const struct modbus_exception *modbus_struct);
 
 #endif

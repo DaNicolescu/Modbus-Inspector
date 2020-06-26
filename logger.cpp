@@ -88,6 +88,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_aggregate *modbus_aggregated_frame;
     struct modbus_tcp_generic *report_slave_id_request;
     struct modbus_report_slave_id_response *report_slave_id_response;
+    struct modbus_exception *exception;
     struct device_struct *dev;
     struct address_struct *addr;
     const uint8_t *ip_header;
@@ -184,6 +185,21 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         std::cout << errors << std::endl;
         std::cout << std::endl;
+
+        return;
+    }
+
+    if (modbus_generic->function_code > 0x80) {
+        exception = get_modbus_exception(payload);
+
+        db->add_exception(exception);
+        display_modbus_exception(exception);
+
+        if (modbus_aggregated_frame->query != NULL) {
+            modbus_aggregated_frame->function_code += 0x80;
+            modbus_aggregated_frame->response = exception;
+            db->add_aggregated_exception_frame(modbus_aggregated_frame);
+        }
 
         return;
     }

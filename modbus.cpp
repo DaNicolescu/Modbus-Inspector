@@ -210,6 +210,19 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     return modbus_struct;
 }
 
+struct modbus_exception *get_modbus_exception(const uint8_t *payload)
+{
+    struct modbus_exception *modbus_struct;
+
+    modbus_struct = new modbus_exception;
+
+    memcpy(modbus_struct, payload, sizeof(struct modbus_exception));
+
+    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+
+    return modbus_struct;
+}
+
 std::string get_event_log_event_string(uint8_t event)
 {
     std::string event_string = byte_to_binary_string(event);
@@ -281,6 +294,70 @@ std::string get_diagnostics_subfunction_string(uint16_t subfunction)
         return "Get/Clear Modbus Plus Statistics";
     default:
         return "Unknown Subfunction";
+    }
+}
+
+std::string get_exception_code_string(uint8_t exception_code)
+{
+    switch (exception_code) {
+    case ILLEGAL_FUNCTION:
+        return "Illegal Function";
+    case ILLEGAL_DATA_ADDRESS:
+        return "Illegal Data Address";
+    case ILLEGAL_DATA_VALUE:
+        return "Illegal Data Value";
+    case SLAVE_DEVICE_FAILURE:
+        return "Slave Device Failure";
+    case ACKNOWLEDGE:
+        return "Acknowledge";
+    case SLAVE_DEVICE_BUSY:
+        return "Slave Device Busy";
+    case NEGATIVE_ACKNOWLEDGE:
+        return "Negative Acknowledge";
+    case MEMORY_PARITY_ERROR:
+        return "Memory Parity Error";
+    default:
+        return "Unknown Exception Code";
+    }
+}
+
+std::string get_exception_code_description(uint8_t exception_code)
+{
+    switch (exception_code) {
+    case ILLEGAL_FUNCTION:
+        return "The function code received in the query is not an allowable "
+            "action for the slave. If a Poll Program Complete command was "
+            "issued, this code indicates that no program function preceded it.";
+    case ILLEGAL_DATA_ADDRESS:
+        return "The data address received in the query is not an allowable "
+            "address for the slave.";
+    case ILLEGAL_DATA_VALUE:
+        return "A value contained in the query data field is not an allowable "
+            "value for theslave.";
+    case SLAVE_DEVICE_FAILURE:
+        return "An unrecoverable error occurred while the slave was attempting "
+            "to perform the requested action.";
+    case ACKNOWLEDGE:
+        return "The slave has accepted the request and is processing it, but a "
+            "long duration of time will be required to do so. This response is "
+            "returned to prevent a timeout error from occurring in the master. "
+            "The master can next issue a Poll Program Complete message to "
+            "determine if processing is completed.";
+    case SLAVE_DEVICE_BUSY:
+        return "The slave is engaged in processing a long–duration program "
+            "command. The master should retransmit the message later when the "
+            "slave is free.";
+    case NEGATIVE_ACKNOWLEDGE:
+        return "The slave cannot perform the program function received in the "
+            "query. This code is returned for an unsuccessful programming "
+            "request using function code 13 or 14 decimal. The master should "
+            "request diagnostic or error information from the slave.";
+    case MEMORY_PARITY_ERROR:
+        return "The slave attempted to read extended memory, but detected a "
+            "parity error in the memory. The master can retry the request, but "
+            "service may be required on the slave device.";
+    default:
+        return "No Exception Code Description";
     }
 }
 
@@ -394,6 +471,16 @@ std::string get_modbus_report_slave_id_response_string(
         + separator + "slave ID: " + std::to_string(modbus_struct->slave_id)
         + separator + "run indicator status: "
         + std::to_string(modbus_struct->run_indicator_status);
+}
+
+std::string get_modbus_exception_string(const struct modbus_exception
+    *modbus_struct, char separator)
+{
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "exception code: "
+        + get_exception_code_string(modbus_struct->exception_code) + separator
+        + "description: "
+        + get_exception_code_description(modbus_struct->exception_code);
 }
 
 void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
@@ -523,4 +610,17 @@ void display_modbus_report_slave_id_response(
         std::cout << modbus_struct->additional_data[i] << ", ";
 
     std::cout << std::endl; 
+}
+
+void display_modbus_exception(const struct modbus_exception *modbus_struct)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+
+    std::cout << "exception code: "
+        << get_exception_code_string(modbus_struct->exception_code)
+        << std::endl;
+
+    std::cout << "description: "
+        << get_exception_code_description(modbus_struct->exception_code)
+        << std::endl;
 }

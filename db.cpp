@@ -808,6 +808,55 @@ bool db_manager::add_report_slave_id_response(
     return true;
 }
 
+bool db_manager::add_exception(const struct modbus_exception *modbus_struct)
+{
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "data) VALUES(1, "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code)
+                        +  ", '" + std::to_string(modbus_struct->exception_code)
+                        + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool db_manager::add_display_frame(const std::string &type,
+                                   const std::string &query,
+                                   const std::string &response)
+{
+    std::string db_query = "INSERT INTO `display_frames`(type, request, "
+                           "response) VALUES('" + type + "', '" + query
+                           + "', '" + response + "')";
+
+    std::cout << "db query: " << db_query << std::endl;
+
+    if (mysql_query(this->connection, db_query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_display_frame(const std::string &type,
                                    const std::string &query,
                                    const std::string &response,
@@ -1188,7 +1237,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         response = get_modbus_exception_status_response_string(
             exception_status_response, DISPLAY_FRAME_SEPARATOR);
 
-        add_display_frame(type, query, response, "");
+        add_display_frame(type, query, response);
 
         break;
     case DIAGNOSTICS:
@@ -1205,7 +1254,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         response = get_modbus_diagnostics_string(diagnostics_response,
                                                  DISPLAY_FRAME_SEPARATOR);
 
-        add_display_frame(type, query, response, "");
+        add_display_frame(type, query, response);
 
         break;
     case FETCH_COMM_EVENT_COUNTER:
@@ -1221,7 +1270,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         response = get_modbus_event_counter_response_string(
             event_counter_response, DISPLAY_FRAME_SEPARATOR);
 
-        add_display_frame(type, query, response, "");
+        add_display_frame(type, query, response);
 
         break;
     case FETCH_COMM_EVENT_LOG:
@@ -1237,7 +1286,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         response = get_modbus_event_log_response_string(event_log_response,
             DISPLAY_FRAME_SEPARATOR);
 
-        add_display_frame(type, query, response, "");
+        add_display_frame(type, query, response);
 
         break;
     case FORCE_MULTIPLE_COILS:
@@ -1358,7 +1407,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         response = get_modbus_report_slave_id_response_string(
             report_slave_id_response, DISPLAY_FRAME_SEPARATOR);
 
-        add_display_frame(type, query, response, "");
+        add_display_frame(type, query, response);
 
         break;
     default:
@@ -1368,3 +1417,144 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     return true;
 }
 
+bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
+                                                *aggregated_frame)
+{
+    struct modbus_read_query *read_query;
+    struct modbus_single_write *single_write_query;
+    struct modbus_tcp_generic *exception_status_request;
+    struct modbus_diagnostics *diagnostics_query;
+    struct modbus_tcp_generic *event_counter_request;
+    struct modbus_tcp_generic *event_log_request;
+    struct modbus_multiple_write_query *multiple_write_query;
+    struct modbus_tcp_generic *report_slave_id_request;
+    struct modbus_exception *exception;
+    std::string type;
+    std::string query;
+    std::string response;
+
+    switch (aggregated_frame->function_code) {
+    case READ_COIL_STATUS:
+        type = "READ COIL STATUS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+
+        query = get_modbus_read_query_string(read_query,
+                                             DISPLAY_FRAME_SEPARATOR);
+        break;
+    case READ_INPUT_STATUS:
+        type = "READ INPUT STATUS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+
+        query = get_modbus_read_query_string(read_query,
+                                             DISPLAY_FRAME_SEPARATOR);
+        break;
+    case READ_HOLDING_REGISTERS:
+        type = "READ HOLDING REGISTERS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+
+        query = get_modbus_read_query_string(read_query,
+                                             DISPLAY_FRAME_SEPARATOR);
+        break;
+    case READ_INPUT_REGISTERS:
+        type = "READ INPUT REGISTERS";
+
+        read_query = (struct modbus_read_query*) aggregated_frame->query;
+
+        query = get_modbus_read_query_string(read_query,
+                                             DISPLAY_FRAME_SEPARATOR);
+        break;
+    case FORCE_SINGLE_COIL:
+        type = "FORCE SINGLE COIL";
+
+        single_write_query = (struct modbus_single_write*)
+            aggregated_frame->query;
+
+        query = get_modbus_single_write_string(single_write_query,
+                                               DISPLAY_FRAME_SEPARATOR);
+        break;
+    case PRESET_SINGLE_REGISTER:
+        type = "PRESET SINGLE REGISTER";
+
+        single_write_query = (struct modbus_single_write*)
+            aggregated_frame->query;
+
+        query = get_modbus_single_write_string(single_write_query,
+                                               DISPLAY_FRAME_SEPARATOR);
+        break;
+    case READ_EXCEPTION_STATUS:
+        type = "READ EXCEPTION STATUS";
+
+        exception_status_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+
+        query = get_modbus_tcp_generic_string(exception_status_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        break;
+    case DIAGNOSTICS:
+        type = "DIAGNOSTICS";
+
+        diagnostics_query = (struct modbus_diagnostics*)
+            aggregated_frame->query;
+
+        query = get_modbus_diagnostics_string(diagnostics_query,
+                                              DISPLAY_FRAME_SEPARATOR);
+        break;
+    case FETCH_COMM_EVENT_COUNTER:
+        type = "FETCH COMM EVENT COUNTER";
+
+        event_counter_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+
+        query = get_modbus_tcp_generic_string(event_counter_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        break;
+    case FETCH_COMM_EVENT_LOG:
+        type = "FETCH COMM EVENT LOG";
+
+        event_log_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+
+        query = get_modbus_tcp_generic_string(event_log_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        break;
+    case FORCE_MULTIPLE_COILS:
+        type = "FORCE MULTIPLE COILS";
+
+        multiple_write_query = (struct modbus_multiple_write_query*)
+            aggregated_frame->query;
+
+        query = get_modbus_multiple_write_query_string(multiple_write_query,
+                                                       DISPLAY_FRAME_SEPARATOR);
+        break;
+    case PRESET_MULTIPLE_REGISTERS:
+        type = "PRESET MULTIPLE REGISTERS";
+
+        multiple_write_query = (struct modbus_multiple_write_query*)
+            aggregated_frame->query;
+
+        query = get_modbus_multiple_write_query_string(multiple_write_query,
+                                                       DISPLAY_FRAME_SEPARATOR);
+        break;
+    case REPORT_SLAVE_ID:
+        type = "REPORT SLAVE ID";
+
+        report_slave_id_request = (struct modbus_tcp_generic*)
+            aggregated_frame->query;
+        query = get_modbus_tcp_generic_string(report_slave_id_request,
+                                              DISPLAY_FRAME_SEPARATOR);
+        break;
+    default:
+        std::cout << "Function code decoding not yet implemented" << std::endl;
+    }
+
+    exception = (struct modbus_exception*) aggregated_frame->response;
+
+    response = get_modbus_exception_string(exception, DISPLAY_FRAME_SEPARATOR);
+
+    add_display_frame(type, query, response);
+
+    return true;
+}

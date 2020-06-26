@@ -21,6 +21,7 @@ struct modbus_event_log_response;
 struct modbus_multiple_write_query;
 struct modbus_multiple_write_response;
 struct modbus_report_slave_id_response;
+struct modbus_exception;
 struct modbus_aggregate;
 
 struct db_manager {
@@ -66,7 +67,10 @@ struct db_manager {
                                      *modbus_struct, const std::string &errors);
     bool add_report_slave_id_response(
         const struct modbus_report_slave_id_response *modbus_struct);
+    bool add_exception(const struct modbus_exception *modbus_struct);
 
+    bool add_display_frame(const std::string &type, const std::string &query,
+                           const std::string &response);
     bool add_display_frame(const std::string &type, const std::string &query,
                            const std::string &response,
                            const std::string &aggregated);
@@ -75,6 +79,8 @@ struct db_manager {
                              uint8_t operation, const std::string &value);
     bool add_aggregated_frame(const struct device_struct *dev,
                               const struct modbus_aggregate *aggregated_frame);
+    bool add_aggregated_exception_frame(const struct modbus_aggregate
+                                        *aggregated_frame);
 };
 
 #endif
