@@ -113,7 +113,7 @@ void handle_single_write_query(const struct device_struct *dev,
                                struct modbus_aggregate *modbus_aggregated_frame,
                                uint16_t address_offset)
 {
-    db->add_single_write(single_write_frame, 0);
+    db->add_single_write(single_write_frame, QUERY_FRAME);
 
     display_modbus_single_write(single_write_frame, true);
     dev->display_addresses(single_write_frame->address + address_offset, 1);
@@ -126,7 +126,7 @@ void handle_single_write_query(const struct device_struct *dev,
 void handle_single_write_query(const struct modbus_single_write
                                *single_write_frame, const std::string &errors)
 {
-    db->add_single_write(single_write_frame, 0, errors);
+    db->add_single_write(single_write_frame, QUERY_FRAME, errors);
 
     std::cout << errors << std::endl;
     std::cout << std::endl;
@@ -139,7 +139,7 @@ void handle_single_write_response(const struct device_struct *dev,
                                   *single_write_frame, struct modbus_aggregate
                                   *modbus_aggregated_frame)
 {
-    db->add_single_write(single_write_frame, 1);
+    db->add_single_write(single_write_frame, RESPONSE_FRAME);
     display_modbus_single_write(single_write_frame, false);
 
     if (modbus_aggregated_frame->query != NULL) {
@@ -154,7 +154,7 @@ void handle_read_exception_status_query(struct modbus_tcp_generic
                                           struct modbus_aggregate
                                           *modbus_aggregated_frame)
 {
-    db->add_modbus_generic(exception_status_query, 0);
+    db->add_modbus_generic(exception_status_query, QUERY_FRAME);
 
     display_modbus_tcp_generic(exception_status_query, true);
 
@@ -179,7 +179,7 @@ void handle_read_exception_status_response(const struct device_struct *dev,
 void handle_diagnostics_query(struct modbus_diagnostics *diagnostics_query,
     struct modbus_aggregate *modbus_aggregated_frame)
 {
-    db->add_diagnostics(diagnostics_query, 0);
+    db->add_diagnostics(diagnostics_query, QUERY_FRAME);
 
     display_modbus_diagnostics(diagnostics_query, true);
 
@@ -192,7 +192,7 @@ void handle_diagnostics_response(const struct device_struct *dev,
     struct modbus_diagnostics *diagnostics_response,
     struct modbus_aggregate* modbus_aggregated_frame)
 {
-    db->add_diagnostics(diagnostics_response, 1);
+    db->add_diagnostics(diagnostics_response, RESPONSE_FRAME);
 
     display_modbus_diagnostics(diagnostics_response, false);
 
@@ -205,7 +205,7 @@ void handle_diagnostics_response(const struct device_struct *dev,
 void handle_fetch_comm_event_counter_query(struct modbus_tcp_generic
     *event_counter_query, struct modbus_aggregate *modbus_aggregated_frame)
 {
-    db->add_modbus_generic(event_counter_query, 0);
+    db->add_modbus_generic(event_counter_query, QUERY_FRAME);
 
     display_modbus_tcp_generic(event_counter_query, true);
 
@@ -230,7 +230,7 @@ void handle_fetch_comm_event_counter_response(const struct device_struct *dev,
 void handle_fetch_comm_event_log_query(struct modbus_tcp_generic
     *event_log_query, struct modbus_aggregate *modbus_aggregated_frame)
 {
-    db->add_modbus_generic(event_log_query, 0);
+    db->add_modbus_generic(event_log_query, QUERY_FRAME);
 
     display_modbus_tcp_generic(event_log_query, true);
 
@@ -307,7 +307,7 @@ void handle_force_multiple_write_response(struct modbus_multiple_write_response
 void handle_report_slave_id_request(struct modbus_tcp_generic
     *report_slave_id_request, struct modbus_aggregate *modbus_aggregated_frame)
 {
-    db->add_modbus_generic(report_slave_id_request, 0);
+    db->add_modbus_generic(report_slave_id_request, QUERY_FRAME);
 
     display_modbus_tcp_generic(report_slave_id_request, true);
 

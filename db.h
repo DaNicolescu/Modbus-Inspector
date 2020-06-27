@@ -5,6 +5,9 @@
 
 #define DISPLAY_FRAME_SEPARATOR     '|'
 
+#define QUERY_FRAME                 0
+#define RESPONSE_FRAME              1
+
 typedef struct st_mysql MYSQL;
 
 struct device_struct;
