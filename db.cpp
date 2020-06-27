@@ -808,6 +808,74 @@ bool db_manager::add_report_slave_id_response(
     return true;
 }
 
+bool db_manager::add_mask_write(const struct modbus_mask_write *modbus_struct,
+                                uint8_t type)
+{
+    std::string data;
+
+    data = byte_to_binary_string(modbus_struct->and_mask) + ", "
+        + byte_to_binary_string(modbus_struct->or_mask);
+
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "data) VALUES(" + std::to_string(type) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", '"
+                        + data + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool db_manager::add_mask_write(const struct modbus_mask_write *modbus_struct,
+                                uint8_t type, const std::string &errors)
+{
+    std::string data;
+
+    data = byte_to_binary_string(modbus_struct->and_mask) + ", "
+        + byte_to_binary_string(modbus_struct->or_mask);
+
+    std::string query = "INSERT INTO `frames`(type, transaction_id, "
+                        "protocol_id, length, slave_id, function_code, "
+                        "data, errors) VALUES(" + std::to_string(type) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.transaction_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.protocol_id) + ", "
+                        + std::to_string(modbus_struct->generic_header.length)
+                        + ", " + std::to_string(
+                            modbus_struct->generic_header.unit_id) + ", "
+                        + std::to_string(
+                            modbus_struct->generic_header.function_code) + ", '"
+                        + data + "', '" + errors + "')";
+
+    std::cout << "db query: " << query << std::endl;
+
+    if (mysql_query(this->connection, query.c_str())) {
+        std::cout << mysql_error(this->connection) << std::endl;
+        mysql_close(this->connection);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool db_manager::add_exception(const struct modbus_exception *modbus_struct)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
@@ -924,6 +992,8 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     struct modbus_multiple_write_response *multiple_write_response;
     struct modbus_tcp_generic *report_slave_id_request;
     struct modbus_report_slave_id_response *report_slave_id_response;
+    struct modbus_mask_write *mask_write_query;
+    struct modbus_mask_write *mask_write_response;
     std::string type;
     std::string query;
     std::string response;
@@ -1406,6 +1476,25 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
                                               DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_report_slave_id_response_string(
             report_slave_id_response, DISPLAY_FRAME_SEPARATOR);
+
+        add_display_frame(type, query, response);
+
+        break;
+    case READ_FILE_RECORD:
+        break;
+    case WRITE_FILE_RECORD:
+        break;
+    case MASK_WRITE_REGISTER:
+        type = "MASK WRITE REGISTER";
+
+        mask_write_query = (struct modbus_mask_write*) aggregated_frame->query;
+        mask_write_response = (struct modbus_mask_write*)
+            aggregated_frame->response;
+
+        query = get_modbus_mask_write_string(mask_write_query,
+                                             DISPLAY_FRAME_SEPARATOR);
+        response = get_modbus_mask_write_string(mask_write_response,
+                                                DISPLAY_FRAME_SEPARATOR);
 
         add_display_frame(type, query, response);
 

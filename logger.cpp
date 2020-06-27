@@ -331,6 +331,53 @@ void handle_report_slave_id_response(struct device_struct *dev,
     }
 }
 
+void handle_mask_write_query(const struct device_struct *dev,
+                             struct modbus_mask_write *mask_write,
+                             struct modbus_aggregate *modbus_aggregated_frame)
+{
+    db->add_mask_write(mask_write, QUERY_FRAME);
+
+    display_modbus_mask_write(mask_write, true);
+    dev->display_addresses(mask_write->address + HLD_REGS_OFFSET, 1);
+
+    modbus_aggregated_frame->function_code =
+        mask_write->generic_header.function_code;
+    modbus_aggregated_frame->query = mask_write;
+}
+
+void handle_mask_write_query(const struct modbus_mask_write *mask_write,
+                             const std::string &errors)
+{
+    db->add_mask_write(mask_write, QUERY_FRAME, errors);
+
+    std::cout << errors << std::endl;
+    std::cout << std::endl;
+
+    display_modbus_mask_write(mask_write, true);
+}
+
+void handle_mask_write_response(const struct device_struct *dev,
+    struct modbus_mask_write *mask_write,
+    struct modbus_aggregate *modbus_aggregated_frame)
+{
+    db->add_mask_write(mask_write, RESPONSE_FRAME);
+
+    display_modbus_mask_write(mask_write, false);
+    dev->display_addresses(mask_write->address + HLD_REGS_OFFSET, 1);
+
+    if (modbus_aggregated_frame->query != NULL) {
+        modbus_aggregated_frame->response = mask_write;
+        dev->display_addresses(modbus_aggregated_frame);
+        db->add_aggregated_frame(dev, modbus_aggregated_frame);
+    }
+}
+
+void handle_mask_write_response(struct modbus_mask_write *mask_write,
+                                const std::string &errors)
+{
+    db->add_mask_write(mask_write, RESPONSE_FRAME, errors);
+}
+
 void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
                            const uint8_t *packet)
 {
@@ -352,6 +399,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     struct modbus_aggregate *modbus_aggregated_frame;
     struct modbus_tcp_generic *report_slave_id_query;
     struct modbus_report_slave_id_response *report_slave_id_response;
+    struct modbus_mask_write *mask_write;
     struct modbus_exception *exception;
     struct device_struct *dev;
     struct address_struct *addr;
@@ -362,7 +410,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     int ip_header_length;
     int tcp_header_length;
     int payload_length;
-    bool query_packet;
+    bool query_frame;
     std::string errors;
     bool valid_frame;
 
@@ -424,9 +472,9 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
     modbus_generic = get_modbus_tcp_generic(payload);
 
-    query_packet = modbus_frame_is_query(modbus_generic->transaction_id);
+    query_frame = modbus_frame_is_query(modbus_generic->transaction_id);
 
-    if (query_packet) {
+    if (query_frame) {
         modbus_aggregated_frame = new modbus_aggregate;
         modbus_aggregated_frame->query = NULL;
         modbus_aggregated_frame->response = NULL;
@@ -484,7 +532,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
     switch (modbus_generic->function_code) {
     case READ_COIL_STATUS:
-        if (query_packet) {
+        if (query_frame) {
             read_query = get_modbus_read_query(payload);
 
             valid_frame = dev->valid_read_coils_addresses(
@@ -504,7 +552,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case READ_INPUT_STATUS:
-        if (query_packet) {
+        if (query_frame) {
             read_query = get_modbus_read_query(payload);
 
             valid_frame =
@@ -524,7 +572,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case READ_HOLDING_REGISTERS:
-        if (query_packet) {
+        if (query_frame) {
             read_query = get_modbus_read_query(payload);
 
             valid_frame = dev->valid_read_hld_regs_addresses(
@@ -545,7 +593,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case READ_INPUT_REGISTERS:
-        if (query_packet) {
+        if (query_frame) {
             read_query = get_modbus_read_query(payload);
 
             valid_frame = dev->valid_input_regs_addresses(
@@ -567,7 +615,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     case FORCE_SINGLE_COIL:
         single_write_packet = get_modbus_single_write(payload);
 
-        if (query_packet) {
+        if (query_frame) {
             valid_frame = dev->valid_write_coils_addresses(
                 single_write_packet->address, 1);
 
@@ -588,7 +636,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
     case PRESET_SINGLE_REGISTER:
         single_write_packet = get_modbus_single_write(payload);
 
-        if (query_packet) {
+        if (query_frame) {
             valid_frame = dev->valid_write_hld_regs_addresses(
                 single_write_packet->address, 1);
 
@@ -607,7 +655,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case READ_EXCEPTION_STATUS:
-        if (query_packet) {
+        if (query_frame) {
             exception_status_query = get_modbus_tcp_generic(payload);
 
             handle_read_exception_status_query(exception_status_query,
@@ -623,7 +671,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case DIAGNOSTICS:
-        if (query_packet) {
+        if (query_frame) {
             diagnostics_query = get_modbus_diagnostics(payload);
 
             handle_diagnostics_query(diagnostics_query,
@@ -637,7 +685,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case FETCH_COMM_EVENT_COUNTER:
-        if (query_packet) {
+        if (query_frame) {
             event_counter_query = get_modbus_tcp_generic(payload);
 
             handle_fetch_comm_event_counter_query(event_counter_query,
@@ -652,7 +700,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case FETCH_COMM_EVENT_LOG:
-        if (query_packet) {
+        if (query_frame) {
             event_log_query = get_modbus_tcp_generic(payload);
 
             handle_fetch_comm_event_log_query(event_log_query,
@@ -666,7 +714,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case FORCE_MULTIPLE_COILS:
-        if (query_packet) {
+        if (query_frame) {
             multiple_write_query = get_modbus_multiple_write_query(payload);
 
             valid_frame = dev->valid_write_coils_addresses(
@@ -702,7 +750,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case PRESET_MULTIPLE_REGISTERS:
-        if (query_packet) {
+        if (query_frame) {
             multiple_write_query = get_modbus_multiple_write_query(payload);
 
             valid_frame = dev->valid_write_hld_regs_addresses(
@@ -738,7 +786,7 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
         break;
     case REPORT_SLAVE_ID:
-        if (query_packet) {
+        if (query_frame) {
             report_slave_id_query = get_modbus_tcp_generic(payload);
 
             handle_report_slave_id_request(report_slave_id_query,
@@ -749,6 +797,33 @@ void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr *header,
 
             handle_report_slave_id_response(dev, report_slave_id_response,
                                             modbus_aggregated_frame);
+        }
+
+        break;
+    case READ_FILE_RECORD:
+        break;
+    case WRITE_FILE_RECORD:
+        break;
+    case MASK_WRITE_REGISTER:
+        mask_write = get_modbus_mask_write(payload);
+
+        valid_frame = dev->valid_write_hld_regs_addresses(mask_write->address,
+                                                          1);
+
+        if (query_frame) {
+            if (valid_frame) {
+                handle_mask_write_query(dev, mask_write,
+                                        modbus_aggregated_frame);
+            } else {
+                handle_mask_write_query(mask_write, "Invalid address");
+            }
+        } else {
+            if (valid_frame) {
+                handle_mask_write_response(dev, mask_write,
+                                           modbus_aggregated_frame);
+            } else {
+                handle_mask_write_response(mask_write, "Invalid address");
+            }
         }
 
         break;

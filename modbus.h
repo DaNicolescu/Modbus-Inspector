@@ -17,6 +17,9 @@
 #define FORCE_MULTIPLE_COILS            0x0F
 #define PRESET_MULTIPLE_REGISTERS       0x10
 #define REPORT_SLAVE_ID                 0x11
+#define READ_FILE_RECORD                0x14
+#define WRITE_FILE_RECORD               0x15
+#define MASK_WRITE_REGISTER             0x16
 
 #define DIAG_RET_QUERY_DATA             0x00
 #define DIAG_RESTART_COMM_OPTION        0x01
@@ -130,6 +133,20 @@ struct modbus_exception {
     uint8_t exception_code;
 } __attribute__((packed));
 
+struct modbus_file_record_read_subquery {
+    uint8_t reference_type;
+    uint16_t file_number;
+    uint16_t starting_address;
+    uint16_t num_of_registers;
+} __attribute__((packed));
+
+struct modbus_mask_write {
+    struct modbus_tcp_generic generic_header;
+    uint16_t address;
+    uint16_t and_mask;
+    uint16_t or_mask;
+} __attribute__((packed));
+
 struct modbus_aggregate {
     uint8_t function_code;
     void *query;
@@ -153,6 +170,7 @@ struct modbus_multiple_write_response *get_modbus_multiple_write_response(
     const uint8_t *payload);
 struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     const uint8_t *payload);
+struct modbus_mask_write *get_modbus_mask_write(const uint8_t *payload);
 struct modbus_exception *get_modbus_exception(const uint8_t *payload);
 
 std::string get_function_code_string(uint8_t function_code);
@@ -185,6 +203,8 @@ std::string get_modbus_multiple_write_response_string(
 std::string get_modbus_report_slave_id_response_string(
     const struct modbus_report_slave_id_response *modbus_struct,
     char separator);
+std::string get_modbus_mask_write_string(const struct modbus_mask_write
+    *modbus_struct, char separator);
 std::string get_modbus_exception_string(const struct modbus_exception
     *modbus_struct, char separator);
 
@@ -209,6 +229,8 @@ void display_modbus_multiple_write_response(
     const struct modbus_multiple_write_response *modbus_struct);
 void display_modbus_report_slave_id_response(
     const struct modbus_report_slave_id_response *modbus_struct);
+void display_modbus_mask_write(const struct modbus_mask_write *modbus_struct,
+                               bool query_packet);
 void display_modbus_exception(const struct modbus_exception *modbus_struct);
 
 #endif

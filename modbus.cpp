@@ -210,6 +210,23 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     return modbus_struct;
 }
 
+struct modbus_mask_write *get_modbus_mask_write(const uint8_t *payload)
+{
+    struct modbus_mask_write *modbus_struct;
+
+    modbus_struct = new modbus_mask_write;
+
+    memcpy(modbus_struct, payload, sizeof(struct modbus_mask_write));
+
+    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+
+    modbus_struct->address = htons(modbus_struct->address);
+    modbus_struct->and_mask = htons(modbus_struct->and_mask);
+    modbus_struct->or_mask = htons(modbus_struct->or_mask);
+
+    return modbus_struct;
+}
+
 struct modbus_exception *get_modbus_exception(const uint8_t *payload)
 {
     struct modbus_exception *modbus_struct;
@@ -510,6 +527,16 @@ std::string get_modbus_report_slave_id_response_string(
         + std::to_string(modbus_struct->run_indicator_status);
 }
 
+std::string get_modbus_mask_write_string(const struct modbus_mask_write
+    *modbus_struct, char separator)
+{
+    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+        separator) + separator + "address: "
+        + std::to_string(modbus_struct->address) + separator + "and mask: "
+        + byte_to_binary_string(modbus_struct->and_mask) + separator
+        + "or mask: " + byte_to_binary_string(modbus_struct->or_mask);
+}
+
 std::string get_modbus_exception_string(const struct modbus_exception
     *modbus_struct, char separator)
 {
@@ -649,6 +676,18 @@ void display_modbus_report_slave_id_response(
         std::cout << modbus_struct->additional_data[i] << ", ";
 
     std::cout << std::endl; 
+}
+
+void display_modbus_mask_write(const struct modbus_mask_write *modbus_struct,
+                               bool query_packet)
+{
+    display_modbus_tcp_generic(&(modbus_struct->generic_header), query_packet);
+
+    std::cout << "address: " << modbus_struct->address << std::endl;
+    std::cout << "and mask: " << byte_to_binary_string(modbus_struct->and_mask)
+        << std::endl;
+    std::cout << "or mask: " << byte_to_binary_string(modbus_struct->or_mask)
+        << std::endl;
 }
 
 void display_modbus_exception(const struct modbus_exception *modbus_struct)

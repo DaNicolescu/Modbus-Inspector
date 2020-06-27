@@ -70,6 +70,10 @@ struct db_manager {
                                      *modbus_struct, const std::string &errors);
     bool add_report_slave_id_response(
         const struct modbus_report_slave_id_response *modbus_struct);
+    bool add_mask_write(const struct modbus_mask_write *mask_write,
+                        uint8_t type);
+    bool add_mask_write(const struct modbus_mask_write *mask_write,
+                        uint8_t type, const std::string &errors);
     bool add_exception(const struct modbus_exception *modbus_struct);
 
     bool add_display_frame(const std::string &type, const std::string &query,
