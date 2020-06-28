@@ -68,7 +68,8 @@ namespace logger {
         struct modbus_read_query *read_query, struct modbus_aggregate
         *modbus_aggregated_frame, uint16_t address_offset)
     {
-        db->add_read_query(read_query);
+        if (log)
+            db->add_read_query(read_query);
 
         if (display) {
             display_modbus_read_query(read_query);
@@ -84,7 +85,8 @@ namespace logger {
     void handle_read_query(const struct modbus_read_query *read_query,
         const std::string &errors)
     {
-        db->add_read_query(read_query, errors);
+        if (log)
+            db->add_read_query(read_query, errors);
 
         if (display) {
             display_modbus_read_query(read_query);
@@ -98,14 +100,17 @@ namespace logger {
         struct modbus_read_response *read_response,
         struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_read_response(read_response);
+        if (log)
+            db->add_read_response(read_response);
 
         if (display)
             display_modbus_read_response(read_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = read_response;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
 
             if (display)
                 dev->display_addresses(modbus_aggregated_frame);
@@ -117,7 +122,8 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame,
         uint16_t address_offset)
     {
-        db->add_single_write(single_write_frame, QUERY_FRAME);
+        if (log)
+            db->add_single_write(single_write_frame, QUERY_FRAME);
 
         if (display) {
             display_modbus_single_write(single_write_frame, true);
@@ -133,7 +139,8 @@ namespace logger {
     void handle_single_write_query(const struct modbus_single_write
         *single_write_frame, const std::string &errors)
     {
-        db->add_single_write(single_write_frame, QUERY_FRAME, errors);
+        if (log)
+            db->add_single_write(single_write_frame, QUERY_FRAME, errors);
 
         if (display) {
             display_modbus_single_write(single_write_frame, true);
@@ -147,14 +154,17 @@ namespace logger {
         struct modbus_single_write *single_write_frame,
         struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_single_write(single_write_frame, RESPONSE_FRAME);
+        if (log)
+            db->add_single_write(single_write_frame, RESPONSE_FRAME);
 
         if (display)
             display_modbus_single_write(single_write_frame, false);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = single_write_frame;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
 
             if (display)
                 dev->display_addresses(modbus_aggregated_frame);
@@ -165,7 +175,8 @@ namespace logger {
         *exception_status_query, struct modbus_aggregate
         *modbus_aggregated_frame)
     {
-        db->add_modbus_generic(exception_status_query, QUERY_FRAME);
+        if (log)
+            db->add_modbus_generic(exception_status_query, QUERY_FRAME);
 
         if (display)
             display_modbus_tcp_generic(exception_status_query, true);
@@ -180,21 +191,25 @@ namespace logger {
         *exception_status_response, struct modbus_aggregate
         *modbus_aggregated_frame)
     {
-        db->add_exception_status_response(exception_status_response);
+        if (log)
+            db->add_exception_status_response(exception_status_response);
 
         if (display)
             display_modbus_exception_status_response(exception_status_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = exception_status_response;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
     }
 
     void handle_diagnostics_query(struct modbus_diagnostics
         *diagnostics_query, struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_diagnostics(diagnostics_query, QUERY_FRAME);
+        if (log)
+            db->add_diagnostics(diagnostics_query, QUERY_FRAME);
 
         if (display)
             display_modbus_diagnostics(diagnostics_query, true);
@@ -208,21 +223,25 @@ namespace logger {
         struct modbus_diagnostics *diagnostics_response,
         struct modbus_aggregate* modbus_aggregated_frame)
     {
-        db->add_diagnostics(diagnostics_response, RESPONSE_FRAME);
+        if (log)
+            db->add_diagnostics(diagnostics_response, RESPONSE_FRAME);
 
         if (display)
             display_modbus_diagnostics(diagnostics_response, false);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = diagnostics_response;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
     }
 
     void handle_fetch_comm_event_counter_query(struct modbus_tcp_generic
         *event_counter_query, struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_modbus_generic(event_counter_query, QUERY_FRAME);
+        if (log)
+            db->add_modbus_generic(event_counter_query, QUERY_FRAME);
 
         if (display)
             display_modbus_tcp_generic(event_counter_query, true);
@@ -236,21 +255,25 @@ namespace logger {
         *dev, struct modbus_event_counter_response *event_counter_response,
         struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_event_counter_response(event_counter_response);
+        if (log)
+            db->add_event_counter_response(event_counter_response);
 
         if (display)
             display_modbus_event_counter_response(event_counter_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = event_counter_response;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
     }
 
     void handle_fetch_comm_event_log_query(struct modbus_tcp_generic
         *event_log_query, struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_modbus_generic(event_log_query, QUERY_FRAME);
+        if (log)
+            db->add_modbus_generic(event_log_query, QUERY_FRAME);
 
         if (display)
             display_modbus_tcp_generic(event_log_query, true);
@@ -263,14 +286,17 @@ namespace logger {
         *dev, struct modbus_event_log_response *event_log_response,
         struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_event_log_response(event_log_response);
+        if (log)
+            db->add_event_log_response(event_log_response);
 
         if (display)
             display_modbus_event_log_response(event_log_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = event_log_response;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
     }
 
@@ -279,7 +305,8 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame,
         uint16_t address_offset)
     {
-        db->add_multiple_write_query(multiple_write_query);
+        if (log)
+            db->add_multiple_write_query(multiple_write_query);
 
         if (display) {
             display_modbus_multiple_write_query(multiple_write_query);
@@ -296,7 +323,8 @@ namespace logger {
         struct modbus_multiple_write_query *multiple_write_query,
         const std::string &errors)
     {
-        db->add_multiple_write_query(multiple_write_query, errors);
+        if (log)
+            db->add_multiple_write_query(multiple_write_query, errors);
 
         if (display) {
             display_modbus_multiple_write_query(multiple_write_query);
@@ -311,7 +339,8 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame,
         uint16_t address_offset)
     {
-        db->add_multiple_write_response(multiple_write_response);
+        if (log)
+            db->add_multiple_write_response(multiple_write_response);
 
         if (display) {
             display_modbus_multiple_write_response(multiple_write_response);
@@ -321,7 +350,9 @@ namespace logger {
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = multiple_write_response;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
 
             if (display)
                 dev->display_addresses(modbus_aggregated_frame);
@@ -332,14 +363,16 @@ namespace logger {
         struct modbus_multiple_write_response *multiple_write_response,
         const std::string &errors)
     {
-        db->add_multiple_write_response(multiple_write_response, errors);
+        if (log)
+            db->add_multiple_write_response(multiple_write_response, errors);
     }
 
     void handle_report_slave_id_request(struct modbus_tcp_generic
         *report_slave_id_request, struct modbus_aggregate
         *modbus_aggregated_frame)
     {
-        db->add_modbus_generic(report_slave_id_request, QUERY_FRAME);
+        if (log)
+            db->add_modbus_generic(report_slave_id_request, QUERY_FRAME);
 
         if (display)
             display_modbus_tcp_generic(report_slave_id_request, true);
@@ -353,7 +386,8 @@ namespace logger {
         struct modbus_report_slave_id_response *report_slave_id_response,
         struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_report_slave_id_response(report_slave_id_response);
+        if (log)
+            db->add_report_slave_id_response(report_slave_id_response);
 
         if (display)
             display_modbus_report_slave_id_response(report_slave_id_response);
@@ -362,7 +396,9 @@ namespace logger {
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = report_slave_id_response;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
         }
     }
 
@@ -370,7 +406,8 @@ namespace logger {
         struct modbus_mask_write *mask_write,
         struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_mask_write(mask_write, QUERY_FRAME);
+        if (log)
+            db->add_mask_write(mask_write, QUERY_FRAME);
 
         if (display) {
             display_modbus_mask_write(mask_write, true);
@@ -385,7 +422,8 @@ namespace logger {
     void handle_mask_write_query(const struct modbus_mask_write *mask_write,
         const std::string &errors)
     {
-        db->add_mask_write(mask_write, QUERY_FRAME, errors);
+        if (log)
+            db->add_mask_write(mask_write, QUERY_FRAME, errors);
 
         if (display) {
             display_modbus_mask_write(mask_write, true);
@@ -399,7 +437,8 @@ namespace logger {
         struct modbus_mask_write *mask_write,
         struct modbus_aggregate *modbus_aggregated_frame)
     {
-        db->add_mask_write(mask_write, RESPONSE_FRAME);
+        if (log)
+            db->add_mask_write(mask_write, RESPONSE_FRAME);
 
         if (display) {
             display_modbus_mask_write(mask_write, false);
@@ -408,7 +447,9 @@ namespace logger {
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = mask_write;
-            db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (log)
+                db->add_aggregated_frame(dev, modbus_aggregated_frame);
 
             if (display)
                 dev->display_addresses(modbus_aggregated_frame);
@@ -418,7 +459,8 @@ namespace logger {
     void handle_mask_write_response(struct modbus_mask_write *mask_write,
         const std::string &errors)
     {
-        db->add_mask_write(mask_write, RESPONSE_FRAME, errors);
+        if (log)
+            db->add_mask_write(mask_write, RESPONSE_FRAME, errors);
     }
 
     void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr
@@ -538,7 +580,8 @@ namespace logger {
                 + std::to_string(modbus_generic->unit_id)
                 + " does not exist";
 
-            db->add_modbus_generic(modbus_generic, 0, errors);
+            if (log)
+                db->add_modbus_generic(modbus_generic, 0, errors);
 
             std::cout << errors << std::endl;
             std::cout << std::endl;
@@ -549,7 +592,8 @@ namespace logger {
         if (modbus_generic->function_code > 0x80) {
             exception = get_modbus_exception(payload);
 
-            db->add_exception(exception);
+            if (log)
+                db->add_exception(exception);
 
             if (display)
                 display_modbus_exception(exception);
@@ -557,7 +601,9 @@ namespace logger {
             if (modbus_aggregated_frame->query != NULL) {
                 modbus_aggregated_frame->function_code += 0x80;
                 modbus_aggregated_frame->response = exception;
-                db->add_aggregated_exception_frame(modbus_aggregated_frame);
+
+                if (log)
+                    db->add_aggregated_exception_frame(modbus_aggregated_frame);
             }
 
             return;
@@ -568,7 +614,8 @@ namespace logger {
                 + std::to_string(modbus_generic->function_code)
                 + " not supported";
 
-            db->add_modbus_generic(modbus_generic, 0, errors);
+            if (log)
+                db->add_modbus_generic(modbus_generic, 0, errors);
 
             std::cout << errors << std::endl;
             std::cout << std::endl;
@@ -914,9 +961,10 @@ namespace logger {
     void display_help()
     {
         std::cout << "Modbus Logger" << std::endl;
-        std::cout << "-h       print the help" << std::endl;
-        std::cout << "-d       print the frames to stdout" << std::endl;
-        std::cout << "-l       log the frames in a database" << std::endl;
+        std::cout << "-h            print the help" << std::endl;
+        std::cout << "-d            print the frames to stdout" << std::endl;
+        std::cout << "-l DB_NAME    create and log the frames in a database"
+            << std::endl;
     }
 
     int parse_arguments(int argc, char **argv)
@@ -926,7 +974,7 @@ namespace logger {
         display = false;
         log = false;
 
-        while ((option = getopt(argc, argv, ":hdl")) != -1) {
+        while ((option = getopt(argc, argv, ":hdl:")) != -1) {
             switch (option) {
             case 'd':
                 display = true;
@@ -938,6 +986,12 @@ namespace logger {
                 return 1;
             case 'l':
                 log = true;
+
+                db = new db_manager;
+
+                db->open();
+                db->create_database(std::string(optarg));
+                db->create_tables();
 
                 break;
             case ':':
@@ -964,12 +1018,6 @@ namespace logger {
 
         if (ret)
             return 1;
-
-        db = new db_manager;
-
-        db->open();
-        db->create_database("modbus");
-        db->create_tables();
 
         // list_interfaces();
 
@@ -1028,7 +1076,8 @@ namespace logger {
 
     void close()
     {
-        db->close();
+        if (log)
+            db->close();
     }
 }
 
