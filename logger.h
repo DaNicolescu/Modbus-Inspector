@@ -2,6 +2,8 @@
 #define LOGGER_H
 
 #include <unordered_map>
+#include <string>
+#include <pcap.h>
 
 #include "db.h"
 
@@ -10,6 +12,10 @@
 namespace logger {
     bool display;
     bool log;
+
+    std::string interface;
+
+    pcap_t *pcap_handler;
 
     std::unordered_map<uint16_t, struct modbus_aggregate*>
         modbus_aggregated_frames;
@@ -22,6 +28,8 @@ namespace logger {
 
     void display_help();
     int parse_arguments(int argc, char **argv);
+
+    void sigint_handler(int signum);
 
     void list_interfaces();
     void display_devices();

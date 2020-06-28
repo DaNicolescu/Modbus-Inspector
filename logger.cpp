@@ -2,9 +2,9 @@
 #include <iostream>
 #include <string.h>
 #include <unistd.h>
-#include <pcap.h>
 #include <net/ethernet.h>
 #include <netinet/in.h>
+#include <signal.h>
 
 #include "logger.h"
 #include "XlsReader.h"
@@ -33,8 +33,8 @@ namespace logger {
         current_dev = all_devs;
 
         while (current_dev) {
-            std::cout << current_dev->name << " " << (current_dev->description
-                ? current_dev->description : "(no description)") << std::endl;
+            printf("%-13s %s\n", current_dev->name, (current_dev->description
+                ? current_dev->description : "(no description)"));
 
             current_dev = current_dev->next;
         }
@@ -965,6 +965,16 @@ namespace logger {
         std::cout << "-d            print the frames to stdout" << std::endl;
         std::cout << "-l DB_NAME    create and log the frames in a database"
             << std::endl;
+        std::cout << "-i INT_NAME   capture the frames on the INT_NAME "
+            << "interface (default interface is lo)" << std::endl;
+        std::cout << "-t SECONDS    run the logger for a specified amount of "
+            << "time (by default the program runs indefinitely and can be "
+            << "stopped using the SIGINT signal)" << std::endl;
+
+        std::cout << std::endl;
+        std::cout << "Available Interfaces" << std::endl;
+
+        list_interfaces();
     }
 
     int parse_arguments(int argc, char **argv)
@@ -974,7 +984,9 @@ namespace logger {
         display = false;
         log = false;
 
-        while ((option = getopt(argc, argv, ":hdl:")) != -1) {
+        interface = "lo";
+
+        while ((option = getopt(argc, argv, ":hdl:i:")) != -1) {
             switch (option) {
             case 'd':
                 display = true;
@@ -984,6 +996,10 @@ namespace logger {
                 display_help();
 
                 return 1;
+            case 'i':
+                interface = std::string(optarg);
+
+                break;
             case 'l':
                 log = true;
 
@@ -1010,6 +1026,15 @@ namespace logger {
         return 0;
     }
 
+    void sigint_handler(int signum)
+    {
+        std::cout << "Terminating program..." << std::endl;
+
+        close();
+
+        exit(0);
+    }
+
     int init(int argc, char **argv)
     {
         int ret;
@@ -1019,30 +1044,27 @@ namespace logger {
         if (ret)
             return 1;
 
-        // list_interfaces();
-
         //display_xls_config_file(XLS_CONFIG_FILE_NAME);
         extract_data_from_xls_config_file(XLS_CONFIG_FILE_NAME, devices_map);
         display_devices();
 
-        add_addresses_to_db(db);
+        if (log)
+            add_addresses_to_db(db);
 
         return 0;
     }
 
     int run()
     {
-        pcap_t *pcap_handler;
         struct bpf_program filter;
         char error_buffer[PCAP_ERRBUF_SIZE];
-        char const *device = "lo";
         int snapshot_len = 1028;
         int promiscuous = 1;
         int timeout = 1000;
         int res;
 
-        pcap_handler = pcap_open_live(device, snapshot_len, promiscuous,
-                                      timeout, error_buffer);
+        pcap_handler = pcap_open_live(interface.c_str(), snapshot_len,
+                                      promiscuous, timeout, error_buffer);
 
         if (!pcap_handler) {
             std::cout << "Error while opening device" << std::endl;
@@ -1070,12 +1092,17 @@ namespace logger {
         //    return 1;
         //}
 
+        signal(SIGINT, sigint_handler);
         pcap_loop(pcap_handler, -1, modbus_packet_handler, NULL);
-        pcap_close(pcap_handler);
     }
 
     void close()
     {
+        if (pcap_handler) {
+            pcap_breakloop(pcap_handler);
+            pcap_close(pcap_handler);
+        }
+
         if (log)
             db->close();
     }
