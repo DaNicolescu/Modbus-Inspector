@@ -70,9 +70,11 @@ namespace logger {
     {
         db->add_read_query(read_query);
 
-        display_modbus_read_query(read_query);
-        dev->display_addresses(read_query->starting_address + address_offset,
-                               read_query->num_of_points);
+        if (display) {
+            display_modbus_read_query(read_query);
+            dev->display_addresses(read_query->starting_address
+                + address_offset, read_query->num_of_points);
+        }
 
         modbus_aggregated_frame->function_code =
             read_query->generic_header.function_code;
@@ -84,10 +86,12 @@ namespace logger {
     {
         db->add_read_query(read_query, errors);
 
-        std::cout << errors << std::endl;
-        std::cout << std::endl;
+        if (display) {
+            display_modbus_read_query(read_query);
 
-        display_modbus_read_query(read_query);
+            std::cout << errors << std::endl;
+            std::cout << std::endl;
+        }
     }
 
     void handle_read_response(const struct device_struct *dev,
@@ -95,12 +99,16 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame)
     {
         db->add_read_response(read_response);
-        display_modbus_read_response(read_response);
+
+        if (display)
+            display_modbus_read_response(read_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = read_response;
-            dev->display_addresses(modbus_aggregated_frame);
             db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (display)
+                dev->display_addresses(modbus_aggregated_frame);
         }
     }
 
@@ -111,8 +119,11 @@ namespace logger {
     {
         db->add_single_write(single_write_frame, QUERY_FRAME);
 
-        display_modbus_single_write(single_write_frame, true);
-        dev->display_addresses(single_write_frame->address + address_offset, 1);
+        if (display) {
+            display_modbus_single_write(single_write_frame, true);
+            dev->display_addresses(single_write_frame->address + address_offset,
+                1);
+        }
 
         modbus_aggregated_frame->function_code =
             single_write_frame->generic_header.function_code;
@@ -124,10 +135,12 @@ namespace logger {
     {
         db->add_single_write(single_write_frame, QUERY_FRAME, errors);
 
-        std::cout << errors << std::endl;
-        std::cout << std::endl;
+        if (display) {
+            display_modbus_single_write(single_write_frame, true);
 
-        display_modbus_single_write(single_write_frame, true);
+            std::cout << errors << std::endl;
+            std::cout << std::endl;
+        }
     }
 
     void handle_single_write_response(const struct device_struct *dev,
@@ -135,12 +148,16 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame)
     {
         db->add_single_write(single_write_frame, RESPONSE_FRAME);
-        display_modbus_single_write(single_write_frame, false);
+
+        if (display)
+            display_modbus_single_write(single_write_frame, false);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = single_write_frame;
-            dev->display_addresses(modbus_aggregated_frame);
             db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (display)
+                dev->display_addresses(modbus_aggregated_frame);
         }
     }
 
@@ -150,7 +167,8 @@ namespace logger {
     {
         db->add_modbus_generic(exception_status_query, QUERY_FRAME);
 
-        display_modbus_tcp_generic(exception_status_query, true);
+        if (display)
+            display_modbus_tcp_generic(exception_status_query, true);
 
         modbus_aggregated_frame->function_code =
             exception_status_query->function_code;
@@ -163,7 +181,9 @@ namespace logger {
         *modbus_aggregated_frame)
     {
         db->add_exception_status_response(exception_status_response);
-        display_modbus_exception_status_response(exception_status_response);
+
+        if (display)
+            display_modbus_exception_status_response(exception_status_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = exception_status_response;
@@ -176,7 +196,8 @@ namespace logger {
     {
         db->add_diagnostics(diagnostics_query, QUERY_FRAME);
 
-        display_modbus_diagnostics(diagnostics_query, true);
+        if (display)
+            display_modbus_diagnostics(diagnostics_query, true);
 
         modbus_aggregated_frame->function_code =
             diagnostics_query->generic_header.function_code;
@@ -189,7 +210,8 @@ namespace logger {
     {
         db->add_diagnostics(diagnostics_response, RESPONSE_FRAME);
 
-        display_modbus_diagnostics(diagnostics_response, false);
+        if (display)
+            display_modbus_diagnostics(diagnostics_response, false);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = diagnostics_response;
@@ -202,7 +224,8 @@ namespace logger {
     {
         db->add_modbus_generic(event_counter_query, QUERY_FRAME);
 
-        display_modbus_tcp_generic(event_counter_query, true);
+        if (display)
+            display_modbus_tcp_generic(event_counter_query, true);
 
         modbus_aggregated_frame->function_code =
             event_counter_query->function_code;
@@ -214,7 +237,9 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame)
     {
         db->add_event_counter_response(event_counter_response);
-        display_modbus_event_counter_response(event_counter_response);
+
+        if (display)
+            display_modbus_event_counter_response(event_counter_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = event_counter_response;
@@ -227,7 +252,8 @@ namespace logger {
     {
         db->add_modbus_generic(event_log_query, QUERY_FRAME);
 
-        display_modbus_tcp_generic(event_log_query, true);
+        if (display)
+            display_modbus_tcp_generic(event_log_query, true);
 
         modbus_aggregated_frame->function_code = event_log_query->function_code;
         modbus_aggregated_frame->query = event_log_query;
@@ -238,7 +264,9 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame)
     {
         db->add_event_log_response(event_log_response);
-        display_modbus_event_log_response(event_log_response);
+
+        if (display)
+            display_modbus_event_log_response(event_log_response);
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = event_log_response;
@@ -251,12 +279,13 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame,
         uint16_t address_offset)
     {
-         db->add_multiple_write_query(multiple_write_query);
+        db->add_multiple_write_query(multiple_write_query);
 
-        display_modbus_multiple_write_query(multiple_write_query);
-        dev->display_addresses(multiple_write_query->starting_address
-                               + address_offset,
-                               multiple_write_query->num_of_points);
+        if (display) {
+            display_modbus_multiple_write_query(multiple_write_query);
+            dev->display_addresses(multiple_write_query->starting_address
+                + address_offset, multiple_write_query->num_of_points);
+        }
 
         modbus_aggregated_frame->function_code =
             multiple_write_query->generic_header.function_code;
@@ -269,10 +298,12 @@ namespace logger {
     {
         db->add_multiple_write_query(multiple_write_query, errors);
 
-        std::cout << errors << std::endl;
-        std::cout << std::endl;
+        if (display) {
+            display_modbus_multiple_write_query(multiple_write_query);
 
-        display_modbus_multiple_write_query(multiple_write_query);
+            std::cout << errors << std::endl;
+            std::cout << std::endl;
+        }
     }
 
     void handle_force_multiple_write_response(const struct device_struct
@@ -282,15 +313,18 @@ namespace logger {
     {
         db->add_multiple_write_response(multiple_write_response);
 
-        display_modbus_multiple_write_response(multiple_write_response);
-        dev->display_addresses(multiple_write_response->starting_address
-                               + address_offset,
-                               multiple_write_response->num_of_points);
+        if (display) {
+            display_modbus_multiple_write_response(multiple_write_response);
+            dev->display_addresses(multiple_write_response->starting_address
+                + address_offset, multiple_write_response->num_of_points);
+        }
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = multiple_write_response;
-            dev->display_addresses(modbus_aggregated_frame);
             db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (display)
+                dev->display_addresses(modbus_aggregated_frame);
         }
     }
 
@@ -307,7 +341,8 @@ namespace logger {
     {
         db->add_modbus_generic(report_slave_id_request, QUERY_FRAME);
 
-        display_modbus_tcp_generic(report_slave_id_request, true);
+        if (display)
+            display_modbus_tcp_generic(report_slave_id_request, true);
 
         modbus_aggregated_frame->function_code =
             report_slave_id_request->function_code;
@@ -319,7 +354,9 @@ namespace logger {
         struct modbus_aggregate *modbus_aggregated_frame)
     {
         db->add_report_slave_id_response(report_slave_id_response);
-        display_modbus_report_slave_id_response(report_slave_id_response);
+
+        if (display)
+            display_modbus_report_slave_id_response(report_slave_id_response);
 
         modbus_aggregated_frame->response = report_slave_id_response;
 
@@ -335,8 +372,10 @@ namespace logger {
     {
         db->add_mask_write(mask_write, QUERY_FRAME);
 
-        display_modbus_mask_write(mask_write, true);
-        dev->display_addresses(mask_write->address + HLD_REGS_OFFSET, 1);
+        if (display) {
+            display_modbus_mask_write(mask_write, true);
+            dev->display_addresses(mask_write->address + HLD_REGS_OFFSET, 1);
+        }
 
         modbus_aggregated_frame->function_code =
             mask_write->generic_header.function_code;
@@ -348,10 +387,12 @@ namespace logger {
     {
         db->add_mask_write(mask_write, QUERY_FRAME, errors);
 
-        std::cout << errors << std::endl;
-        std::cout << std::endl;
+        if (display) {
+            display_modbus_mask_write(mask_write, true);
 
-        display_modbus_mask_write(mask_write, true);
+            std::cout << errors << std::endl;
+            std::cout << std::endl;
+        }
     }
 
     void handle_mask_write_response(const struct device_struct *dev,
@@ -360,13 +401,17 @@ namespace logger {
     {
         db->add_mask_write(mask_write, RESPONSE_FRAME);
 
-        display_modbus_mask_write(mask_write, false);
-        dev->display_addresses(mask_write->address + HLD_REGS_OFFSET, 1);
+        if (display) {
+            display_modbus_mask_write(mask_write, false);
+            dev->display_addresses(mask_write->address + HLD_REGS_OFFSET, 1);
+        }
 
         if (modbus_aggregated_frame->query != NULL) {
             modbus_aggregated_frame->response = mask_write;
-            dev->display_addresses(modbus_aggregated_frame);
             db->add_aggregated_frame(dev, modbus_aggregated_frame);
+
+            if (display)
+                dev->display_addresses(modbus_aggregated_frame);
         }
     }
 
@@ -505,7 +550,9 @@ namespace logger {
             exception = get_modbus_exception(payload);
 
             db->add_exception(exception);
-            display_modbus_exception(exception);
+
+            if (display)
+                display_modbus_exception(exception);
 
             if (modbus_aggregated_frame->query != NULL) {
                 modbus_aggregated_frame->function_code += 0x80;
