@@ -2,19 +2,26 @@
 #define LOGGER_H
 
 #include <unordered_map>
+
 #include "db.h"
 
 #define ETH_HDR_LEN                 0x0E
 
 namespace logger {
+    bool display;
+    bool log;
+
     std::unordered_map<uint16_t, struct modbus_aggregate*>
         modbus_aggregated_frames;
     std::unordered_map<uint8_t, struct device_struct*> devices_map;
     struct db_manager *db;
 
-    void init();
+    int init(int argc, char **argv);
     int run();
     void close();
+
+    void display_help();
+    int parse_arguments(int argc, char **argv);
 
     void list_interfaces();
     void display_devices();

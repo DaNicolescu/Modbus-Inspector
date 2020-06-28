@@ -1,6 +1,7 @@
 /* Compile with: g++ logger.c -lpcap */
 #include <iostream>
 #include <string.h>
+#include <unistd.h>
 #include <pcap.h>
 #include <net/ethernet.h>
 #include <netinet/in.h>
@@ -12,10 +13,6 @@
 #include "config.h"
 #include "utils.h"
 #include "db.h"
-
-std::unordered_map<uint16_t, struct modbus_aggregate*> modbus_aggregated_frames;
-std::unordered_map<uint8_t, struct device_struct*> devices_map;
-struct db_manager *db;
 
 namespace logger {
     void list_interfaces()
@@ -867,8 +864,60 @@ namespace logger {
         }
     }
 
-    void init()
+    void display_help()
     {
+        std::cout << "Modbus Logger" << std::endl;
+        std::cout << "-h       print the help" << std::endl;
+        std::cout << "-d       print the frames to stdout" << std::endl;
+        std::cout << "-l       log the frames in a database" << std::endl;
+    }
+
+    int parse_arguments(int argc, char **argv)
+    {
+        int option;
+
+        display = false;
+        log = false;
+
+        while ((option = getopt(argc, argv, ":hdl")) != -1) {
+            switch (option) {
+            case 'd':
+                display = true;
+
+                break;
+            case 'h':
+                display_help();
+
+                return 1;
+            case 'l':
+                log = true;
+
+                break;
+            case ':':
+                std::cout << "a value is required, use -h to print the help"
+                    << std::endl;
+
+                return 1;
+            case '?':
+                std::cout << "unknown option: " << (char) optopt
+                    << ", use -h to print the help" << std::endl;
+
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    int init(int argc, char **argv)
+    {
+        int ret;
+
+        ret = parse_arguments(argc, argv);
+
+        if (ret)
+            return 1;
+
         db = new db_manager;
 
         db->open();
@@ -882,6 +931,8 @@ namespace logger {
         display_devices();
 
         add_addresses_to_db(db);
+
+        return 0;
     }
 
     int run()
@@ -936,7 +987,13 @@ namespace logger {
 
 int main(int argc, char **argv)
 {
-    logger::init();
+    int ret;
+
+    ret = logger::init(argc, argv);
+
+    if (ret)
+        return 0;
+
     logger::run();
     logger::close();
 
