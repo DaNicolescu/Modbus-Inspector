@@ -195,6 +195,8 @@ void device_struct::display_addresses(
     uint8_t i;
     uint8_t data_index;
 
+    std::cout << std::endl;
+
     switch (aggregated_frame->function_code) {
     case READ_COIL_STATUS:
         std::cout << "AGGREGATED READ COIL STATUS" << std::endl;

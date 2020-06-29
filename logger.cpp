@@ -549,13 +549,13 @@ namespace logger {
 
         payload = packet + total_headers_size;
 
-        if (payload_length <= 0) {
-            std::cout << "No modbus payload" << std::endl << std::endl;
-
+        if (payload_length <= 0 || payload_length > 260)
             return;
-        }
 
         modbus_generic = get_modbus_tcp_generic(payload);
+
+        if (modbus_generic->protocol_id != 0 || modbus_generic->length > 256)
+            return;
 
         query_frame = modbus_frame_is_query(modbus_generic->transaction_id);
 
@@ -1035,6 +1035,7 @@ namespace logger {
 
     void sig_handler(int signum)
     {
+        std::cout << std::endl;
         std::cout << "Terminating program..." << std::endl;
 
         close();
