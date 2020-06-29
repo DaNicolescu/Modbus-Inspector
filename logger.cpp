@@ -983,10 +983,11 @@ namespace logger {
 
         display = false;
         log = false;
+        timed = false;
 
         interface = "lo";
 
-        while ((option = getopt(argc, argv, ":hdl:i:")) != -1) {
+        while ((option = getopt(argc, argv, ":hdl:i:t:")) != -1) {
             switch (option) {
             case 'd':
                 display = true;
@@ -1010,6 +1011,12 @@ namespace logger {
                 db->create_tables();
 
                 break;
+            case 't':
+                timed = true;
+
+                sscanf(optarg, "%u", &seconds);
+
+                break;
             case ':':
                 std::cout << "a value is required, use -h to print the help"
                     << std::endl;
@@ -1026,7 +1033,7 @@ namespace logger {
         return 0;
     }
 
-    void sigint_handler(int signum)
+    void sig_handler(int signum)
     {
         std::cout << "Terminating program..." << std::endl;
 
@@ -1092,7 +1099,14 @@ namespace logger {
         //    return 1;
         //}
 
-        signal(SIGINT, sigint_handler);
+        signal(SIGINT, sig_handler);
+
+        if (timed) {
+            signal(SIGALRM, sig_handler);
+
+            alarm(seconds);
+        }
+
         pcap_loop(pcap_handler, -1, modbus_packet_handler, NULL);
     }
 

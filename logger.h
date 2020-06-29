@@ -12,10 +12,13 @@
 namespace logger {
     bool display;
     bool log;
+    bool timed;
 
     std::string interface;
 
     pcap_t *pcap_handler;
+
+    unsigned int seconds;
 
     std::unordered_map<uint16_t, struct modbus_aggregate*>
         modbus_aggregated_frames;
@@ -29,7 +32,7 @@ namespace logger {
     void display_help();
     int parse_arguments(int argc, char **argv);
 
-    void sigint_handler(int signum);
+    void sig_handler(int signum);
 
     void list_interfaces();
     void display_devices();
