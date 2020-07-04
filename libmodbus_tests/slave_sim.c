@@ -9,6 +9,8 @@ int main(void)
     int s = -1;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping;
+    uint8_t raw_resp[] = { 0xFF, 0x18, 0x00, 0x06, 0x00, 0x02, 0x01, 0xB8,
+        0x12, 0x84 };
 
     ctx = modbus_new_tcp("127.0.0.1", 502);
     modbus_set_debug(ctx, TRUE);
@@ -31,7 +33,8 @@ int main(void)
         rc = modbus_receive(ctx, query);
         if (rc > 0) {
             /* rc is the query size */
-            modbus_reply(ctx, query, rc, mb_mapping);
+            //modbus_reply(ctx, query, rc, mb_mapping);
+            modbus_send_raw_request(ctx, raw_resp, 10 * sizeof(uint8_t));
         } else if (rc == -1) {
             /* Connection closed by the client or error */
             break;

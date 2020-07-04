@@ -9,8 +9,9 @@ int main(void)
 {
     modbus_t *ctx;
     int rc;
-    uint8_t raw_req[] = { 0xFF, 0x03, 0x00, 0x01,
-        0x0, 0x05 };
+    //uint8_t raw_req[] = { 0xFF, 0x03, 0x00, 0x01,
+    //    0x0, 0x05 };
+    uint8_t raw_req[] = { 0xFF, 0x18, 0x04, 0xDE };
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
 
@@ -25,7 +26,11 @@ int main(void)
         return -1;
     }
 
-    req_length = modbus_send_raw_request(ctx, raw_req, 6 * sizeof(uint8_t));
+    //req_length = modbus_send_raw_request(ctx, raw_req, 6 * sizeof(uint8_t));
+    req_length = modbus_send_raw_request(ctx, raw_req, 4 * sizeof(uint8_t));
+    modbus_receive_confirmation(ctx, rsp);
+
+    req_length = modbus_send_raw_request(ctx, raw_req, 4 * sizeof(uint8_t));
     modbus_receive_confirmation(ctx, rsp);
 
     /* Close the connection */
