@@ -5,8 +5,12 @@
 #include <net/ethernet.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <termios.h>
 
 #include "logger.h"
+#include "serial_sniffer.h"
 #include "XlsReader.h"
 #include "device_struct.h"
 #include "modbus.h"
@@ -962,6 +966,8 @@ namespace logger {
     {
         std::cout << "Modbus Logger" << std::endl;
         std::cout << "-h            print the help" << std::endl;
+        std::cout << "-s            capture the frames on the serial line"
+            << std::endl;
         std::cout << "-d            print the frames to stdout" << std::endl;
         std::cout << "-l DB_NAME    create and log the frames in a database"
             << std::endl;
@@ -984,10 +990,11 @@ namespace logger {
         display = false;
         log = false;
         timed = false;
+        serial = false;
 
         interface = "lo";
 
-        while ((option = getopt(argc, argv, ":hdl:i:t:")) != -1) {
+        while ((option = getopt(argc, argv, ":hdl:i:t:s")) != -1) {
             switch (option) {
             case 'd':
                 display = true;
@@ -1009,6 +1016,10 @@ namespace logger {
                 db->open();
                 db->create_database(std::string(optarg));
                 db->create_tables();
+
+                break;
+            case 's':
+                serial = true;
 
                 break;
             case 't':
@@ -1038,7 +1049,7 @@ namespace logger {
         std::cout << std::endl;
         std::cout << "Terminating program..." << std::endl;
 
-        close();
+        close_logger();
 
         exit(0);
     }
@@ -1059,10 +1070,15 @@ namespace logger {
         if (log)
             add_addresses_to_db(db);
 
+        if (serial) {
+            serial_sniffer::init("/dev/pts/3", "/dev/pts/8", B19200, CS8, NO_PARITY,
+                ONE_STOP_BIT);
+        }
+
         return 0;
     }
 
-    int run()
+    int run_tcp()
     {
         struct bpf_program filter;
         char error_buffer[PCAP_ERRBUF_SIZE];
@@ -1109,9 +1125,19 @@ namespace logger {
         }
 
         pcap_loop(pcap_handler, -1, modbus_packet_handler, NULL);
+
+        return 0;
     }
 
-    void close()
+    int run()
+    {
+        if (serial)
+            return serial_sniffer::run();
+
+        return run_tcp();
+    }
+
+    void close_logger()
     {
         if (pcap_handler) {
             pcap_breakloop(pcap_handler);
@@ -1133,7 +1159,7 @@ int main(int argc, char **argv)
         return 0;
 
     logger::run();
-    logger::close();
+    logger::close_logger();
 
     return 0;
 }

@@ -13,9 +13,10 @@ namespace logger {
     bool display;
     bool log;
     bool timed;
+    bool serial;
 
+    // modbus tcp
     std::string interface;
-
     pcap_t *pcap_handler;
 
     unsigned int seconds;
@@ -26,8 +27,9 @@ namespace logger {
     struct db_manager *db;
 
     int init(int argc, char **argv);
+    int run_tcp();
     int run();
-    void close();
+    void close_logger();
 
     void display_help();
     int parse_arguments(int argc, char **argv);
