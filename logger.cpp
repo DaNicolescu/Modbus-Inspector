@@ -37,7 +37,7 @@ namespace logger {
         current_dev = all_devs;
 
         while (current_dev) {
-            printf("%-13s %s\n", current_dev->name, (current_dev->description
+            printf("%-17s %s\n", current_dev->name, (current_dev->description
                 ? current_dev->description : "(no description)"));
 
             current_dev = current_dev->next;
@@ -965,16 +965,19 @@ namespace logger {
     void display_help()
     {
         std::cout << "Modbus Logger" << std::endl;
-        std::cout << "-h            print the help" << std::endl;
-        std::cout << "-s            capture the frames on the serial line"
+        std::cout << "-h                print the help" << std::endl;
+        std::cout << "-s                capture the frames on the serial line"
             << std::endl;
-        std::cout << "-d            print the frames to stdout" << std::endl;
-        std::cout << "-l DB_NAME    create and log the frames in a database"
+        std::cout << "-p PORT1 PORT2    use the specified serial ports"
             << std::endl;
-        std::cout << "-i INT_NAME   capture the frames on the INT_NAME "
+        std::cout << "-d                print the frames to stdout"
+            << std::endl;
+        std::cout << "-l DB_NAME        create and log the frames in a database"
+            << std::endl;
+        std::cout << "-i INT_NAME       capture the frames on the INT_NAME "
             << "interface (default interface is lo)" << std::endl;
-        std::cout << "-t SECONDS    run the logger for a specified amount of "
-            << "time (by default the program runs indefinitely and can be "
+        std::cout << "-t SECONDS        run the logger for a specified amount "
+            << "of time (by default the program runs indefinitely and can be "
             << "stopped using the SIGINT signal)" << std::endl;
 
         std::cout << std::endl;
@@ -994,7 +997,7 @@ namespace logger {
 
         interface = "lo";
 
-        while ((option = getopt(argc, argv, ":hdl:i:t:s")) != -1) {
+        while ((option = getopt(argc, argv, ":hdl:i:t:sp:")) != -1) {
             switch (option) {
             case 'd':
                 display = true;
@@ -1016,6 +1019,23 @@ namespace logger {
                 db->open();
                 db->create_database(std::string(optarg));
                 db->create_tables();
+
+                break;
+            case 'p':
+                port1 = std::string(optarg);
+
+                if (optind < argc && *argv[optind] != '-'){
+                    port2 = std::string(argv[optind]);
+
+                    optind++;
+                } else {
+                    std::cout << "-p option requires two arguments"
+                        << std::endl;
+
+                    display_help();
+
+                    return 1;
+                }
 
                 break;
             case 's':

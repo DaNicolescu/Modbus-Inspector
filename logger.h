@@ -19,6 +19,10 @@ namespace logger {
     std::string interface;
     pcap_t *pcap_handler;
 
+    // modbus serial
+    std::string port1;
+    std::string port2;
+
     unsigned int seconds;
 
     std::unordered_map<uint16_t, struct modbus_aggregate*>
