@@ -2,7 +2,7 @@ CXX=g++
 RM=rm -f
 LDLIBS=-lxlsreader -lpcap `mariadb_config --libs`
 
-SRCS=logger.cpp serial_sniffer.cpp XlsReader.cpp device_struct.cpp modbus.cpp config.cpp utils.cpp db.cpp
+SRCS=logger.cpp serial_sniffer.cpp tcp_sniffer.cpp XlsReader.cpp device_struct.cpp modbus.cpp config.cpp utils.cpp db.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 all: logger
@@ -15,6 +15,8 @@ logger.o: logger.cpp logger.h
 XlsReader.o: XlsReader.cpp XlsReader.h
 
 serial_sniffer.o: serial_sniffer.cpp serial_sniffer.h
+
+tcp_sniffer.o: tcp_sniffer.cpp tcp_sniffer.h
 
 device_struct.o: device_struct.cpp device_struct.h
 

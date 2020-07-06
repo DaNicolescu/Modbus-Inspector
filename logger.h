@@ -7,31 +7,8 @@
 
 #include "db.h"
 
-#define ETH_HDR_LEN                 0x0E
-
 namespace logger {
-    bool display;
-    bool log;
-    bool timed;
-    bool serial;
-
-    // modbus tcp
-    std::string interface;
-    pcap_t *pcap_handler;
-
-    // modbus serial
-    std::string port1;
-    std::string port2;
-
-    unsigned int seconds;
-
-    std::unordered_map<uint16_t, struct modbus_aggregate*>
-        modbus_aggregated_frames;
-    std::unordered_map<uint8_t, struct device_struct*> devices_map;
-    struct db_manager *db;
-
     int init(int argc, char **argv);
-    int run_tcp();
     int run();
     void close_logger();
 
@@ -40,7 +17,6 @@ namespace logger {
 
     void sig_handler(int signum);
 
-    void list_interfaces();
     void display_devices();
     void add_addresses_to_db(struct db_manager *db);
 
@@ -115,8 +91,7 @@ namespace logger {
     void handle_mask_write_response(struct modbus_mask_write *mask_write,
         const std::string &errors);
 
-    void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr
-        *header, const uint8_t *packet);
+    void modbus_packet_handler(const uint8_t *payload);
 };
 
 #endif

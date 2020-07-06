@@ -1,9 +1,6 @@
-/* Compile with: g++ logger.c -lpcap */
 #include <iostream>
 #include <string.h>
 #include <unistd.h>
-#include <net/ethernet.h>
-#include <netinet/in.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -11,6 +8,7 @@
 
 #include "logger.h"
 #include "serial_sniffer.h"
+#include "tcp_sniffer.h"
 #include "XlsReader.h"
 #include "device_struct.h"
 #include "modbus.h"
@@ -19,33 +17,24 @@
 #include "db.h"
 
 namespace logger {
-    void list_interfaces()
-    {
-        pcap_if_t *all_devs;
-        pcap_if_t *current_dev;
-        char error_buff[PCAP_ERRBUF_SIZE];
-        int ret;
+    bool display;
+    bool log;
+    bool timed;
+    bool serial;
 
-        ret = pcap_findalldevs(&all_devs, error_buff);
+    // modbus tcp
+    std::string interface;
 
-        if (ret) {
-            std::cout << "pcap_findalldevs failes: " << error_buff << std::endl;
+    // modbus serial
+    std::string port1;
+    std::string port2;
 
-            return;
-        }
+    unsigned int seconds;
 
-        current_dev = all_devs;
-
-        while (current_dev) {
-            printf("%-17s %s\n", current_dev->name, (current_dev->description
-                ? current_dev->description : "(no description)"));
-
-            current_dev = current_dev->next;
-        }
-
-        if (all_devs)
-            pcap_freealldevs(all_devs);
-    }
+    std::unordered_map<uint16_t, struct modbus_aggregate*>
+        modbus_aggregated_frames;
+    std::unordered_map<uint8_t, struct device_struct*> devices_map;
+    struct db_manager *db;
 
     bool modbus_frame_is_query(uint16_t transaction_id)
     {
@@ -467,10 +456,8 @@ namespace logger {
             db->add_mask_write(mask_write, RESPONSE_FRAME, errors);
     }
 
-    void modbus_packet_handler(uint8_t *args, const struct pcap_pkthdr
-        *header, const uint8_t *packet)
+    void modbus_packet_handler(const uint8_t *payload)
     {
-        struct ether_header *ethernet_header;
         struct modbus_tcp_generic *modbus_generic;
         struct modbus_read_query *read_query;
         struct modbus_read_response *read_response;
@@ -492,69 +479,9 @@ namespace logger {
         struct modbus_exception *exception;
         struct device_struct *dev;
         struct address_struct *addr;
-        const uint8_t *ip_header;
-        const uint8_t *tcp_header;
-        const uint8_t *payload;
-        int ethernet_header_length = ETH_HDR_LEN;
-        int ip_header_length;
-        int tcp_header_length;
-        int payload_length;
         bool query_frame;
         std::string errors;
         bool valid_frame;
-
-        // std::cout << "entered handler" << std::endl;
-
-        ethernet_header = (struct ether_header*) packet;
-
-        if (ntohs(ethernet_header->ether_type) != ETHERTYPE_IP) {
-            std::cout << "Not an IP packet" << std::endl << std::endl;
-
-            return;
-        }
-
-        // std::cout << "Total packet available: " << header->caplen << " bytes" <<
-        // std::endl;
-
-        // std::cout << "Expected packet size: " << header->len << " bytes" <<
-        // std::endl;
-
-        ip_header = packet + ethernet_header_length;
-        ip_header_length = ((*ip_header) & 0x0F) * 4;
-
-        // std::cout << "IP header length (IHL) in bytes: " << ip_header_length <<
-        // std::endl;
-
-        uint8_t protocol = *(ip_header + 9);
-
-        if (protocol != IPPROTO_TCP) {
-            std::cout << "Not a TCP packet" << std::endl << std::endl;
-
-            return;
-        }
-
-        tcp_header = packet + ethernet_header_length + ip_header_length;
-        tcp_header_length = ((*(tcp_header + 12)) & 0xF0) >> 4;
-        tcp_header_length = tcp_header_length * 4;
-
-        // std::cout << "TCP header length in bytes: " << tcp_header_length <<
-        // std::endl;
-
-        int total_headers_size = ethernet_header_length
-            + ip_header_length+tcp_header_length;
-
-        // std::cout << "Size of all headers combined: " << total_headers_size <<
-        // " bytes" << std::endl;
-
-        payload_length = header->caplen
-            - (ethernet_header_length + ip_header_length + tcp_header_length);
-
-        // std::cout << "Payload size: " << payload_length << " bytes" << std::endl;
-
-        payload = packet + total_headers_size;
-
-        if (payload_length <= 0 || payload_length > 260)
-            return;
 
         modbus_generic = get_modbus_tcp_generic(payload);
 
@@ -983,7 +910,7 @@ namespace logger {
         std::cout << std::endl;
         std::cout << "Available Interfaces" << std::endl;
 
-        list_interfaces();
+        tcp_sniffer::list_interfaces();
     }
 
     int parse_arguments(int argc, char **argv)
@@ -1091,51 +1018,17 @@ namespace logger {
             add_addresses_to_db(db);
 
         if (serial) {
-            serial_sniffer::init("/dev/pts/3", "/dev/pts/8", B19200, CS8, NO_PARITY,
-                ONE_STOP_BIT);
+            serial_sniffer::init("/dev/pts/3", "/dev/pts/8", B19200, CS8,
+                NO_PARITY, ONE_STOP_BIT);
+        } else {
+            tcp_sniffer::init(interface);
         }
 
         return 0;
     }
 
-    int run_tcp()
+    int run()
     {
-        struct bpf_program filter;
-        char error_buffer[PCAP_ERRBUF_SIZE];
-        int snapshot_len = 1028;
-        int promiscuous = 1;
-        int timeout = 1000;
-        int res;
-
-        pcap_handler = pcap_open_live(interface.c_str(), snapshot_len,
-                                      promiscuous, timeout, error_buffer);
-
-        if (!pcap_handler) {
-            std::cout << "Error while opening device" << std::endl;
-
-            return 1;
-        }
-
-        // adding filter to capture only tcp packets
-        //res = pcap_compile(pcap_handler, &filter, "tcp", 0,
-        //                   PCAP_NETMASK_UNKNOWN);
-
-        //if(res) {
-        //    printf("pcap_compile failed\n");
-        //    pcap_close(pcap_handler);
-
-        //    return 1;
-        //}
-
-        //res = pcap_setfilter(pcap_handler, &filter);
-
-        //if(res) {
-        //    printf("pcap_setfilter failed\n");
-        //    pcap_close(pcap_handler);
-
-        //    return 1;
-        //}
-
         signal(SIGINT, sig_handler);
 
         if (timed) {
@@ -1144,25 +1037,18 @@ namespace logger {
             alarm(seconds);
         }
 
-        pcap_loop(pcap_handler, -1, modbus_packet_handler, NULL);
-
-        return 0;
-    }
-
-    int run()
-    {
         if (serial)
             return serial_sniffer::run();
 
-        return run_tcp();
+        return tcp_sniffer::run();
     }
 
     void close_logger()
     {
-        if (pcap_handler) {
-            pcap_breakloop(pcap_handler);
-            pcap_close(pcap_handler);
-        }
+        if (serial)
+            serial_sniffer::close_sniffer();
+        else
+            tcp_sniffer::close_sniffer();
 
         if (log)
             db->close();
