@@ -3,6 +3,8 @@
 
 #include <string>
 
+#define BUFFER_SIZE         256
+
 #define NO_PARITY           0
 #define EVEN_PARITY         1
 #define ODD_PARITY          2

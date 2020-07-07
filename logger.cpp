@@ -1018,7 +1018,7 @@ namespace logger {
             add_addresses_to_db(db);
 
         if (serial) {
-            serial_sniffer::init("/dev/pts/3", "/dev/pts/8", B19200, CS8,
+            serial_sniffer::init(port1, port2, B19200, CS8,
                 NO_PARITY, ONE_STOP_BIT);
         } else {
             tcp_sniffer::init(interface);

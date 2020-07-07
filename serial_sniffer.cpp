@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include <fcntl.h> // Contains file controls like O_RDWR
 #include <errno.h> // Error integer and strerror() function
 #include <termios.h> // Contains POSIX terminal control definitions
@@ -6,6 +7,7 @@
 #include <string.h>
 
 #include "serial_sniffer.h"
+#include "modbus.h"
 
 namespace serial_sniffer {
     std::string port1;
@@ -129,15 +131,78 @@ namespace serial_sniffer {
 
     int run()
     {
-        char read_buf [256];
-        memset(&read_buf, '\0', sizeof(read_buf));
+        uint8_t read_buf[BUFFER_SIZE];
+        int buf_index;
+        int n;
+        uint8_t function_code;
 
-        int n = read(port1_fd, &read_buf, sizeof(read_buf));
+        memset(&read_buf, '\0', 6 * sizeof(uint8_t));
 
-        std::cout << "read " << n << " bytes from serial port: "
-            << unsigned(read_buf[0]) << ", " << unsigned(read_buf[1]) << ", "
-            << unsigned(read_buf[2]) << ", " << unsigned(read_buf[3])
-            << std::endl;
+        buf_index = 6;
+
+        n = read(port1_fd, &read_buf + buf_index, 2 * sizeof(uint8_t));
+        buf_index += n;
+
+        if (n == 1) {
+            n = read(port1_fd, &read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+        }
+
+        function_code = read_buf[8];
+
+        switch (function_code) {
+        case READ_COIL_STATUS:
+
+            break;
+        case READ_INPUT_STATUS:
+
+            break;
+        case READ_HOLDING_REGISTERS:
+
+            break;
+        case READ_INPUT_REGISTERS:
+
+            break;
+        case FORCE_SINGLE_COIL:
+
+            break;
+        case PRESET_SINGLE_REGISTER:
+
+            break;
+        case READ_EXCEPTION_STATUS:
+
+            break;
+        case DIAGNOSTICS:
+
+            break;
+        case FETCH_COMM_EVENT_COUNTER:
+
+            break;
+        case FETCH_COMM_EVENT_LOG:
+
+            break;
+        case FORCE_MULTIPLE_COILS:
+
+            break;
+        case PRESET_MULTIPLE_REGISTERS:
+
+            break;
+        case REPORT_SLAVE_ID:
+
+            break;
+        case READ_FILE_RECORD:
+            break;
+        case WRITE_FILE_RECORD:
+            break;
+        case MASK_WRITE_REGISTER:
+
+            break;
+        default:
+            std::cout << "Function code decoding not yet implemented"
+                << std::endl;
+        }
+
+        memset(&read_buf, '\0', BUFFER_SIZE);
 
         return 0;
     }
