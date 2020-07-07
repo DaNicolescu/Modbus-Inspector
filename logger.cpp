@@ -164,7 +164,7 @@ namespace logger {
         }
     }
 
-    void handle_read_exception_status_query(struct modbus_tcp_generic
+    void handle_read_exception_status_query(struct modbus_generic
         *exception_status_query, struct modbus_aggregate
         *modbus_aggregated_frame)
     {
@@ -172,7 +172,7 @@ namespace logger {
             db->add_modbus_generic(exception_status_query, QUERY_FRAME);
 
         if (display)
-            display_modbus_tcp_generic(exception_status_query, true);
+            display_modbus_generic(exception_status_query, true);
 
         modbus_aggregated_frame->function_code =
             exception_status_query->function_code;
@@ -230,14 +230,14 @@ namespace logger {
         }
     }
 
-    void handle_fetch_comm_event_counter_query(struct modbus_tcp_generic
+    void handle_fetch_comm_event_counter_query(struct modbus_generic
         *event_counter_query, struct modbus_aggregate *modbus_aggregated_frame)
     {
         if (log)
             db->add_modbus_generic(event_counter_query, QUERY_FRAME);
 
         if (display)
-            display_modbus_tcp_generic(event_counter_query, true);
+            display_modbus_generic(event_counter_query, true);
 
         modbus_aggregated_frame->function_code =
             event_counter_query->function_code;
@@ -262,14 +262,14 @@ namespace logger {
         }
     }
 
-    void handle_fetch_comm_event_log_query(struct modbus_tcp_generic
+    void handle_fetch_comm_event_log_query(struct modbus_generic
         *event_log_query, struct modbus_aggregate *modbus_aggregated_frame)
     {
         if (log)
             db->add_modbus_generic(event_log_query, QUERY_FRAME);
 
         if (display)
-            display_modbus_tcp_generic(event_log_query, true);
+            display_modbus_generic(event_log_query, true);
 
         modbus_aggregated_frame->function_code = event_log_query->function_code;
         modbus_aggregated_frame->query = event_log_query;
@@ -360,7 +360,7 @@ namespace logger {
             db->add_multiple_write_response(multiple_write_response, errors);
     }
 
-    void handle_report_slave_id_request(struct modbus_tcp_generic
+    void handle_report_slave_id_request(struct modbus_generic
         *report_slave_id_request, struct modbus_aggregate
         *modbus_aggregated_frame)
     {
@@ -368,7 +368,7 @@ namespace logger {
             db->add_modbus_generic(report_slave_id_request, QUERY_FRAME);
 
         if (display)
-            display_modbus_tcp_generic(report_slave_id_request, true);
+            display_modbus_generic(report_slave_id_request, true);
 
         modbus_aggregated_frame->function_code =
             report_slave_id_request->function_code;
@@ -458,22 +458,22 @@ namespace logger {
 
     void modbus_packet_handler(const uint8_t *payload)
     {
-        struct modbus_tcp_generic *modbus_generic;
+        struct modbus_generic *modbus_generic;
         struct modbus_read_query *read_query;
         struct modbus_read_response *read_response;
         struct modbus_single_write *single_write_packet;
-        struct modbus_tcp_generic *exception_status_query;
+        struct modbus_generic *exception_status_query;
         struct modbus_exception_status_response *exception_status_response;
         struct modbus_diagnostics *diagnostics_query;
         struct modbus_diagnostics *diagnostics_response;
-        struct modbus_tcp_generic *event_counter_query;
+        struct modbus_generic *event_counter_query;
         struct modbus_event_counter_response *event_counter_response;
-        struct modbus_tcp_generic *event_log_query;
+        struct modbus_generic *event_log_query;
         struct modbus_event_log_response *event_log_response;
         struct modbus_multiple_write_query *multiple_write_query;
         struct modbus_multiple_write_response *multiple_write_response;
         struct modbus_aggregate *modbus_aggregated_frame;
-        struct modbus_tcp_generic *report_slave_id_query;
+        struct modbus_generic *report_slave_id_query;
         struct modbus_report_slave_id_response *report_slave_id_response;
         struct modbus_mask_write *mask_write;
         struct modbus_exception *exception;
@@ -483,7 +483,7 @@ namespace logger {
         std::string errors;
         bool valid_frame;
 
-        modbus_generic = get_modbus_tcp_generic(payload);
+        modbus_generic = get_modbus_generic(payload);
 
         if (modbus_generic->protocol_id != 0 || modbus_generic->length > 256)
             return;
@@ -684,7 +684,7 @@ namespace logger {
             break;
         case READ_EXCEPTION_STATUS:
             if (query_frame) {
-                exception_status_query = get_modbus_tcp_generic(payload);
+                exception_status_query = get_modbus_generic(payload);
 
                 handle_read_exception_status_query(exception_status_query,
                                                      modbus_aggregated_frame);
@@ -714,7 +714,7 @@ namespace logger {
             break;
         case FETCH_COMM_EVENT_COUNTER:
             if (query_frame) {
-                event_counter_query = get_modbus_tcp_generic(payload);
+                event_counter_query = get_modbus_generic(payload);
 
                 handle_fetch_comm_event_counter_query(event_counter_query,
                                                       modbus_aggregated_frame);
@@ -729,7 +729,7 @@ namespace logger {
             break;
         case FETCH_COMM_EVENT_LOG:
             if (query_frame) {
-                event_log_query = get_modbus_tcp_generic(payload);
+                event_log_query = get_modbus_generic(payload);
 
                 handle_fetch_comm_event_log_query(event_log_query,
                                                     modbus_aggregated_frame);
@@ -813,7 +813,7 @@ namespace logger {
             break;
         case REPORT_SLAVE_ID:
             if (query_frame) {
-                report_slave_id_query = get_modbus_tcp_generic(payload);
+                report_slave_id_query = get_modbus_generic(payload);
 
                 handle_report_slave_id_request(report_slave_id_query,
                                                modbus_aggregated_frame);

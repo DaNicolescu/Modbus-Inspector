@@ -40,7 +40,7 @@ namespace logger {
     void handle_single_write_response(const struct device_struct *dev,
         struct modbus_single_write *single_write_frame,
         struct modbus_aggregate *modbus_aggregated_frame);
-    void handle_read_exception_status_query(struct modbus_tcp_generic
+    void handle_read_exception_status_query(struct modbus_generic
         *exception_status_query, struct modbus_aggregate
         *modbus_aggregated_frame);
     void handle_read_exception_status_response(const struct device_struct *dev,
@@ -51,12 +51,12 @@ namespace logger {
     void handle_diagnostics_response(const struct device_struct *dev,
         struct modbus_diagnostics *diagnostics_response,
         struct modbus_aggregate* modbus_aggregated_frame);
-    void handle_fetch_comm_event_counter_query(struct modbus_tcp_generic
+    void handle_fetch_comm_event_counter_query(struct modbus_generic
         *event_counter_query, struct modbus_aggregate *modbus_aggregated_frame);
     void handle_fetch_comm_event_counter_response(const struct device_struct
         *dev, struct modbus_event_counter_response *event_counter_response,
         struct modbus_aggregate *modbus_aggregated_frame);
-    void handle_fetch_comm_event_log_query(struct modbus_tcp_generic
+    void handle_fetch_comm_event_log_query(struct modbus_generic
         *event_log_query, struct modbus_aggregate *modbus_aggregated_frame);
     void handle_fetch_comm_event_log_response(const struct device_struct *dev,
         struct modbus_event_log_response *event_log_response,
@@ -74,7 +74,7 @@ namespace logger {
     void handle_force_multiple_write_response(
         struct modbus_multiple_write_response *multiple_write_response,
         const std::string &errors);
-    void handle_report_slave_id_request(struct modbus_tcp_generic
+    void handle_report_slave_id_request(struct modbus_generic
         *report_slave_id_request,
         struct modbus_aggregate *modbus_aggregated_frame);
     void handle_report_slave_id_response(struct device_struct *dev,

@@ -53,7 +53,7 @@
 #define NEGATIVE_ACKNOWLEDGE            0x07
 #define MEMORY_PARITY_ERROR             0x08
 
-struct modbus_tcp_generic {
+struct modbus_generic {
     uint16_t transaction_id;
     uint16_t protocol_id;
     uint16_t length;
@@ -62,42 +62,42 @@ struct modbus_tcp_generic {
 } __attribute__((packed));
 
 struct modbus_read_query {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint16_t starting_address;
     uint16_t num_of_points;
 } __attribute__((packed));
 
 struct modbus_read_response {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint8_t byte_count;
     uint8_t *data;
 } __attribute__((packed));
 
 struct modbus_single_write {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint16_t address;
     uint16_t value;
 } __attribute__((packed));
 
 struct modbus_exception_status_response {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint8_t coil_data;
 } __attribute__((packed));
 
 struct modbus_diagnostics {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint16_t subfunction;
     uint16_t data;
 } __attribute__((packed));
 
 struct modbus_event_counter_response {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint16_t status;
     uint16_t event_count;
 } __attribute__((packed));
 
 struct modbus_event_log_response {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint8_t byte_count;
     uint16_t status;
     uint16_t event_count;
@@ -107,7 +107,7 @@ struct modbus_event_log_response {
 } __attribute__((packed));
 
 struct modbus_multiple_write_query {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint16_t starting_address;
     uint16_t num_of_points;
     uint8_t byte_count;
@@ -115,13 +115,13 @@ struct modbus_multiple_write_query {
 } __attribute__((packed));
 
 struct modbus_multiple_write_response {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint16_t starting_address;
     uint16_t num_of_points;
 } __attribute__((packed));
 
 struct modbus_report_slave_id_response {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint8_t byte_count;
     uint8_t slave_id;
     uint8_t run_indicator_status;
@@ -129,7 +129,7 @@ struct modbus_report_slave_id_response {
 } __attribute__((packed));
 
 struct modbus_exception {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint8_t exception_code;
 } __attribute__((packed));
 
@@ -141,7 +141,7 @@ struct modbus_file_record_read_subquery {
 } __attribute__((packed));
 
 struct modbus_mask_write {
-    struct modbus_tcp_generic generic_header;
+    struct modbus_generic generic_header;
     uint16_t address;
     uint16_t and_mask;
     uint16_t or_mask;
@@ -153,7 +153,7 @@ struct modbus_aggregate {
     void *response;
 };
 
-struct modbus_tcp_generic *get_modbus_tcp_generic(const uint8_t *payload);
+struct modbus_generic *get_modbus_generic(const uint8_t *payload);
 struct modbus_read_query *get_modbus_read_query(const uint8_t *payload);
 struct modbus_read_response *get_modbus_read_response(const uint8_t *payload);
 struct modbus_single_write *get_modbus_single_write(const uint8_t *payload);
@@ -179,8 +179,8 @@ std::string get_diagnostics_subfunction_string(uint16_t subfunction);
 std::string get_exception_code_string(uint8_t exception_code);
 std::string get_exception_code_description(uint8_t exception_code);
 
-std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
-                                          *modbus_struct, char serparator);
+std::string get_modbus_generic_string(const struct modbus_generic
+                                      *modbus_struct, char serparator);
 std::string get_modbus_read_query_string(const struct modbus_read_query
                                          *modbus_struct, char separator);
 std::string get_modbus_read_response_string(const struct modbus_read_response
@@ -208,8 +208,8 @@ std::string get_modbus_mask_write_string(const struct modbus_mask_write
 std::string get_modbus_exception_string(const struct modbus_exception
     *modbus_struct, char separator);
 
-void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
-                                bool query_packet);
+void display_modbus_generic(const struct modbus_generic *modbus_struct,
+                            bool query_packet);
 void display_modbus_read_query(const struct modbus_read_query *modbus_struct);
 void display_modbus_read_response(const struct modbus_read_response
                                   *modbus_struct);

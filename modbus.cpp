@@ -5,22 +5,22 @@
 #include "modbus.h"
 #include "utils.h"
 
-void reorder_modbus_tcp_generic_bytes(struct modbus_tcp_generic *modbus_struct)
+void reorder_modbus_generic_bytes(struct modbus_generic *modbus_struct)
 {
     modbus_struct->transaction_id = htons(modbus_struct->transaction_id);
     modbus_struct->protocol_id = htons(modbus_struct->protocol_id);
     modbus_struct->length = htons(modbus_struct->length);
 }
 
-struct modbus_tcp_generic *get_modbus_tcp_generic(const uint8_t *payload)
+struct modbus_generic *get_modbus_generic(const uint8_t *payload)
 {
-    struct modbus_tcp_generic *modbus_struct;
+    struct modbus_generic *modbus_struct;
 
-    modbus_struct = new modbus_tcp_generic;
+    modbus_struct = new modbus_generic;
 
-    memcpy(modbus_struct, payload, sizeof(struct modbus_tcp_generic));
+    memcpy(modbus_struct, payload, sizeof(struct modbus_generic));
 
-    reorder_modbus_tcp_generic_bytes(modbus_struct);
+    reorder_modbus_generic_bytes(modbus_struct);
 
     return modbus_struct;
 }
@@ -33,7 +33,7 @@ struct modbus_read_query *get_modbus_read_query(const uint8_t *payload)
 
     memcpy(modbus_struct, payload, sizeof(struct modbus_read_query));
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->starting_address = htons(modbus_struct->starting_address);
     modbus_struct->num_of_points = htons(modbus_struct->num_of_points);
@@ -47,9 +47,9 @@ struct modbus_read_response *get_modbus_read_response(const uint8_t *payload)
 
     modbus_struct = new modbus_read_response;
 
-    memcpy(modbus_struct, payload, sizeof(struct modbus_tcp_generic) + 1);
+    memcpy(modbus_struct, payload, sizeof(struct modbus_generic) + 1);
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->data = (uint8_t*) malloc(modbus_struct->byte_count);
 
@@ -59,7 +59,7 @@ struct modbus_read_response *get_modbus_read_response(const uint8_t *payload)
         return NULL;
     }
 
-    memcpy(modbus_struct->data, payload + sizeof(struct modbus_tcp_generic) + 1,
+    memcpy(modbus_struct->data, payload + sizeof(struct modbus_generic) + 1,
            modbus_struct->byte_count);
 
     return modbus_struct;
@@ -73,7 +73,7 @@ struct modbus_single_write *get_modbus_single_write(const uint8_t *payload)
 
     memcpy(modbus_struct, payload, sizeof(struct modbus_single_write));
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->address = htons(modbus_struct->address);
     modbus_struct->value = htons(modbus_struct->value);
@@ -88,7 +88,7 @@ struct modbus_exception_status_response *get_modbus_exception_status_response(
 
     modbus_struct = new modbus_exception_status_response;
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     return modbus_struct;
 }
@@ -99,7 +99,7 @@ struct modbus_diagnostics *get_modbus_diagnostics(const uint8_t *payload)
 
     modbus_struct = new modbus_diagnostics;
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->subfunction = htons(modbus_struct->subfunction);
     modbus_struct->data = htons(modbus_struct->data);
@@ -114,7 +114,7 @@ struct modbus_event_counter_response *get_modbus_event_counter_response(
 
     modbus_struct = new modbus_event_counter_response;
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->status = htons(modbus_struct->status);
     modbus_struct->event_count = htons(modbus_struct->event_count);
@@ -129,7 +129,7 @@ struct modbus_event_log_response *get_modbus_event_log_response(const uint8_t
 
     modbus_struct = new modbus_event_log_response;
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->status = htons(modbus_struct->status);
     modbus_struct->event_count = htons(modbus_struct->event_count);
@@ -145,9 +145,9 @@ struct modbus_multiple_write_query *get_modbus_multiple_write_query(
 
     modbus_struct = new modbus_multiple_write_query;
 
-    memcpy(modbus_struct, payload, sizeof(struct modbus_tcp_generic) + 5);
+    memcpy(modbus_struct, payload, sizeof(struct modbus_generic) + 5);
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->starting_address = htons(modbus_struct->starting_address);
     modbus_struct->num_of_points = htons(modbus_struct->num_of_points);
@@ -160,7 +160,7 @@ struct modbus_multiple_write_query *get_modbus_multiple_write_query(
         return NULL;
     }
 
-    memcpy(modbus_struct->data, payload + sizeof(struct modbus_tcp_generic) + 5,
+    memcpy(modbus_struct->data, payload + sizeof(struct modbus_generic) + 5,
            modbus_struct->byte_count);
 
     return modbus_struct;
@@ -173,9 +173,9 @@ struct modbus_multiple_write_response *get_modbus_multiple_write_response(
 
     modbus_struct = new modbus_multiple_write_response;
 
-    memcpy(modbus_struct, payload, sizeof(struct modbus_tcp_generic) + 4);
+    memcpy(modbus_struct, payload, sizeof(struct modbus_generic) + 4);
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->starting_address = htons(modbus_struct->starting_address);
     modbus_struct->num_of_points = htons(modbus_struct->num_of_points);
@@ -190,9 +190,9 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
 
     modbus_struct = new modbus_report_slave_id_response;
 
-    memcpy(modbus_struct, payload, sizeof(struct modbus_tcp_generic) + 3);
+    memcpy(modbus_struct, payload, sizeof(struct modbus_generic) + 3);
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->additional_data = (uint8_t*)
         malloc(modbus_struct->byte_count - 2);
@@ -204,7 +204,7 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     }
 
     memcpy(modbus_struct->additional_data, payload
-           + sizeof(struct modbus_tcp_generic) + 3,
+           + sizeof(struct modbus_generic) + 3,
            modbus_struct->byte_count - 2);
 
     return modbus_struct;
@@ -218,7 +218,7 @@ struct modbus_mask_write *get_modbus_mask_write(const uint8_t *payload)
 
     memcpy(modbus_struct, payload, sizeof(struct modbus_mask_write));
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->address = htons(modbus_struct->address);
     modbus_struct->and_mask = htons(modbus_struct->and_mask);
@@ -235,7 +235,7 @@ struct modbus_exception *get_modbus_exception(const uint8_t *payload)
 
     memcpy(modbus_struct, payload, sizeof(struct modbus_exception));
 
-    reorder_modbus_tcp_generic_bytes(&(modbus_struct->generic_header));
+    reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     return modbus_struct;
 }
@@ -415,8 +415,8 @@ std::string get_function_code_string(uint8_t function_code)
     }
 }
 
-std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
-                                          *modbus_struct, char separator)
+std::string get_modbus_generic_string(const struct modbus_generic
+    *modbus_struct, char separator)
 {
     return "transaction id: " +  std::to_string(modbus_struct->transaction_id)
         + separator + "protocol id: "
@@ -430,7 +430,7 @@ std::string get_modbus_tcp_generic_string(const struct modbus_tcp_generic
 std::string get_modbus_read_query_string(const struct modbus_read_query
                                          *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "starting address: "
         + std::to_string(modbus_struct->starting_address) + separator
         + "number of points: " + std::to_string(modbus_struct->num_of_points);
@@ -439,7 +439,7 @@ std::string get_modbus_read_query_string(const struct modbus_read_query
 std::string get_modbus_read_response_string(const struct modbus_read_response
                                             *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "byte count: "
         + std::to_string(modbus_struct->byte_count);
 }
@@ -447,7 +447,7 @@ std::string get_modbus_read_response_string(const struct modbus_read_response
 std::string get_modbus_single_write_string(const struct modbus_single_write
                                            *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "address: "
         + std::to_string(modbus_struct->address);
 }
@@ -456,7 +456,7 @@ std::string get_modbus_exception_status_response_string(
     const struct modbus_exception_status_response *modbus_struct,
     char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "coil data: "
         + std::to_string(modbus_struct->coil_data);
 }
@@ -464,7 +464,7 @@ std::string get_modbus_exception_status_response_string(
 std::string get_modbus_diagnostics_string(const struct modbus_diagnostics
     *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "subfunction: "
         + std::to_string(modbus_struct->subfunction) + " ("
         + get_diagnostics_subfunction_string(modbus_struct->subfunction) + ")"
@@ -474,7 +474,7 @@ std::string get_modbus_diagnostics_string(const struct modbus_diagnostics
 std::string get_modbus_event_counter_response_string(
     const struct modbus_event_counter_response *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "status: "
         + std::to_string(modbus_struct->status) + separator + "event count: "
         + std::to_string(modbus_struct->event_count);
@@ -483,7 +483,7 @@ std::string get_modbus_event_counter_response_string(
 std::string get_modbus_event_log_response_string(
     const struct modbus_event_log_response *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "status: "
         + std::to_string(modbus_struct->status) + separator + "event count: "
         + std::to_string(modbus_struct->event_count) + separator
@@ -496,7 +496,7 @@ std::string get_modbus_event_log_response_string(
 std::string get_modbus_multiple_write_query_string(
     const struct modbus_multiple_write_query *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "starting address: "
         + std::to_string(modbus_struct->starting_address)
         + separator + "number of points: "
@@ -508,7 +508,7 @@ std::string get_modbus_multiple_write_query_string(
 std::string get_modbus_multiple_write_response_string(
     const struct modbus_multiple_write_response *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "starting address: "
         + std::to_string(modbus_struct->starting_address)
         + separator + "number of points: "
@@ -519,7 +519,7 @@ std::string get_modbus_report_slave_id_response_string(
     const struct modbus_report_slave_id_response *modbus_struct,
     char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "byte count: "
         + std::to_string(modbus_struct->byte_count)
         + separator + "slave ID: " + std::to_string(modbus_struct->slave_id)
@@ -530,7 +530,7 @@ std::string get_modbus_report_slave_id_response_string(
 std::string get_modbus_mask_write_string(const struct modbus_mask_write
     *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "address: "
         + std::to_string(modbus_struct->address) + separator + "and mask: "
         + byte_to_binary_string(modbus_struct->and_mask) + separator
@@ -540,15 +540,15 @@ std::string get_modbus_mask_write_string(const struct modbus_mask_write
 std::string get_modbus_exception_string(const struct modbus_exception
     *modbus_struct, char separator)
 {
-    return get_modbus_tcp_generic_string(&(modbus_struct->generic_header),
+    return get_modbus_generic_string(&(modbus_struct->generic_header),
         separator) + separator + "exception code: "
         + get_exception_code_string(modbus_struct->exception_code) + separator
         + "description: "
         + get_exception_code_description(modbus_struct->exception_code);
 }
 
-void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
-                                bool query_packet)
+void display_modbus_generic(const struct modbus_generic *modbus_struct,
+    bool query_packet)
 {
     std::cout << "MODBUS " << (query_packet ? "query" : "response")
         << std::endl;
@@ -565,7 +565,7 @@ void display_modbus_tcp_generic(const struct modbus_tcp_generic *modbus_struct,
 
 void display_modbus_read_query(const struct modbus_read_query *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), true);
+    display_modbus_generic(&(modbus_struct->generic_header), true);
 
     std::cout << "starting address: " << modbus_struct->starting_address
         << std::endl;
@@ -575,7 +575,7 @@ void display_modbus_read_query(const struct modbus_read_query *modbus_struct)
 void display_modbus_read_response(const struct modbus_read_response
                                   *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+    display_modbus_generic(&(modbus_struct->generic_header), false);
 
     std::cout << "byte count: " << unsigned(modbus_struct->byte_count)
         << std::endl;
@@ -584,7 +584,7 @@ void display_modbus_read_response(const struct modbus_read_response
 void display_modbus_single_write(const struct modbus_single_write
                                  *modbus_struct, bool query_packet)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), query_packet);
+    display_modbus_generic(&(modbus_struct->generic_header), query_packet);
 
     std::cout << "address: " << modbus_struct->address << std::endl;
     std::cout << "value: " << modbus_struct->value << std::endl;
@@ -593,7 +593,7 @@ void display_modbus_single_write(const struct modbus_single_write
 void display_modbus_exception_status_response(
     const struct modbus_exception_status_response *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+    display_modbus_generic(&(modbus_struct->generic_header), false);
 
     std::cout << "coils data: "
         << byte_to_binary_string(modbus_struct->coil_data) << std::endl;
@@ -602,7 +602,7 @@ void display_modbus_exception_status_response(
 void display_modbus_diagnostics(const struct modbus_diagnostics *modbus_struct,
                                 bool query_packet)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), query_packet);
+    display_modbus_generic(&(modbus_struct->generic_header), query_packet);
 
     std::cout << "subfunction: "
         << get_diagnostics_subfunction_string(modbus_struct->subfunction)
@@ -614,7 +614,7 @@ void display_modbus_diagnostics(const struct modbus_diagnostics *modbus_struct,
 void display_modbus_event_counter_response(
     const struct modbus_event_counter_response *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+    display_modbus_generic(&(modbus_struct->generic_header), false);
 
     std::cout << "status: " << modbus_struct->status << std::endl;
     std::cout << "event count: " << modbus_struct->event_count << std::endl;
@@ -623,7 +623,7 @@ void display_modbus_event_counter_response(
 void display_modbus_event_log_response(const struct modbus_event_log_response
                                        *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+    display_modbus_generic(&(modbus_struct->generic_header), false);
 
     std::cout << "status: " << modbus_struct->status << std::endl;
     std::cout << "event count: " << modbus_struct->event_count << std::endl;
@@ -637,7 +637,7 @@ void display_modbus_event_log_response(const struct modbus_event_log_response
 void display_modbus_multiple_write_query(
     const struct modbus_multiple_write_query *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), true);
+    display_modbus_generic(&(modbus_struct->generic_header), true);
 
     std::cout << "starting address: " << modbus_struct->starting_address
         << std::endl;
@@ -649,7 +649,7 @@ void display_modbus_multiple_write_query(
 void display_modbus_multiple_write_response(
     const struct modbus_multiple_write_response *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+    display_modbus_generic(&(modbus_struct->generic_header), false);
 
     std::cout << "starting address: " << modbus_struct->starting_address
         << std::endl;
@@ -661,7 +661,7 @@ void display_modbus_report_slave_id_response(
 {
     uint8_t byte_count;
 
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+    display_modbus_generic(&(modbus_struct->generic_header), false);
 
     std::cout << "byte count: " << unsigned(modbus_struct->byte_count)
         << std::endl;
@@ -681,7 +681,7 @@ void display_modbus_report_slave_id_response(
 void display_modbus_mask_write(const struct modbus_mask_write *modbus_struct,
                                bool query_packet)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), query_packet);
+    display_modbus_generic(&(modbus_struct->generic_header), query_packet);
 
     std::cout << "address: " << modbus_struct->address << std::endl;
     std::cout << "and mask: " << byte_to_binary_string(modbus_struct->and_mask)
@@ -692,7 +692,7 @@ void display_modbus_mask_write(const struct modbus_mask_write *modbus_struct,
 
 void display_modbus_exception(const struct modbus_exception *modbus_struct)
 {
-    display_modbus_tcp_generic(&(modbus_struct->generic_header), false);
+    display_modbus_generic(&(modbus_struct->generic_header), false);
 
     std::cout << "exception code: "
         << get_exception_code_string(modbus_struct->exception_code)

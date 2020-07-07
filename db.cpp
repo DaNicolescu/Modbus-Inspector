@@ -214,7 +214,7 @@ bool db_manager::add_address(struct address_struct *address, uint8_t slave_id)
     return true;
 }
 
-bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
+bool db_manager::add_modbus_generic(const struct modbus_generic
                                     *modbus_struct, uint8_t type)
 {
     std::string query = "INSERT INTO `frames`(type, transaction_id, "
@@ -238,7 +238,7 @@ bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
     return true;
 }
 
-bool db_manager::add_modbus_generic(const struct modbus_tcp_generic
+bool db_manager::add_modbus_generic(const struct modbus_generic
                                     *modbus_struct, uint8_t type,
                                     const std::string &errors)
 {
@@ -980,17 +980,17 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     struct modbus_read_response *read_response;
     struct modbus_single_write *single_write_query;
     struct modbus_single_write *single_write_response;
-    struct modbus_tcp_generic *exception_status_request;
+    struct modbus_generic *exception_status_request;
     struct modbus_exception_status_response *exception_status_response;
     struct modbus_diagnostics *diagnostics_query;
     struct modbus_diagnostics *diagnostics_response;
-    struct modbus_tcp_generic *event_counter_request;
+    struct modbus_generic *event_counter_request;
     struct modbus_event_counter_response *event_counter_response;
-    struct modbus_tcp_generic *event_log_request;
+    struct modbus_generic *event_log_request;
     struct modbus_event_log_response *event_log_response;
     struct modbus_multiple_write_query *multiple_write_query;
     struct modbus_multiple_write_response *multiple_write_response;
-    struct modbus_tcp_generic *report_slave_id_request;
+    struct modbus_generic *report_slave_id_request;
     struct modbus_report_slave_id_response *report_slave_id_response;
     struct modbus_mask_write *mask_write_query;
     struct modbus_mask_write *mask_write_response;
@@ -1297,12 +1297,12 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     case READ_EXCEPTION_STATUS:
         type = "READ EXCEPTION STATUS";
 
-        exception_status_request = (struct modbus_tcp_generic*)
+        exception_status_request = (struct modbus_generic*)
             aggregated_frame->query;
         exception_status_response = (struct modbus_exception_status_response*)
             aggregated_frame->response;
 
-        query = get_modbus_tcp_generic_string(exception_status_request,
+        query = get_modbus_generic_string(exception_status_request,
                                               DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_exception_status_response_string(
             exception_status_response, DISPLAY_FRAME_SEPARATOR);
@@ -1330,12 +1330,12 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     case FETCH_COMM_EVENT_COUNTER:
         type = "FETCH COMM EVENT COUNTER";
 
-        event_counter_request = (struct modbus_tcp_generic*)
+        event_counter_request = (struct modbus_generic*)
             aggregated_frame->query;
         event_counter_response = (struct modbus_event_counter_response*)
             aggregated_frame->response;
 
-        query = get_modbus_tcp_generic_string(event_counter_request,
+        query = get_modbus_generic_string(event_counter_request,
                                               DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_event_counter_response_string(
             event_counter_response, DISPLAY_FRAME_SEPARATOR);
@@ -1346,12 +1346,12 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     case FETCH_COMM_EVENT_LOG:
         type = "FETCH COMM EVENT LOG";
 
-        event_log_request = (struct modbus_tcp_generic*)
+        event_log_request = (struct modbus_generic*)
             aggregated_frame->query;
         event_log_response = (struct modbus_event_log_response*)
             aggregated_frame->response;
 
-        query = get_modbus_tcp_generic_string(event_log_request,
+        query = get_modbus_generic_string(event_log_request,
                                               DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_event_log_response_string(event_log_response,
             DISPLAY_FRAME_SEPARATOR);
@@ -1467,12 +1467,12 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
     case REPORT_SLAVE_ID:
         type = "REPORT SLAVE ID";
 
-        report_slave_id_request = (struct modbus_tcp_generic*)
+        report_slave_id_request = (struct modbus_generic*)
             aggregated_frame->query;
         report_slave_id_response = (struct modbus_report_slave_id_response*)
             aggregated_frame->response;
 
-        query = get_modbus_tcp_generic_string(report_slave_id_request,
+        query = get_modbus_generic_string(report_slave_id_request,
                                               DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_report_slave_id_response_string(
             report_slave_id_response, DISPLAY_FRAME_SEPARATOR);
@@ -1511,12 +1511,12 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
 {
     struct modbus_read_query *read_query;
     struct modbus_single_write *single_write_query;
-    struct modbus_tcp_generic *exception_status_request;
+    struct modbus_generic *exception_status_request;
     struct modbus_diagnostics *diagnostics_query;
-    struct modbus_tcp_generic *event_counter_request;
-    struct modbus_tcp_generic *event_log_request;
+    struct modbus_generic *event_counter_request;
+    struct modbus_generic *event_log_request;
     struct modbus_multiple_write_query *multiple_write_query;
-    struct modbus_tcp_generic *report_slave_id_request;
+    struct modbus_generic *report_slave_id_request;
     struct modbus_exception *exception;
     std::string type;
     std::string query;
@@ -1576,10 +1576,10 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
     case READ_EXCEPTION_STATUS:
         type = "READ EXCEPTION STATUS";
 
-        exception_status_request = (struct modbus_tcp_generic*)
+        exception_status_request = (struct modbus_generic*)
             aggregated_frame->query;
 
-        query = get_modbus_tcp_generic_string(exception_status_request,
+        query = get_modbus_generic_string(exception_status_request,
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     case DIAGNOSTICS:
@@ -1594,19 +1594,19 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
     case FETCH_COMM_EVENT_COUNTER:
         type = "FETCH COMM EVENT COUNTER";
 
-        event_counter_request = (struct modbus_tcp_generic*)
+        event_counter_request = (struct modbus_generic*)
             aggregated_frame->query;
 
-        query = get_modbus_tcp_generic_string(event_counter_request,
+        query = get_modbus_generic_string(event_counter_request,
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     case FETCH_COMM_EVENT_LOG:
         type = "FETCH COMM EVENT LOG";
 
-        event_log_request = (struct modbus_tcp_generic*)
+        event_log_request = (struct modbus_generic*)
             aggregated_frame->query;
 
-        query = get_modbus_tcp_generic_string(event_log_request,
+        query = get_modbus_generic_string(event_log_request,
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     case FORCE_MULTIPLE_COILS:
@@ -1630,9 +1630,9 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
     case REPORT_SLAVE_ID:
         type = "REPORT SLAVE ID";
 
-        report_slave_id_request = (struct modbus_tcp_generic*)
+        report_slave_id_request = (struct modbus_generic*)
             aggregated_frame->query;
-        query = get_modbus_tcp_generic_string(report_slave_id_request,
+        query = get_modbus_generic_string(report_slave_id_request,
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     default:

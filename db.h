@@ -13,7 +13,7 @@ typedef struct st_mysql MYSQL;
 struct device_struct;
 struct address_struct;
 
-struct modbus_tcp_generic;
+struct modbus_generic;
 struct modbus_read_query;
 struct modbus_read_response;
 struct modbus_single_write;
@@ -40,9 +40,9 @@ struct db_manager {
 
     bool add_address(struct address_struct *address, uint8_t slave_id);
 
-    bool add_modbus_generic(const struct modbus_tcp_generic *modbus_struct,
+    bool add_modbus_generic(const struct modbus_generic *modbus_struct,
                             uint8_t type);
-    bool add_modbus_generic(const struct modbus_tcp_generic *modbus_struct,
+    bool add_modbus_generic(const struct modbus_generic *modbus_struct,
                             uint8_t type, const std::string &errors);
     bool add_read_query(const struct modbus_read_query *modbus_struct);
     bool add_read_query(const struct modbus_read_query *modbus_struct,
