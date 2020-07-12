@@ -146,6 +146,7 @@ namespace serial_sniffer {
         int n;
         int bytes_read;
         uint8_t function_code;
+        uint8_t byte_count;
         uint16_t frame_length;
 
         read_buf = new uint8_t[BUFFER_SIZE];
@@ -168,66 +169,126 @@ namespace serial_sniffer {
         case READ_COIL_STATUS:
             while (bytes_read < 4) {
                 n = read(port1_fd, read_buf + buf_index, 
-                    4 * sizeof(uint8_t));
+                    4 * sizeof(uint8_t) - bytes_read);
                 buf_index += n;
                 bytes_read += n;
             }
 
-            // read the CRC
-            n = read(port1_fd, read_buf + buf_index, 2 * sizeof(uint8_t));
-            buf_index += n;
-
-            if (n == 1) {
-                n = read(port1_fd, read_buf + buf_index, sizeof(uint8_t));
-                buf_index += n;
-            }
-
-            logger::modbus_packet_handler(read_buf);
-
-            queue_item = new msg_buf;
-            queue_item->payload = read_buf + 6;
-            queue_item->length = 8;
-
-            write_to_port(port2_fd, queue_item);
-
-            delete[] read_buf;
-            delete queue_item;
+            frame_length = 6;
 
             break;
         case READ_INPUT_STATUS:
+            while (bytes_read < 4) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case READ_HOLDING_REGISTERS:
+            while (bytes_read < 4) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case READ_INPUT_REGISTERS:
+            while (bytes_read < 4) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case FORCE_SINGLE_COIL:
+            while (bytes_read < 4) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case PRESET_SINGLE_REGISTER:
+            while (bytes_read < 4) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case READ_EXCEPTION_STATUS:
+            frame_length = 2;
 
             break;
         case DIAGNOSTICS:
 
             break;
         case FETCH_COMM_EVENT_COUNTER:
+            frame_length = 2;
 
             break;
         case FETCH_COMM_EVENT_LOG:
+            frame_length = 2;
 
             break;
         case FORCE_MULTIPLE_COILS:
+            while (bytes_read < 5) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    5 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            byte_count = read_buf[12];
+
+            while (bytes_read < byte_count) {
+                n = read(port1_fd, read_buf + buf_index,
+                         byte_count * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 7 + byte_count;
 
             break;
         case PRESET_MULTIPLE_REGISTERS:
+            while (bytes_read < 5) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    5 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            byte_count = read_buf[12];
+
+            while (bytes_read < byte_count) {
+                n = read(port1_fd, read_buf + buf_index,
+                         byte_count * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 7 + byte_count;
 
             break;
         case REPORT_SLAVE_ID:
+            frame_length = 2;
 
             break;
         case READ_FILE_RECORD:
@@ -235,12 +296,44 @@ namespace serial_sniffer {
         case WRITE_FILE_RECORD:
             break;
         case MASK_WRITE_REGISTER:
+            while (bytes_read < 6) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    6 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 8;
 
             break;
         default:
             std::cout << "Function code decoding not yet implemented"
                 << std::endl;
+
+            return 0;
         }
+
+        // read the CRC
+        n = read(port1_fd, read_buf + buf_index, 2 * sizeof(uint8_t));
+        buf_index += n;
+
+        if (n == 1) {
+            n = read(port1_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+        }
+
+        frame_length += 2;
+
+        logger::modbus_packet_handler(read_buf);
+
+        queue_item = new msg_buf;
+        queue_item->payload = read_buf + 6;
+        queue_item->length = frame_length;
+
+        write_to_port(port2_fd, queue_item);
+
+        delete[] read_buf;
+        delete queue_item;
 
         return 0;
     }
@@ -281,68 +374,157 @@ namespace serial_sniffer {
 
             while (bytes_read < byte_count) {
                 n = read(port2_fd, read_buf + buf_index,
-                         byte_count * sizeof(uint8_t));
+                         byte_count * sizeof(uint8_t) - bytes_read);
                 buf_index += n;
                 bytes_read += n;
             }
 
-            // read the CRC
-            n = read(port2_fd, read_buf + buf_index, 2 * sizeof(uint8_t));
-            buf_index += n;
-
-            if (n == 1) {
-                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-                buf_index += n;
-            }
-
-            frame_length = 5 + byte_count;
-
-            logger::modbus_packet_handler(read_buf);
-
-            queue_item = new msg_buf;
-            queue_item->payload = read_buf + 6;
-            queue_item->length = frame_length;
-
-            write_to_port(port1_fd, queue_item);
-
-            delete[] read_buf;
-            delete queue_item;
+            frame_length = 3 + byte_count;
 
             break;
         case READ_INPUT_STATUS:
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+
+            byte_count = read_buf[8];
+
+            while (bytes_read < byte_count) {
+                n = read(port2_fd, read_buf + buf_index,
+                         byte_count * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 3 + byte_count;
 
             break;
         case READ_HOLDING_REGISTERS:
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+
+            byte_count = read_buf[8];
+
+            while (bytes_read < byte_count) {
+                n = read(port2_fd, read_buf + buf_index,
+                         byte_count * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 3 + byte_count;
 
             break;
         case READ_INPUT_REGISTERS:
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+
+            byte_count = read_buf[8];
+
+            while (bytes_read < byte_count) {
+                n = read(port2_fd, read_buf + buf_index,
+                         byte_count * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 3 + byte_count;
 
             break;
         case FORCE_SINGLE_COIL:
+            while (bytes_read < 4) {
+                n = read(port2_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case PRESET_SINGLE_REGISTER:
+            while (bytes_read < 4) {
+                n = read(port2_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case READ_EXCEPTION_STATUS:
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+
+            frame_length = 3;
 
             break;
         case DIAGNOSTICS:
 
             break;
         case FETCH_COMM_EVENT_COUNTER:
+            while (bytes_read < 4) {
+                n = read(port2_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case FETCH_COMM_EVENT_LOG:
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+
+            byte_count = read_buf[8];
+
+            while (bytes_read < byte_count) {
+                n = read(port2_fd, read_buf + buf_index,
+                         byte_count * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 3 + byte_count;
 
             break;
         case FORCE_MULTIPLE_COILS:
+            while (bytes_read < 4) {
+                n = read(port2_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case PRESET_MULTIPLE_REGISTERS:
+            while (bytes_read < 4) {
+                n = read(port2_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case REPORT_SLAVE_ID:
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+
+            byte_count = read_buf[8];
+
+            while (bytes_read < byte_count) {
+                n = read(port2_fd, read_buf + buf_index,
+                         byte_count * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 3 + byte_count;
 
             break;
         case READ_FILE_RECORD:
@@ -350,12 +532,42 @@ namespace serial_sniffer {
         case WRITE_FILE_RECORD:
             break;
         case MASK_WRITE_REGISTER:
+            while (bytes_read < 6) {
+                n = read(port2_fd, read_buf + buf_index, 
+                    6 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 8;
 
             break;
         default:
             std::cout << "Function code decoding not yet implemented"
                 << std::endl;
         }
+
+        // read the CRC
+        n = read(port2_fd, read_buf + buf_index, 2 * sizeof(uint8_t));
+        buf_index += n;
+
+        if (n == 1) {
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+        }
+
+        frame_length += 2;
+
+        logger::modbus_packet_handler(read_buf);
+
+        queue_item = new msg_buf;
+        queue_item->payload = read_buf + 6;
+        queue_item->length = frame_length;
+
+        write_to_port(port1_fd, queue_item);
+
+        delete[] read_buf;
+        delete queue_item;
 
         return 0;
     }
