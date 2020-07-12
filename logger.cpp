@@ -895,8 +895,9 @@ namespace logger {
         std::cout << "-h                print the help" << std::endl;
         std::cout << "-s                capture the frames on the serial line"
             << std::endl;
-        std::cout << "-p PORT1 PORT2    use the specified serial ports"
-            << std::endl;
+        std::cout << "-p PORT1 PORT2    use the specified serial ports (PORT1 "
+            << "is used to sniff the incoming Master queries and PORT2 is used "
+            << "to sniff the incoming Slave responses)" << std::endl;
         std::cout << "-d                print the frames to stdout"
             << std::endl;
         std::cout << "-l DB_NAME        create and log the frames in a database"
