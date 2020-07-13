@@ -27,7 +27,7 @@ namespace tcp_sniffer {
         current_dev = all_devs;
 
         while (current_dev) {
-            printf("%-17s %s\n", current_dev->name, (current_dev->description
+            printf("%-37s %s\n", current_dev->name, (current_dev->description
                 ? current_dev->description : "(no description)"));
 
             current_dev = current_dev->next;

@@ -26,6 +26,9 @@ namespace logger {
     std::string interface;
 
     // modbus serial
+    unsigned int baud_rate;
+    unsigned int parity_bit;
+    unsigned int stop_bits;
     std::string port1;
     std::string port2;
 
@@ -891,22 +894,27 @@ namespace logger {
 
     void display_help()
     {
-        std::cout << "Modbus Logger" << std::endl;
-        std::cout << "-h                print the help" << std::endl;
-        std::cout << "-s                capture the frames on the serial line"
+        std::cout << "MODBUS Logger" << std::endl;
+        std::cout << "-h                                    print the help"
             << std::endl;
-        std::cout << "-p PORT1 PORT2    use the specified serial ports (PORT1 "
-            << "is used to sniff the incoming Master queries and PORT2 is used "
-            << "to sniff the incoming Slave responses)" << std::endl;
-        std::cout << "-d                print the frames to stdout"
+        std::cout << "-i INT_NAME                           capture MODBUS TCP "
+            << "frames on the INT_NAME interface (default interface is lo)"
             << std::endl;
-        std::cout << "-l DB_NAME        create and log the frames in a database"
+        std::cout << "-s BAUD_RATE PARITY_OPTION STOP_BITS  capture MODBUS RTU "
+            << "frames (PARITY_OPTION: 0 for no parity, 1 for odd parity and 2 "
+            << "for even parity; STOP_BITS: 1 or 2)" << std::endl;
+        std::cout << "-p PORT1 PORT2                        use the specified "
+            << "serial ports (PORT1 is used to sniff the incoming Master "
+            << "queries and PORT2 is used to sniff the incoming Slave "
+            << "responses)" << std::endl;
+        std::cout << "-d                                    print the frames "
+            << "to stdout" << std::endl;
+        std::cout << "-l DB_NAME                            create and log the "
+            << "frames in a database" << std::endl;
+        std::cout << "-t SECONDS                            run the logger for "
+            << "a specified amount of time (by default the program runs "
+            << "indefinitely and can be stopped using the SIGINT signal)"
             << std::endl;
-        std::cout << "-i INT_NAME       capture the frames on the INT_NAME "
-            << "interface (default interface is lo)" << std::endl;
-        std::cout << "-t SECONDS        run the logger for a specified amount "
-            << "of time (by default the program runs indefinitely and can be "
-            << "stopped using the SIGINT signal)" << std::endl;
 
         std::cout << std::endl;
         std::cout << "Available Interfaces" << std::endl;
@@ -925,7 +933,7 @@ namespace logger {
 
         interface = "lo";
 
-        while ((option = getopt(argc, argv, ":hdl:i:t:sp:")) != -1) {
+        while ((option = getopt(argc, argv, ":hdl:i:t:s:p:")) != -1) {
             switch (option) {
             case 'd':
                 display = true;
@@ -952,7 +960,7 @@ namespace logger {
             case 'p':
                 port1 = std::string(optarg);
 
-                if (optind < argc && *argv[optind] != '-'){
+                if (optind < argc && *argv[optind] != '-') {
                     port2 = std::string(argv[optind]);
 
                     optind++;
@@ -968,6 +976,34 @@ namespace logger {
                 break;
             case 's':
                 serial = true;
+
+                sscanf(optarg, "%u", &baud_rate);
+
+                if (optind < argc && *argv[optind] != '-'){
+                    sscanf(argv[optind], "%u", &parity_bit);
+
+                    optind++;
+                } else {
+                    std::cout << "-s option requires three arguments"
+                        << std::endl;
+
+                    display_help();
+
+                    return 1;
+                }
+
+                if (optind < argc && *argv[optind] != '-'){
+                    sscanf(argv[optind], "%u", &stop_bits);
+
+                    optind++;
+                } else {
+                    std::cout << "-s option requires three arguments"
+                        << std::endl;
+
+                    display_help();
+
+                    return 1;
+                }
 
                 break;
             case 't':
@@ -1019,8 +1055,10 @@ namespace logger {
             add_addresses_to_db(db);
 
         if (serial) {
-            serial_sniffer::init(port1, port2, B19200, CS8,
-                NO_PARITY, ONE_STOP_BIT);
+            //serial_sniffer::init(port1, port2, B19200, CS8,
+            //    NO_PARITY, ONE_STOP_BIT);
+            serial_sniffer::init(port1, port2, baud_rate, CS8, parity_bit,
+                stop_bits);
         } else {
             tcp_sniffer::init(interface);
         }

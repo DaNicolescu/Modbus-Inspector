@@ -1,8 +1,8 @@
 #include <iostream>
-#include <fcntl.h> // Contains file controls like O_RDWR
-#include <errno.h> // Error integer and strerror() function
-#include <termios.h> // Contains POSIX terminal control definitions
-#include <unistd.h> // write(), read(), close()
+#include <fcntl.h>
+#include <errno.h>
+#include <termios.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "serial_sniffer.h"
@@ -107,6 +107,13 @@ namespace serial_sniffer {
         port1_tty.c_cc[VMIN] = 1;
         port2_tty.c_cc[VTIME] = 0;
         port2_tty.c_cc[VMIN] = 1;
+
+        if (baud_rate == 4800)
+            baud_rate == B4800;
+        else if (baud_rate == 9600)
+            baud_rate == B9600;
+        else if (baud_rate == 19200)
+            baud_rate = B19200;
 
         cfsetispeed(&port1_tty, baud_rate);
         cfsetospeed(&port1_tty, baud_rate);

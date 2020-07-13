@@ -6,11 +6,11 @@
 #define BUFFER_SIZE         256
 
 #define NO_PARITY           0
-#define EVEN_PARITY         1
-#define ODD_PARITY          2
+#define ODD_PARITY          1
+#define EVEN_PARITY         2
 
-#define ONE_STOP_BIT        0
-#define TWO_STOP_BITS       1
+#define ONE_STOP_BIT        1
+#define TWO_STOP_BITS       2
 
 struct msg_buf;
 
