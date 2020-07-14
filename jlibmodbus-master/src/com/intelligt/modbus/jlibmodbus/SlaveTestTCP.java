@@ -2,6 +2,7 @@ package com.intelligt.modbus.jlibmodbus;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
 import com.intelligt.modbus.jlibmodbus.data.DataHolder;
+import com.intelligt.modbus.jlibmodbus.data.ModbusCoils;
 import com.intelligt.modbus.jlibmodbus.data.ModbusHoldingRegisters;
 import com.intelligt.modbus.jlibmodbus.exception.IllegalDataAddressException;
 import com.intelligt.modbus.jlibmodbus.exception.IllegalDataValueException;
@@ -43,7 +44,7 @@ import java.util.List;
  * Authors: Vladislav Y. Kochedykov, software engineer.
  * email: vladislav.kochedykov@gmail.com
  */
-public class SimpleSlaveTCP {
+public class SlaveTestTCP {
 
     static public void main(String[] argv) {
 
@@ -84,9 +85,47 @@ public class SimpleSlaveTCP {
             });
 
             slave.setDataHolder(dh);
-            ModbusHoldingRegisters hr = new ModbusHoldingRegisters(15);
-            hr.set(0, 12345);
+
+            // set holding registers
+            ModbusHoldingRegisters hr = new ModbusHoldingRegisters(4);
+            hr.set(0, 20);
+            hr.set(1, 10);
+            hr.set(2, 67);
+            hr.set(3, 0);
+            hr.set(4, 0);
             slave.getDataHolder().setHoldingRegisters(hr);
+
+            // set input registers
+            ModbusHoldingRegisters inputRegisters = new ModbusHoldingRegisters(4);
+            inputRegisters.set(0, 10);
+            inputRegisters.set(1, 11);
+            inputRegisters.set(2, 12);
+            inputRegisters.set(3, 13);
+            slave.getDataHolder().setInputRegisters(inputRegisters);
+
+            // set read coils
+            ModbusCoils coils = new ModbusCoils(6);
+
+            coils.set(0, true);
+            coils.set(1, true);
+            coils.set(2, false);
+            coils.set(3, true);
+            coils.set(4, false);
+            coils.set(5, false);
+            slave.getDataHolder().setCoils(coils);
+
+            // set discrete inputs
+            ModbusCoils discreteInputs = new ModbusCoils(6);
+
+            discreteInputs.set(0, true);
+            discreteInputs.set(1, false);
+            discreteInputs.set(2, false);
+            discreteInputs.set(3, false);
+            discreteInputs.set(4, false);
+            discreteInputs.set(5, false);
+            slave.getDataHolder().setDiscreteInputs(discreteInputs);
+
+
             slave.setServerAddress(2);
             /*
              * using master-branch it should be #slave.open();
