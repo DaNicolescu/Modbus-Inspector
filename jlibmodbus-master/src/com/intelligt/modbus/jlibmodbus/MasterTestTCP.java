@@ -42,7 +42,7 @@ import java.net.InetAddress;
  * Authors: Vladislav Y. Kochedykov, software engineer.
  * email: vladislav.kochedykov@gmail.com
  */
-public class SimpleMasterTCP {
+public class MasterTestTCP {
 
     static public void main(String[] args) {
         try {
@@ -58,9 +58,8 @@ public class SimpleMasterTCP {
             ModbusMaster m = ModbusMasterFactory.createModbusMasterTCP(tcpParameters);
             Modbus.setAutoIncrementTransactionId(true);
 
-            int slaveId = 1;
+            int slaveId = 2;
             int offset = 0;
-            int quantity = 9;
 
             try {
                 // since 1.2.8
@@ -68,23 +67,55 @@ public class SimpleMasterTCP {
                     m.connect();
                 }
 
-                // at next string we receive ten registers from a slave with id of 1 at offset of 0.
-                int[] registerValues = m.readHoldingRegisters(slaveId, offset, quantity);
+                // read holding registers
+                int[] registerValues = m.readHoldingRegisters(slaveId, offset, 4);
 
                 for (int value : registerValues) {
                     System.out.println("Address: " + offset++ + ", Value: " + value);
                 }
-                // also since 1.2.8.4 you can create your own request and process it with the master
-                /*offset = 0;
-                ReadHoldingRegistersRequest request = new ReadHoldingRegistersRequest();
-                request.setServerAddress(1);
-                request.setStartAddress(offset);
-                request.setTransactionId(0);
-                ReadHoldingRegistersResponse response = (ReadHoldingRegistersResponse) m.processRequest(request);
-                // you can get either int[] containing register values or byte[] containing raw bytes.
-                for (int value : response.getRegisters()) {
+
+                offset = 0;
+
+                // read input registers
+                int[] inputRegisterValues = m.readInputRegisters(slaveId, offset, 4);
+
+                for (int value : inputRegisterValues) {
                     System.out.println("Address: " + offset++ + ", Value: " + value);
-                }*/
+                }
+
+                offset = 0;
+
+                // read coils
+                boolean[] coilValues = m.readCoils(slaveId, offset, 6);
+
+                for (boolean value : coilValues) {
+                    System.out.println("Address: " + offset++ + ", Value: " + value);
+                }
+
+                offset = 0;
+
+                // read discrete inputs
+                boolean[] discreteInputsValues = m.readDiscreteInputs(slaveId, offset, 6);
+
+                for (boolean value : discreteInputsValues) {
+                    System.out.println("Address: " + offset++ + ", Value: " + value);
+                }
+
+                // write single coil
+                m.writeSingleCoil(slaveId, 1, true);
+
+                // write single register
+                m.writeSingleRegister(slaveId, 2, 25);
+
+                // write multiple coils
+                m.writeMultipleCoils(slaveId, 0, new boolean[]{true, false, true});
+
+                // write multiple registers
+                m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
+
+                // mask write register
+                m.maskWriteRegister(slaveId, 3, 242, 37);
+
             } catch (ModbusProtocolException e) {
                 e.printStackTrace();
             } catch (ModbusNumberException e) {

@@ -87,7 +87,7 @@ public class SimpleSlaveTCP {
             ModbusHoldingRegisters hr = new ModbusHoldingRegisters(15);
             hr.set(0, 12345);
             slave.getDataHolder().setHoldingRegisters(hr);
-            slave.setServerAddress(1);
+            slave.setServerAddress(2);
             /*
              * using master-branch it should be #slave.open();
              */
