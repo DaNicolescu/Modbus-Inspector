@@ -92,7 +92,6 @@ public class SlaveTestTCP {
             hr.set(1, 10);
             hr.set(2, 67);
             hr.set(3, 0);
-            hr.set(4, 0);
             slave.getDataHolder().setHoldingRegisters(hr);
 
             // set input registers
