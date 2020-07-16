@@ -102,13 +102,13 @@ public class MasterTestTCP {
                 }
 
                 // write single coil
-                m.writeSingleCoil(slaveId, 1, true);
+                m.writeSingleCoil(slaveId, 10, true);
 
                 // write single register
                 m.writeSingleRegister(slaveId, 2, 25);
 
                 // write multiple coils
-                m.writeMultipleCoils(slaveId, 0, new boolean[]{true, false, true});
+                m.writeMultipleCoils(slaveId, 10, new boolean[]{true, false, true});
 
                 // write multiple registers
                 m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});

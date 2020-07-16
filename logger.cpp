@@ -898,8 +898,7 @@ namespace logger {
         std::cout << "-h                                    print the help"
             << std::endl;
         std::cout << "-i INT_NAME                           capture MODBUS TCP "
-            << "frames on the INT_NAME interface (default interface is lo)"
-            << std::endl;
+            << "frames on the INT_NAME interface" << std::endl;
         std::cout << "-s BAUD_RATE PARITY_OPTION STOP_BITS  capture MODBUS RTU "
             << "frames (PARITY_OPTION: 0 for no parity, 1 for odd parity and 2 "
             << "for even parity; STOP_BITS: 1 or 2)" << std::endl;
@@ -930,8 +929,6 @@ namespace logger {
         log = false;
         timed = false;
         serial = false;
-
-        interface = "lo";
 
         while ((option = getopt(argc, argv, ":hdl:i:t:s:p:")) != -1) {
             switch (option) {

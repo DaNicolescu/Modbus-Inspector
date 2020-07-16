@@ -103,7 +103,7 @@ public class SlaveTestTCP {
             slave.getDataHolder().setInputRegisters(inputRegisters);
 
             // set read coils
-            ModbusCoils coils = new ModbusCoils(6);
+            ModbusCoils coils = new ModbusCoils(15);
 
             coils.set(0, true);
             coils.set(1, true);

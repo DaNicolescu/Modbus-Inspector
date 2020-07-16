@@ -410,6 +410,8 @@ std::string get_function_code_string(uint8_t function_code)
         return "PRESET MULTIPLE REGISTERS";
     case REPORT_SLAVE_ID:
         return "REPORT SLAVE ID";
+    case MASK_WRITE_REGISTER:
+        return "MASK WRITE 4X REGISTER";
     default:
         return "UNKNOWN";
     }
