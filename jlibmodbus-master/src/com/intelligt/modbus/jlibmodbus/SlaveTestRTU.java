@@ -1,13 +1,11 @@
 package com.intelligt.modbus.jlibmodbus;
 
+import com.intelligt.modbus.jlibmodbus.data.ModbusCoils;
 import com.intelligt.modbus.jlibmodbus.data.ModbusHoldingRegisters;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusIOException;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusNumberException;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusProtocolException;
-import com.intelligt.modbus.jlibmodbus.serial.SerialParameters;
-import com.intelligt.modbus.jlibmodbus.serial.SerialPort;
-import com.intelligt.modbus.jlibmodbus.serial.SerialPortException;
-import com.intelligt.modbus.jlibmodbus.serial.SerialUtils;
+import com.intelligt.modbus.jlibmodbus.serial.*;
 import com.intelligt.modbus.jlibmodbus.slave.ModbusSlave;
 import com.intelligt.modbus.jlibmodbus.slave.ModbusSlaveFactory;
 import com.intelligt.modbus.jlibmodbus.utils.DataUtils;
@@ -22,18 +20,19 @@ public class SlaveTestRTU {
             Modbus.setLogLevel(Modbus.LogLevel.LEVEL_DEBUG);
             SerialParameters serialParameters = new SerialParameters();
 
-            serialParameters.setDevice("/dev/pts/5");
+            serialParameters.setDevice("/dev/pts/7");
             // these parameters are set by default
-            serialParameters.setBaudRate(SerialPort.BaudRate.BAUD_RATE_115200);
+            serialParameters.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
             serialParameters.setDataBits(8);
             serialParameters.setParity(SerialPort.Parity.NONE);
             serialParameters.setStopBits(1);
 
+            SerialUtils.setSerialPortFactory(new SerialPortFactoryJSSC());
             ModbusSlave slave = ModbusSlaveFactory.createModbusSlaveRTU(serialParameters);
 
             slave.setServerAddress(slaveId);
             slave.setBroadcastEnabled(true);
-            slave.setReadTimeout(10000);
+            slave.setReadTimeout(5000);
 
             FrameEventListener listener = new FrameEventListener() {
                 @Override
@@ -49,7 +48,7 @@ public class SlaveTestRTU {
 
             slave.addListener(listener);
 
-            ModbusHoldingRegisters holdingRegisters = new ModbusHoldingRegisters(1000);
+            ModbusHoldingRegisters holdingRegisters = new ModbusHoldingRegisters(10);
 
             for (int i = 0; i < holdingRegisters.getQuantity(); i++) {
                 //fill
@@ -60,6 +59,36 @@ public class SlaveTestRTU {
             holdingRegisters.setFloat64At(0, Math.PI);
 
             slave.getDataHolder().setHoldingRegisters(holdingRegisters);
+
+            // set input registers
+            ModbusHoldingRegisters inputRegisters = new ModbusHoldingRegisters(4);
+            inputRegisters.set(0, 10);
+            inputRegisters.set(1, 11);
+            inputRegisters.set(2, 12);
+            inputRegisters.set(3, 13);
+            slave.getDataHolder().setInputRegisters(inputRegisters);
+
+            // set read coils
+            ModbusCoils coils = new ModbusCoils(15);
+
+            coils.set(0, true);
+            coils.set(1, true);
+            coils.set(2, false);
+            coils.set(3, true);
+            coils.set(4, false);
+            coils.set(5, false);
+            slave.getDataHolder().setCoils(coils);
+
+            // set discrete inputs
+            ModbusCoils discreteInputs = new ModbusCoils(6);
+
+            discreteInputs.set(0, true);
+            discreteInputs.set(1, false);
+            discreteInputs.set(2, false);
+            discreteInputs.set(3, false);
+            discreteInputs.set(4, false);
+            discreteInputs.set(5, false);
+            slave.getDataHolder().setDiscreteInputs(discreteInputs);
 
             slave.listen();
 

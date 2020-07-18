@@ -264,6 +264,8 @@ namespace serial_sniffer {
 
             byte_count = read_buf[12];
 
+            bytes_read = 0;
+
             while (bytes_read < byte_count) {
                 n = read(port1_fd, read_buf + buf_index,
                          byte_count * sizeof(uint8_t) - bytes_read);
@@ -283,6 +285,8 @@ namespace serial_sniffer {
             }
 
             byte_count = read_buf[12];
+
+            bytes_read = 0;
 
             while (bytes_read < byte_count) {
                 n = read(port1_fd, read_buf + buf_index,
@@ -371,6 +375,14 @@ namespace serial_sniffer {
         }
 
         function_code = read_buf[7];
+
+        if (function_code > 0x80) {
+            // read the exception code
+            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+            buf_index += n;
+
+            // WIPPPPPP
+        }
 
         switch (function_code) {
         case READ_COIL_STATUS:
@@ -550,7 +562,7 @@ namespace serial_sniffer {
 
             break;
         default:
-            std::cout << "Function code decoding not yet implemented"
+            std::cout << "serial sniffer function code not yet implemented"
                 << std::endl;
         }
 
@@ -584,7 +596,9 @@ namespace serial_sniffer {
         std::cout << "starting to run" << std::endl;
 
         while (true) {
+            std::cout << "read query" << std::endl;
             read_query_frame();
+            std::cout << "read response" << std::endl;
             read_response_frame();
         }
 

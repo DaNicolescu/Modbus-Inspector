@@ -111,7 +111,7 @@ public class MasterTestTCP {
                 m.writeMultipleCoils(slaveId, 10, new boolean[]{true, false, true});
 
                 // write multiple registers
-                m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
+                //m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
 
                 // mask write register
                 m.maskWriteRegister(slaveId, 3, 242, 37);

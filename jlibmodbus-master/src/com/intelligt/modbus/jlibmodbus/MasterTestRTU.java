@@ -1,11 +1,14 @@
 package com.intelligt.modbus.jlibmodbus;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
+import com.intelligt.modbus.jlibmodbus.data.CommStatus;
 import com.intelligt.modbus.jlibmodbus.master.ModbusMaster;
 import com.intelligt.modbus.jlibmodbus.master.ModbusMasterFactory;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusIOException;
 import com.intelligt.modbus.jlibmodbus.serial.SerialParameters;
 import com.intelligt.modbus.jlibmodbus.serial.SerialPort;
+import com.intelligt.modbus.jlibmodbus.serial.SerialPortFactoryJSSC;
+import com.intelligt.modbus.jlibmodbus.serial.SerialUtils;
 import jssc.SerialPortList;
 
 /*
@@ -50,9 +53,9 @@ public class MasterTestRTU {
             // if there is at least one serial port at your system
 
             // you can choose the one of those you need
-            sp.setDevice("/dev/pts/4");
+            sp.setDevice("/dev/pts/3");
             // these parameters are set by default
-            sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_115200);
+            sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
             sp.setDataBits(8);
             sp.setParity(SerialPort.Parity.NONE);
             sp.setStopBits(1);
@@ -87,6 +90,67 @@ public class MasterTestRTU {
                 for (int value : registerValues) {
                     System.out.println("Address: " + offset++ + ", Value: " + value);
                 }
+
+                offset = 0;
+
+                // read input registers
+                int[] inputRegisterValues = m.readInputRegisters(slaveId, offset, 4);
+
+                for (int value : inputRegisterValues) {
+                    System.out.println("Address: " + offset++ + ", Value: " + value);
+                }
+
+                offset = 0;
+
+                // read coils
+                boolean[] coilValues = m.readCoils(slaveId, offset, 6);
+
+                for (boolean value : coilValues) {
+                    System.out.println("Address: " + offset++ + ", Value: " + value);
+                }
+
+                offset = 0;
+
+                // read discrete inputs
+                boolean[] discreteInputsValues = m.readDiscreteInputs(slaveId, offset, 6);
+
+                for (boolean value : discreteInputsValues) {
+                    System.out.println("Address: " + offset++ + ", Value: " + value);
+                }
+
+                // write single coil
+                m.writeSingleCoil(slaveId, 10, true);
+
+                // write single register
+                m.writeSingleRegister(slaveId, 2, 25);
+
+                // write multiple coils
+                //m.writeMultipleCoils(slaveId, 10, new boolean[]{true, false, true});
+
+                // write multiple registers
+                m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
+
+                // mask write register
+                m.maskWriteRegister(slaveId, 3, 242, 37);
+
+                // read exception status
+                int excetptionStatus = m.readExceptionStatus(slaveId);
+
+                System.out.println("exception: " + excetptionStatus);
+
+                // report slave id
+                byte[] slaveIdInfo = m.reportSlaveId(slaveId);
+
+                System.out.println("Slave ID message length:" + slaveIdInfo.length);
+
+                CommStatus commStatus = m.getCommEventCounter(slaveId);
+
+                System.out.println("Comm event counter: " + commStatus.toString());
+
+                CommStatus commLog = m.getCommEventLog(slaveId);
+
+                System.out.println("Comm event log: " + commLog.toString());
+
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {

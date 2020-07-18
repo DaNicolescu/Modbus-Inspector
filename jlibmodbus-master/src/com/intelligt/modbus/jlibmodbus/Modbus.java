@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  */
 final public class Modbus {
     final static public int MAX_CONNECTION_TIMEOUT = 3000;
-    final static public int MAX_RESPONSE_TIMEOUT = 1000;
+    final static public int MAX_RESPONSE_TIMEOUT = 10000;
     final static public int MAX_PDU_LENGTH = 254;
     /*
        slave id + function code.
