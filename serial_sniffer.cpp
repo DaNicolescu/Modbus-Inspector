@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/epoll.h>
 
 #include "serial_sniffer.h"
 #include "modbus.h"
@@ -16,6 +17,43 @@ namespace serial_sniffer {
 
     int port1_fd;
     int port2_fd;
+
+    int epoll_fd;
+
+    int init_epoll()
+    {
+        struct epoll_event event_port1;
+        struct epoll_event event_port2;
+
+        epoll_fd = epoll_create1(0);
+
+        if(epoll_fd == -1) {
+            std::cout << "Failed to create epoll file descriptor" << std::endl;
+
+            return 1;
+        }
+
+        event_port1.events = EPOLLIN;
+        event_port1.data.fd = port1_fd;
+        event_port2.events = EPOLLIN;
+        event_port2.data.fd = port2_fd;
+
+        if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, port1_fd, &event_port1)) {
+            std::cout << "Failed to add file descriptor to epoll" << std::endl;
+            close_sniffer();
+
+            return 1;
+        }
+
+        if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, port2_fd, &event_port2)) {
+            std::cout << "Failed to add file descriptor to epoll" << std::endl;
+            close_sniffer();
+
+            return 1;
+        }
+
+        return 0;
+    }
 
     int init(std::string port1, std::string port2, unsigned int baud_rate,
         unsigned int data_bits, unsigned int parity_bit,
@@ -133,6 +171,9 @@ namespace serial_sniffer {
 
             return 1;
         }
+
+        if (init_epoll() != 0)
+            return 1;
 
         return 0;
     }
@@ -611,13 +652,22 @@ namespace serial_sniffer {
 
     int run()
     {
-        std::cout << "starting to run" << std::endl;
+        struct epoll_event events[MAX_EVENTS];
+        int event_count;
+        int event_fd;
+        int i;
 
         while (true) {
-            std::cout << "read query" << std::endl;
-            read_query_frame();
-            std::cout << "read response" << std::endl;
-            read_response_frame();
+            event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+
+            for(i = 0; i < event_count; i++) {
+                event_fd = events[i].data.fd;
+
+                if (event_fd == port1_fd)
+                    read_query_frame();
+                else if (event_fd == port2_fd)
+                    read_response_frame();
+            }
         }
 
         return 0;
@@ -625,7 +675,13 @@ namespace serial_sniffer {
 
     void close_sniffer()
     {
-        close(port1_fd);
-        close(port2_fd);
+        if (epoll_fd >= 0)
+            close(epoll_fd);
+
+        if (port1_fd >= 0)
+            close(port1_fd);
+
+        if (port2_fd >= 0)
+            close(port2_fd);
     }
 }

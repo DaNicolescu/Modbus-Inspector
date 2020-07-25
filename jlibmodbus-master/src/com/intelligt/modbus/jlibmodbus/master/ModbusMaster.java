@@ -140,8 +140,8 @@ abstract public class ModbusMaster implements FrameEventListenerList {
                          */
                         if (msg.getModbusExceptionCode() != ModbusExceptionCode.ACKNOWLEDGE) {
                             // connemt this to get exception messages
-                            if (msg.isException())
-                                throw new ModbusProtocolException(msg.getModbusExceptionCode());
+                            //if (msg.isException())
+                            //    throw new ModbusProtocolException(msg.getModbusExceptionCode());
                             return msg;
                         }
                     } catch (ModbusNumberException mne) {
