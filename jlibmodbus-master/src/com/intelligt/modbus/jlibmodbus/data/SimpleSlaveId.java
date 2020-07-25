@@ -25,15 +25,25 @@ import java.util.Arrays;
  */
 public class SimpleSlaveId implements SlaveId {
 
+    byte slaveId;
+    byte runIndicatorStatus;
     private byte[] bytes = null;
 
-    public SimpleSlaveId(int size) {
-        bytes = new byte[size];
+    public SimpleSlaveId(byte slaveId, byte runIndicatorStatus, int size) {
+        this.slaveId = slaveId;
+        this.runIndicatorStatus = runIndicatorStatus;
+        this.bytes = new byte[size];
     }
 
     @Override
     synchronized public byte[] get() {
-        return Arrays.copyOf(bytes, bytes.length);
+        byte[] info = new byte[this.bytes.length + 2];
+
+        info[0] = slaveId;
+        info[1] = runIndicatorStatus;
+        System.arraycopy(this.bytes, 0, info, 2, this.bytes.length);
+
+        return info;
     }
 
     @Override

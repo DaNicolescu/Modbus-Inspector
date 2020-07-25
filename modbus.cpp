@@ -88,6 +88,9 @@ struct modbus_exception_status_response *get_modbus_exception_status_response(
 
     modbus_struct = new modbus_exception_status_response;
 
+    memcpy(modbus_struct, payload,
+        sizeof(struct modbus_exception_status_response));
+
     reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     return modbus_struct;
@@ -98,6 +101,8 @@ struct modbus_diagnostics *get_modbus_diagnostics(const uint8_t *payload)
     struct modbus_diagnostics *modbus_struct;
 
     modbus_struct = new modbus_diagnostics;
+
+    memcpy(modbus_struct, payload, sizeof(struct modbus_diagnostics));
 
     reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
@@ -114,6 +119,9 @@ struct modbus_event_counter_response *get_modbus_event_counter_response(
 
     modbus_struct = new modbus_event_counter_response;
 
+    memcpy(modbus_struct, payload,
+        sizeof(struct modbus_event_counter_response));
+
     reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->status = htons(modbus_struct->status);
@@ -128,6 +136,8 @@ struct modbus_event_log_response *get_modbus_event_log_response(const uint8_t
     struct modbus_event_log_response *modbus_struct;
 
     modbus_struct = new modbus_event_log_response;
+
+    memcpy(modbus_struct, payload, sizeof(struct modbus_event_log_response));
 
     reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
@@ -195,7 +205,7 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
     reorder_modbus_generic_bytes(&(modbus_struct->generic_header));
 
     modbus_struct->additional_data = (uint8_t*)
-        malloc(modbus_struct->byte_count - 2);
+        malloc(modbus_struct->byte_count);
 
     if (!modbus_struct->additional_data) {
         std::cout << "Failed to allocate memory" << std::endl;
@@ -205,7 +215,7 @@ struct modbus_report_slave_id_response *get_modbus_report_slave_id_response(
 
     memcpy(modbus_struct->additional_data, payload
            + sizeof(struct modbus_generic) + 3,
-           modbus_struct->byte_count - 2);
+           modbus_struct->byte_count);
 
     return modbus_struct;
 }

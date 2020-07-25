@@ -151,6 +151,24 @@ public class MasterTestRTU {
 
                 System.out.println("Comm event log: " + commLog.toString());
 
+                m.diagnosticsReturnQueryData(slaveId, 25);
+
+                int diagRegister = m.diagnosticsReturnDiagnosticRegister(slaveId);
+
+                System.out.println("diag register: " + diagRegister);
+
+                int busMessageCount = m.diagnosticsReturnBusMessageCount(slaveId);
+
+                System.out.println("bus message count: " + busMessageCount);
+
+                int busErrorCount =  m.diagnosticsReturnBusCommunicationErrorCount(slaveId);
+
+                System.out.println("bus error count: " + busErrorCount);
+
+                m.diagnosticsReturnBusExceptionErrorCount(slaveId);
+
+                m.diagnosticsReturnSlaveMessageCount(slaveId);
+
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {

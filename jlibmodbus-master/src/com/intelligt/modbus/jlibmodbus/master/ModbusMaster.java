@@ -139,8 +139,9 @@ abstract public class ModbusMaster implements FrameEventListenerList {
                          * it means that operation is in processing and you should be waiting for the answer
                          */
                         if (msg.getModbusExceptionCode() != ModbusExceptionCode.ACKNOWLEDGE) {
-                            //if (msg.isException())
-                             //   throw new ModbusProtocolException(msg.getModbusExceptionCode());
+                            // connemt this to get exception messages
+                            if (msg.isException())
+                                throw new ModbusProtocolException(msg.getModbusExceptionCode());
                             return msg;
                         }
                     } catch (ModbusNumberException mne) {

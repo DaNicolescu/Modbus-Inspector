@@ -244,6 +244,14 @@ namespace serial_sniffer {
 
             break;
         case DIAGNOSTICS:
+            while (bytes_read < 4) {
+                n = read(port1_fd, read_buf + buf_index, 
+                    4 * sizeof(uint8_t) - bytes_read);
+                buf_index += n;
+                bytes_read += n;
+            }
+
+            frame_length = 6;
 
             break;
         case FETCH_COMM_EVENT_COUNTER:
@@ -376,194 +384,204 @@ namespace serial_sniffer {
 
         function_code = read_buf[7];
 
-        if (function_code > 0x80) {
+        if (function_code < 0x80) {
+            switch (function_code) {
+            case READ_COIL_STATUS:
+                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+                buf_index += n;
+
+                byte_count = read_buf[8];
+
+                while (bytes_read < byte_count) {
+                    n = read(port2_fd, read_buf + buf_index,
+                             byte_count * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 3 + byte_count;
+
+                break;
+            case READ_INPUT_STATUS:
+                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+                buf_index += n;
+
+                byte_count = read_buf[8];
+
+                while (bytes_read < byte_count) {
+                    n = read(port2_fd, read_buf + buf_index,
+                             byte_count * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 3 + byte_count;
+
+                break;
+            case READ_HOLDING_REGISTERS:
+                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+                buf_index += n;
+
+                byte_count = read_buf[8];
+
+                while (bytes_read < byte_count) {
+                    n = read(port2_fd, read_buf + buf_index,
+                             byte_count * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 3 + byte_count;
+
+                break;
+            case READ_INPUT_REGISTERS:
+                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+                buf_index += n;
+
+                byte_count = read_buf[8];
+
+                while (bytes_read < byte_count) {
+                    n = read(port2_fd, read_buf + buf_index,
+                             byte_count * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 3 + byte_count;
+
+                break;
+            case FORCE_SINGLE_COIL:
+                while (bytes_read < 4) {
+                    n = read(port2_fd, read_buf + buf_index, 
+                        4 * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 6;
+
+                break;
+            case PRESET_SINGLE_REGISTER:
+                while (bytes_read < 4) {
+                    n = read(port2_fd, read_buf + buf_index, 
+                        4 * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 6;
+
+                break;
+            case READ_EXCEPTION_STATUS:
+                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+                buf_index += n;
+
+                frame_length = 3;
+
+                break;
+            case DIAGNOSTICS:
+                while (bytes_read < 4) {
+                    n = read(port2_fd, read_buf + buf_index, 
+                        4 * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 6;
+
+                break;
+            case FETCH_COMM_EVENT_COUNTER:
+                while (bytes_read < 4) {
+                    n = read(port2_fd, read_buf + buf_index, 
+                        4 * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 6;
+
+                break;
+            case FETCH_COMM_EVENT_LOG:
+                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+                buf_index += n;
+
+                byte_count = read_buf[8];
+
+                while (bytes_read < byte_count) {
+                    n = read(port2_fd, read_buf + buf_index,
+                             byte_count * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 3 + byte_count;
+
+                break;
+            case FORCE_MULTIPLE_COILS:
+                while (bytes_read < 4) {
+                    n = read(port2_fd, read_buf + buf_index, 
+                        4 * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 6;
+
+                break;
+            case PRESET_MULTIPLE_REGISTERS:
+                while (bytes_read < 4) {
+                    n = read(port2_fd, read_buf + buf_index, 
+                        4 * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 6;
+
+                break;
+            case REPORT_SLAVE_ID:
+                n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
+                buf_index += n;
+
+                byte_count = read_buf[8];
+
+                while (bytes_read < byte_count) {
+                    n = read(port2_fd, read_buf + buf_index,
+                             byte_count * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 3 + byte_count;
+
+                break;
+            case READ_FILE_RECORD:
+                break;
+            case WRITE_FILE_RECORD:
+                break;
+            case MASK_WRITE_REGISTER:
+                while (bytes_read < 6) {
+                    n = read(port2_fd, read_buf + buf_index,
+                        6 * sizeof(uint8_t) - bytes_read);
+                    buf_index += n;
+                    bytes_read += n;
+                }
+
+                frame_length = 8;
+
+                break;
+            default:
+                std::cout << "serial sniffer function code not yet implemented"
+                    << std::endl;
+            }
+        } else {
+            // an exception response message was received
+
             // read the exception code
             n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
             buf_index += n;
 
-            // WIPPPPPP
-        }
-
-        switch (function_code) {
-        case READ_COIL_STATUS:
-            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-            buf_index += n;
-
-            byte_count = read_buf[8];
-
-            while (bytes_read < byte_count) {
-                n = read(port2_fd, read_buf + buf_index,
-                         byte_count * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 3 + byte_count;
-
-            break;
-        case READ_INPUT_STATUS:
-            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-            buf_index += n;
-
-            byte_count = read_buf[8];
-
-            while (bytes_read < byte_count) {
-                n = read(port2_fd, read_buf + buf_index,
-                         byte_count * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 3 + byte_count;
-
-            break;
-        case READ_HOLDING_REGISTERS:
-            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-            buf_index += n;
-
-            byte_count = read_buf[8];
-
-            while (bytes_read < byte_count) {
-                n = read(port2_fd, read_buf + buf_index,
-                         byte_count * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 3 + byte_count;
-
-            break;
-        case READ_INPUT_REGISTERS:
-            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-            buf_index += n;
-
-            byte_count = read_buf[8];
-
-            while (bytes_read < byte_count) {
-                n = read(port2_fd, read_buf + buf_index,
-                         byte_count * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 3 + byte_count;
-
-            break;
-        case FORCE_SINGLE_COIL:
-            while (bytes_read < 4) {
-                n = read(port2_fd, read_buf + buf_index, 
-                    4 * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 6;
-
-            break;
-        case PRESET_SINGLE_REGISTER:
-            while (bytes_read < 4) {
-                n = read(port2_fd, read_buf + buf_index, 
-                    4 * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 6;
-
-            break;
-        case READ_EXCEPTION_STATUS:
-            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-            buf_index += n;
-
             frame_length = 3;
-
-            break;
-        case DIAGNOSTICS:
-
-            break;
-        case FETCH_COMM_EVENT_COUNTER:
-            while (bytes_read < 4) {
-                n = read(port2_fd, read_buf + buf_index, 
-                    4 * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 6;
-
-            break;
-        case FETCH_COMM_EVENT_LOG:
-            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-            buf_index += n;
-
-            byte_count = read_buf[8];
-
-            while (bytes_read < byte_count) {
-                n = read(port2_fd, read_buf + buf_index,
-                         byte_count * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 3 + byte_count;
-
-            break;
-        case FORCE_MULTIPLE_COILS:
-            while (bytes_read < 4) {
-                n = read(port2_fd, read_buf + buf_index, 
-                    4 * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 6;
-
-            break;
-        case PRESET_MULTIPLE_REGISTERS:
-            while (bytes_read < 4) {
-                n = read(port2_fd, read_buf + buf_index, 
-                    4 * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 6;
-
-            break;
-        case REPORT_SLAVE_ID:
-            n = read(port2_fd, read_buf + buf_index, sizeof(uint8_t));
-            buf_index += n;
-
-            byte_count = read_buf[8];
-
-            while (bytes_read < byte_count) {
-                n = read(port2_fd, read_buf + buf_index,
-                         byte_count * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 3 + byte_count;
-
-            break;
-        case READ_FILE_RECORD:
-            break;
-        case WRITE_FILE_RECORD:
-            break;
-        case MASK_WRITE_REGISTER:
-            while (bytes_read < 6) {
-                n = read(port2_fd, read_buf + buf_index, 
-                    6 * sizeof(uint8_t) - bytes_read);
-                buf_index += n;
-                bytes_read += n;
-            }
-
-            frame_length = 8;
-
-            break;
-        default:
-            std::cout << "serial sniffer function code not yet implemented"
-                << std::endl;
         }
 
         // read the CRC

@@ -70,7 +70,6 @@ public class SimpleDataHolderBuilder extends DataHolderBuilder {
 
     @Override
     public void buildSlaveId() {
-        dataHolder.setSlaveId(new SimpleSlaveId(slaveIdSize));
     }
 
     @Override

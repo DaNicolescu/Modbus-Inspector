@@ -1,7 +1,7 @@
 package com.intelligt.modbus.jlibmodbus;
 
-import com.intelligt.modbus.jlibmodbus.data.ModbusCoils;
-import com.intelligt.modbus.jlibmodbus.data.ModbusHoldingRegisters;
+import com.intelligt.modbus.jlibmodbus.data.*;
+import com.intelligt.modbus.jlibmodbus.data.comm.ModbusCommEventSend;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusIOException;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusNumberException;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusProtocolException;
@@ -12,6 +12,8 @@ import com.intelligt.modbus.jlibmodbus.utils.DataUtils;
 import com.intelligt.modbus.jlibmodbus.utils.FrameEvent;
 import com.intelligt.modbus.jlibmodbus.utils.FrameEventListener;
 
+import java.nio.charset.Charset;
+
 public class SlaveTestRTU {
     final static private int slaveId = 2;
 
@@ -20,7 +22,7 @@ public class SlaveTestRTU {
             Modbus.setLogLevel(Modbus.LogLevel.LEVEL_DEBUG);
             SerialParameters serialParameters = new SerialParameters();
 
-            serialParameters.setDevice("/dev/pts/7");
+            serialParameters.setDevice("/dev/pts/6");
             // these parameters are set by default
             serialParameters.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
             serialParameters.setDataBits(8);
@@ -89,6 +91,18 @@ public class SlaveTestRTU {
             discreteInputs.set(4, false);
             discreteInputs.set(5, false);
             slave.getDataHolder().setDiscreteInputs(discreteInputs);
+
+            SlaveId slaveId = new SimpleSlaveId((byte)2, (byte)255, 33);
+            ExceptionStatus exceptionStatus = new SimpleExceptionStatus(123);
+
+            slaveId.set("slave implementation = jlibmodbus".getBytes(Charset.forName("UTF-8")));
+
+            slave.getDataHolder().setSlaveId(slaveId);
+            slave.getDataHolder().setExceptionStatus(exceptionStatus);
+
+            // slave.getDataHolder().getSlaveId().set("slave implementation = jlibmodbus".getBytes(Charset.forName("UTF-8")));
+            // slave.getDataHolder().getExceptionStatus().set(123);
+            slave.getDataHolder().getCommStatus().addEvent(ModbusCommEventSend.createExceptionSentRead());
 
             slave.listen();
 
