@@ -23,7 +23,7 @@ public class SlaveTestRTU {
             SerialParameters serialParameters = new SerialParameters();
 
             serialParameters.setDevice("/dev/pts/6");
-            // these parameters are set by default
+
             serialParameters.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
             serialParameters.setDataBits(8);
             serialParameters.setParity(SerialPort.Parity.NONE);
@@ -52,12 +52,9 @@ public class SlaveTestRTU {
 
             ModbusHoldingRegisters holdingRegisters = new ModbusHoldingRegisters(10);
 
-            for (int i = 0; i < holdingRegisters.getQuantity(); i++) {
-                //fill
+            for (int i = 0; i < holdingRegisters.getQuantity(); i++)
                 holdingRegisters.set(i, i + 1);
-            }
 
-            //place the number PI at offset 0
             holdingRegisters.setFloat64At(0, Math.PI);
 
             slave.getDataHolder().setHoldingRegisters(holdingRegisters);
@@ -100,15 +97,10 @@ public class SlaveTestRTU {
             slave.getDataHolder().setSlaveId(slaveId);
             slave.getDataHolder().setExceptionStatus(exceptionStatus);
 
-            // slave.getDataHolder().getSlaveId().set("slave implementation = jlibmodbus".getBytes(Charset.forName("UTF-8")));
-            // slave.getDataHolder().getExceptionStatus().set(123);
             slave.getDataHolder().getCommStatus().addEvent(ModbusCommEventSend.createExceptionSentRead());
 
             slave.listen();
 
-            /*
-             * since 1.2.8
-             */
             if (slave.isListening()) {
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     @Override
@@ -123,9 +115,6 @@ public class SlaveTestRTU {
                     slave.wait();
                 }
 
-                /*
-                 * using master-branch it should be #slave.close();
-                 */
                 slave.shutdown();
             }
 

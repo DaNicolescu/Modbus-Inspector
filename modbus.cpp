@@ -685,7 +685,7 @@ void display_modbus_report_slave_id_response(
     byte_count = modbus_struct->byte_count - 2;
 
     for (uint8_t i = 0; i < byte_count; i++)
-        std::cout << modbus_struct->additional_data[i] << ", ";
+        std::cout << modbus_struct->additional_data[i];
 
     std::cout << std::endl; 
 }

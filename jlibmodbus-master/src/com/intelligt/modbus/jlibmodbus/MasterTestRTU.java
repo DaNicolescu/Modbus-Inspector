@@ -59,34 +59,17 @@ public class MasterTestRTU {
             sp.setDataBits(8);
             sp.setParity(SerialPort.Parity.NONE);
             sp.setStopBits(1);
-            //you can choose the library to use.
-            //the library uses jssc by default.
-            //
-            //first, you should set the factory that will be used by library to create an instance of SerialPort.
-            //SerialUtils.setSerialPortFactory(new SerialPortFactoryRXTX());
-            //  JSSC is Java Simple Serial Connector
-            //SerialUtils.setSerialPortFactory(new SerialPortFactoryJSSC());
-            //  PJC is PureJavaComm.
-            //SerialUtils.setSerialPortFactory(new SerialPortFactoryPJC());
-            //  JavaComm is the Java Communications API (also known as javax.comm)
-            //SerialUtils.setSerialPortFactory(new SerialPortFactoryJavaComm());
-            //in case of using serial-to-wifi adapter
-            //String ip = "192.168.0.180";//for instance
-            //int port  = 777;
-            //SerialUtils.setSerialPortFactory(new SerialPortFactoryTcp(new TcpParameters(InetAddress.getByName(ip), port, true)));
-            // you should use another method:
-            //next you just create your master and use it.
+
             ModbusMaster m = ModbusMasterFactory.createModbusMasterRTU(sp);
             m.connect();
 
             int slaveId = 2;
             int offset = 0;
             int quantity = 1;
-            //you can invoke #connect method manually, otherwise it'll be invoked automatically
+
             try {
-                // at next string we receive ten registers from a slave with id of 1 at offset of 0.
                 int[] registerValues = m.readHoldingRegisters(slaveId, offset, quantity);
-                // print values
+
                 for (int value : registerValues) {
                     System.out.println("Address: " + offset++ + ", Value: " + value);
                 }
@@ -123,9 +106,6 @@ public class MasterTestRTU {
 
                 // write single register
                 m.writeSingleRegister(slaveId, 2, 25);
-
-                // write multiple coils
-                //m.writeMultipleCoils(slaveId, 10, new boolean[]{true, false, true});
 
                 // write multiple registers
                 m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
