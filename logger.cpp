@@ -799,7 +799,7 @@ namespace logger {
                 multiple_write_response = get_modbus_multiple_write_response(
                     payload);
 
-                valid_frame = !dev->valid_write_hld_regs_addresses(
+                valid_frame = dev->valid_write_hld_regs_addresses(
                     multiple_write_response->starting_address,
                     multiple_write_response->num_of_points);
 

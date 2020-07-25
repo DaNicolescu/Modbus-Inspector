@@ -107,6 +107,9 @@ public class MasterTestRTU {
                 // write single register
                 m.writeSingleRegister(slaveId, 2, 25);
 
+                // write multiple coils
+                m.writeMultipleCoils(slaveId, 1, new boolean[]{true, false, true});
+
                 // write multiple registers
                 m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
 
