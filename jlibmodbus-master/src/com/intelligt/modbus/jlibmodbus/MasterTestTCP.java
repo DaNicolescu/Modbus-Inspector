@@ -108,7 +108,7 @@ public class MasterTestTCP {
                 m.writeSingleRegister(slaveId, 2, 25);
 
                 // write multiple coils
-                m.writeMultipleCoils(slaveId, 4, new boolean[]{false, false});
+                m.writeMultipleCoils(slaveId, 12, new boolean[]{false, true});
 
                 // write multiple registers
                 m.writeMultipleRegisters(slaveId, 0, new int[]{30, 40});

@@ -1019,8 +1019,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         query = get_modbus_read_query_string(read_query,
                                              DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_read_response_string(read_response,
-                                                   DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            DISPLAY_FRAME_SEPARATOR) + DISPLAY_FRAME_SEPARATOR + "data: ";
         aggregated = "";
 
         transaction_id = read_query->generic_header.transaction_id;
@@ -1040,14 +1039,14 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
                 data_index++;
                 binary_string = byte_to_binary_string(
                     read_response->data[data_index]);
-                response += ", " + binary_string;
+                response = response + ", " + binary_string;
             }
 
             addr_data = dev->addresses_map.find(address)->second;
-            aggregated += "address: " + std::to_string(address) + " ("
-                + addr_data->description + ") reading is " + binary_string[i]
-                + DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes
-                + DISPLAY_FRAME_SEPARATOR;
+            aggregated = aggregated + "address: " + std::to_string(address)
+                + " (" + addr_data->description + ") reading is "
+                + binary_string[i] + DISPLAY_FRAME_SEPARATOR + "notes: "
+                + addr_data->notes + DISPLAY_FRAME_SEPARATOR;
 
             add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
                                 address, 0, std::string(1, binary_string[i]));
@@ -1066,10 +1065,9 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_read_query_string(read_query,
-                                             DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_read_response_string(read_response,
-                                                   DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            DISPLAY_FRAME_SEPARATOR) + DISPLAY_FRAME_SEPARATOR + "data: ";
         aggregated = "";
 
         transaction_id = read_query->generic_header.transaction_id;
@@ -1081,7 +1079,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         i = 0;
         data_index = 0;
         binary_string = byte_to_binary_string(read_response->data[data_index]);
-        response += binary_string;
+        response = response + binary_string;
 
         for (; address <= last_address; address++) {
             if (i == 8) {
@@ -1089,14 +1087,14 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
                 data_index++;
                 binary_string = byte_to_binary_string(
                     read_response->data[data_index]);
-                response += ", " + binary_string;
+                response = response + ", " + binary_string;
             }
 
             addr_data = dev->addresses_map.find(address)->second;
-            aggregated += "address: " + std::to_string(address) + " ("
-                + addr_data->description + ") reading is " + binary_string[i]
-                + DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes
-                + DISPLAY_FRAME_SEPARATOR;
+            aggregated = aggregated + "address: " + std::to_string(address)
+                + " (" + addr_data->description + ") reading is "
+                + binary_string[i] + DISPLAY_FRAME_SEPARATOR + "notes: "
+                + addr_data->notes + DISPLAY_FRAME_SEPARATOR;
 
             add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
                                 address, 0, std::string(1, binary_string[i]));
@@ -1114,11 +1112,12 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         read_response = (struct modbus_read_response*)
             aggregated_frame->response;
 
+        std::cout << "I am hereeee" << std::endl;
+
         query = get_modbus_read_query_string(read_query,
-                                             DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_read_response_string(read_response,
-                                                   DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            DISPLAY_FRAME_SEPARATOR) + DISPLAY_FRAME_SEPARATOR + "data: ";
         aggregated = "";
 
         transaction_id = read_query->generic_header.transaction_id;
@@ -1132,25 +1131,25 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         for (; address <= last_address; address++) {
 
             addr_data = dev->addresses_map.find(address)->second;
-            aggregated += "address: " + std::to_string(address) + " ("
-                + addr_data->description + ") reading is ";
+            aggregated = aggregated + "address: " + std::to_string(address)
+                + " (" + addr_data->description + ") reading is ";
 
             if (addr_data->type == XLS_FLOAT_TYPE) {
                 data_string = std::to_string(bytes_to_float(
                         read_response->data[data_index],
                         read_response->data[data_index + 1]));
-                response += data_string + ", ";
-                aggregated += data_string;
+                response = response + data_string + ", ";
+                aggregated = aggregated + data_string;
             } else {
                 data_string = std::to_string(
                     bytes_to_int(read_response->data[data_index],
                     read_response->data[data_index + 1]));
-                response += data_string + ", ";
-                aggregated += data_string;
+                response = response + data_string + ", ";
+                aggregated = aggregated + data_string;
             }
 
-            aggregated += DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes
-                + DISPLAY_FRAME_SEPARATOR;
+            aggregated = aggregated + DISPLAY_FRAME_SEPARATOR + "notes: "
+                + addr_data->notes + DISPLAY_FRAME_SEPARATOR;
 
             add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
                                 address, 0, data_string);
@@ -1169,10 +1168,9 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_read_query_string(read_query,
-                                             DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_read_response_string(read_response,
-                                                   DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            DISPLAY_FRAME_SEPARATOR) + DISPLAY_FRAME_SEPARATOR + "data: ";
         aggregated = "";
 
         transaction_id = read_query->generic_header.transaction_id;
@@ -1186,28 +1184,28 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         for (; address <= last_address; address++) {
 
             addr_data = dev->addresses_map.find(address)->second;
-            aggregated += "address: " + std::to_string(address) + " ("
-                + addr_data->description + ") reading is ";
+            aggregated = aggregated + "address: " + std::to_string(address)
+                + " (" + addr_data->description + ") reading is ";
 
             if (addr_data->type == XLS_FLOAT_TYPE) {
                 data_string = std::to_string(bytes_to_float(
                         read_response->data[data_index],
                         read_response->data[data_index + 1]));
-                response += data_string + ", ";
-                aggregated += data_string;
+                response = response + data_string + ", ";
+                aggregated = aggregated + data_string;
             } else {
                 data_string = std::to_string(
                     bytes_to_int(read_response->data[data_index],
                     read_response->data[data_index + 1]));
-                response += data_string + ", ";
-                aggregated += data_string;
+                response = response + data_string + ", ";
+                aggregated = aggregated + data_string;
             }
 
-            aggregated += DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes
-                + DISPLAY_FRAME_SEPARATOR;
+            aggregated = aggregated + DISPLAY_FRAME_SEPARATOR + "notes: "
+                + addr_data->notes + DISPLAY_FRAME_SEPARATOR;
 
             add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
-                                address, 0, data_string);
+                address, 0, data_string);
 
             data_index += 2;
         }
@@ -1224,10 +1222,9 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_single_write_string(single_write_query,
-                                               DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_single_write_string(single_write_response,
-                                                  DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            DISPLAY_FRAME_SEPARATOR) + DISPLAY_FRAME_SEPARATOR + "data: ";
 
         transaction_id = single_write_query->generic_header.transaction_id;
         slave_id = single_write_query->generic_header.unit_id;
@@ -1236,17 +1233,17 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
 
         addr_data = dev->addresses_map.find(address)->second;
 
-        response += std::to_string(single_write_query->value);
+        response = response + std::to_string(single_write_query->value);
 
         aggregated = "address: " + std::to_string(address) + " ("
             + addr_data->description + ") was set to "
             + std::to_string(single_write_query->value);
 
-        aggregated += DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes;
+        aggregated = aggregated + DISPLAY_FRAME_SEPARATOR + "notes: "
+            + addr_data->notes;
 
         add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
-                            address, 1,
-                            std::to_string(single_write_query->value));
+            address, 1, std::to_string(single_write_query->value));
 
         add_display_frame(type, query, response, aggregated);
 
@@ -1260,10 +1257,9 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_single_write_string(single_write_query,
-                                               DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_single_write_string(single_write_response,
-                                                  DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            DISPLAY_FRAME_SEPARATOR) + DISPLAY_FRAME_SEPARATOR + "data: ";
 
         transaction_id = single_write_query->generic_header.transaction_id;
         slave_id = single_write_query->generic_header.unit_id;
@@ -1277,19 +1273,19 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
 
         if (addr_data->type == XLS_FLOAT_TYPE) {
             data_string = std::to_string(float(single_write_query->value));
-            response += data_string;
-            aggregated += data_string;
+            response = response + data_string;
+            aggregated = aggregated + data_string;
         } else {
             data_string = std::to_string(single_write_query->value);
-            response += data_string;
-            aggregated += data_string;
+            response = response + data_string;
+            aggregated = aggregated + data_string;
         }
 
-        aggregated += DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes;
+        aggregated = aggregated + DISPLAY_FRAME_SEPARATOR + "notes: "
+            + addr_data->notes;
 
         add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
-                            address, 1,
-                            std::to_string(single_write_query->value));
+            address, 1, std::to_string(single_write_query->value));
 
         add_display_frame(type, query, response, aggregated);
 
@@ -1303,7 +1299,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_generic_string(exception_status_request,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_exception_status_response_string(
             exception_status_response, DISPLAY_FRAME_SEPARATOR);
 
@@ -1319,10 +1315,10 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_diagnostics_string(diagnostics_query,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
 
         response = get_modbus_diagnostics_string(diagnostics_response,
-                                                 DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
 
         add_display_frame(type, query, response);
 
@@ -1336,7 +1332,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_generic_string(event_counter_request,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_event_counter_response_string(
             event_counter_response, DISPLAY_FRAME_SEPARATOR);
 
@@ -1352,7 +1348,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_generic_string(event_log_request,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_event_log_response_string(event_log_response,
             DISPLAY_FRAME_SEPARATOR);
 
@@ -1368,10 +1364,10 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_multiple_write_query_string(multiple_write_query,
-                                                       DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_multiple_write_response_string(
-            multiple_write_response, DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            multiple_write_response, DISPLAY_FRAME_SEPARATOR)
+            + DISPLAY_FRAME_SEPARATOR + "data: ";
         aggregated = "";
 
         transaction_id = multiple_write_query->generic_header.transaction_id;
@@ -1384,7 +1380,7 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         data_index = 0;
         binary_string = byte_to_binary_string(
             multiple_write_query->data[data_index]);
-        response += binary_string;
+        response = response + binary_string;
 
         for (; address <= last_address; address++) {
             if (i == 8) {
@@ -1392,16 +1388,17 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
                 data_index++;
                 binary_string = byte_to_binary_string(
                     multiple_write_query->data[data_index]);
-                response += ", " + binary_string;
+                response = response + ", " + binary_string;
             }
 
             addr_data = dev->addresses_map.find(address)->second;
-            aggregated += "address: " + std::to_string(address) + " ("
-                + addr_data->description + ") was set to " + binary_string[i]
-                + DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes;
+            aggregated = aggregated + "address: " + std::to_string(address)
+                + " (" + addr_data->description + ") was set to "
+                + binary_string[i] + DISPLAY_FRAME_SEPARATOR + "notes: "
+                + addr_data->notes;
 
             add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
-                                address, 1, std::string(1, binary_string[i]));
+                address, 1, std::string(1, binary_string[i]));
 
             i++;
         }
@@ -1418,10 +1415,10 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
             aggregated_frame->response;
 
         query = get_modbus_multiple_write_query_string(multiple_write_query,
-                                                       DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
         response = get_modbus_multiple_write_response_string(
-            multiple_write_response, DISPLAY_FRAME_SEPARATOR);
-        response += DISPLAY_FRAME_SEPARATOR + "data: ";
+            multiple_write_response, DISPLAY_FRAME_SEPARATOR)
+            + DISPLAY_FRAME_SEPARATOR + "data: ";
         aggregated = "";
 
         transaction_id = multiple_write_query->generic_header.transaction_id;
@@ -1435,28 +1432,28 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         for (; address <= last_address; address++) {
 
             addr_data = dev->addresses_map.find(address)->second;
-            aggregated += "address: " + std::to_string(address) + " ("
-                + addr_data->description + ") was set to ";
+            aggregated = aggregated + "address: " + std::to_string(address)
+                + " (" + addr_data->description + ") was set to ";
 
             if (addr_data->type == XLS_FLOAT_TYPE) {
                 data_string = std::to_string(bytes_to_float(
                     multiple_write_query->data[data_index],
                     multiple_write_query->data[data_index + 1]));
-                response += data_string + ", ";
-                aggregated += data_string;
+                response = response + data_string + ", ";
+                aggregated = aggregated + data_string;
             } else {
                 data_string = std::to_string(bytes_to_int(
                     multiple_write_query->data[data_index],
                     multiple_write_query->data[data_index + 1]));
-                response += data_string + ", ";
-                aggregated += data_string;
+                response = response + data_string + ", ";
+                aggregated = aggregated + data_string;
             }
 
-            aggregated += DISPLAY_FRAME_SEPARATOR + "notes: " + addr_data->notes
-                + DISPLAY_FRAME_SEPARATOR;
+            aggregated = aggregated + DISPLAY_FRAME_SEPARATOR + "notes: "
+                + addr_data->notes + DISPLAY_FRAME_SEPARATOR;
 
             add_aggregated_data(addr_data->db_id, transaction_id, slave_id,
-                                address, 1, data_string);
+                address, 1, data_string);
 
             data_index += 2;
         }
