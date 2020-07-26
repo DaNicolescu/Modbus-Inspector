@@ -520,6 +520,10 @@ namespace logger {
             std::cout << errors << std::endl;
             std::cout << std::endl;
 
+            // eliminate the frame so that the next one will also be a query
+            // frame
+            modbus_aggregated_frames.erase(modbus_generic->transaction_id);
+
             return;
         }
 

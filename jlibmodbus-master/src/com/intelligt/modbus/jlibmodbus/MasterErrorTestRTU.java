@@ -52,7 +52,7 @@ public class MasterErrorTestRTU {
                 offset = 0;
 
                 // read coils
-                boolean[] coilValues = m.readCoils(5, offset, 6);
+                boolean[] coilValues = m.readCoils(slaveId, offset, 4);
 
                 for (boolean value : coilValues) {
                     System.out.println("Address: " + offset++ + ", Value: " + value);

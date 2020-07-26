@@ -108,14 +108,13 @@ public class MasterTestTCP {
                 m.writeSingleRegister(slaveId, 2, 25);
 
                 // write multiple coils
-                m.writeMultipleCoils(slaveId, 10, new boolean[]{true, false, true});
+                m.writeMultipleCoils(slaveId, 4, new boolean[]{false, false});
 
                 // write multiple registers
-                m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
+                m.writeMultipleRegisters(slaveId, 0, new int[]{30, 40});
 
                 // mask write register
                 m.maskWriteRegister(slaveId, 3, 242, 37);
-
             } catch (ModbusProtocolException e) {
                 e.printStackTrace();
             } catch (ModbusNumberException e) {
