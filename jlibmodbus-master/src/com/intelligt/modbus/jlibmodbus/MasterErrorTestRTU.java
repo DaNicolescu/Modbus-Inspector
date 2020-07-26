@@ -19,7 +19,7 @@ public class MasterErrorTestRTU {
             // if there is at least one serial port at your system
 
             // you can choose the one of those you need
-            sp.setDevice("/dev/pts/3");
+            sp.setDevice("/dev/pts/5");
             // these parameters are set by default
             sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
             sp.setDataBits(8);
@@ -71,16 +71,13 @@ public class MasterErrorTestRTU {
                 m.writeSingleCoil(slaveId, 10, true);
 
                 // write single register
-                m.writeSingleRegister(slaveId, 2, 25);
+                m.writeSingleRegister(slaveId, 50, 25);
 
                 // write multiple coils
-                m.writeMultipleCoils(slaveId, 1, new boolean[]{true, false, true});
+                m.writeMultipleCoils(slaveId, 12, new boolean[]{false, true});
 
                 // write multiple registers
-                m.writeMultipleRegisters(slaveId, 1, new int[]{10, 11});
-
-                // mask write register
-                m.maskWriteRegister(slaveId, 3, 242, 37);
+                m.writeMultipleRegisters(slaveId, 40, new int[]{10, 11});
 
                 // read exception status
                 int excetptionStatus = m.readExceptionStatus(slaveId);

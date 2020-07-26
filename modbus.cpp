@@ -278,7 +278,7 @@ std::string get_event_log_event_string(uint8_t event)
             + event_string[5] + " (Currently in Listen Only Mode), "
             + event_string[6] + ", " + event_string[7];
     } else {
-        return "Invalid Event: " + event_string;
+        return "No Event: " + event_string;
     }
 }
 

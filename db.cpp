@@ -1518,10 +1518,13 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
     std::string type;
     std::string query;
     std::string response;
+    uint8_t function_code;
 
-    switch (aggregated_frame->function_code) {
+    function_code = aggregated_frame->function_code - 0x80;
+
+    switch (function_code) {
     case READ_COIL_STATUS:
-        type = "READ COIL STATUS";
+        type = "READ COIL STATUS EXCEPTION";
 
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
@@ -1529,7 +1532,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                              DISPLAY_FRAME_SEPARATOR);
         break;
     case READ_INPUT_STATUS:
-        type = "READ INPUT STATUS";
+        type = "READ INPUT STATUS EXCEPTION";
 
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
@@ -1537,7 +1540,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                              DISPLAY_FRAME_SEPARATOR);
         break;
     case READ_HOLDING_REGISTERS:
-        type = "READ HOLDING REGISTERS";
+        type = "READ HOLDING REGISTERS EXCEPTION";
 
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
@@ -1545,7 +1548,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                              DISPLAY_FRAME_SEPARATOR);
         break;
     case READ_INPUT_REGISTERS:
-        type = "READ INPUT REGISTERS";
+        type = "READ INPUT REGISTERS EXCEPTION";
 
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
@@ -1553,7 +1556,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                              DISPLAY_FRAME_SEPARATOR);
         break;
     case FORCE_SINGLE_COIL:
-        type = "FORCE SINGLE COIL";
+        type = "FORCE SINGLE COIL EXCEPTION";
 
         single_write_query = (struct modbus_single_write*)
             aggregated_frame->query;
@@ -1562,7 +1565,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                                DISPLAY_FRAME_SEPARATOR);
         break;
     case PRESET_SINGLE_REGISTER:
-        type = "PRESET SINGLE REGISTER";
+        type = "PRESET SINGLE REGISTER EXCEPTION";
 
         single_write_query = (struct modbus_single_write*)
             aggregated_frame->query;
@@ -1571,7 +1574,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                                DISPLAY_FRAME_SEPARATOR);
         break;
     case READ_EXCEPTION_STATUS:
-        type = "READ EXCEPTION STATUS";
+        type = "READ EXCEPTION STATUS EXCEPTION";
 
         exception_status_request = (struct modbus_generic*)
             aggregated_frame->query;
@@ -1580,7 +1583,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     case DIAGNOSTICS:
-        type = "DIAGNOSTICS";
+        type = "DIAGNOSTICS EXCEPTION";
 
         diagnostics_query = (struct modbus_diagnostics*)
             aggregated_frame->query;
@@ -1589,7 +1592,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     case FETCH_COMM_EVENT_COUNTER:
-        type = "FETCH COMM EVENT COUNTER";
+        type = "FETCH COMM EVENT COUNTER EXCEPTION";
 
         event_counter_request = (struct modbus_generic*)
             aggregated_frame->query;
@@ -1598,7 +1601,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     case FETCH_COMM_EVENT_LOG:
-        type = "FETCH COMM EVENT LOG";
+        type = "FETCH COMM EVENT LOG EXCEPTION";
 
         event_log_request = (struct modbus_generic*)
             aggregated_frame->query;
@@ -1607,7 +1610,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                               DISPLAY_FRAME_SEPARATOR);
         break;
     case FORCE_MULTIPLE_COILS:
-        type = "FORCE MULTIPLE COILS";
+        type = "FORCE MULTIPLE COILS EXCEPTION";
 
         multiple_write_query = (struct modbus_multiple_write_query*)
             aggregated_frame->query;
@@ -1616,7 +1619,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                                        DISPLAY_FRAME_SEPARATOR);
         break;
     case PRESET_MULTIPLE_REGISTERS:
-        type = "PRESET MULTIPLE REGISTERS";
+        type = "PRESET MULTIPLE REGISTERS EXCEPTION";
 
         multiple_write_query = (struct modbus_multiple_write_query*)
             aggregated_frame->query;
@@ -1625,7 +1628,7 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
                                                        DISPLAY_FRAME_SEPARATOR);
         break;
     case REPORT_SLAVE_ID:
-        type = "REPORT SLAVE ID";
+        type = "REPORT SLAVE ID EXCEPTION";
 
         report_slave_id_request = (struct modbus_generic*)
             aggregated_frame->query;

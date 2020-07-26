@@ -533,8 +533,11 @@ namespace logger {
             if (log)
                 db->add_exception(exception);
 
-            if (display)
+            if (display) {
                 display_modbus_exception(exception);
+
+                std::cout << std::endl;
+            }
 
             if (modbus_aggregated_frame->query != NULL) {
                 modbus_aggregated_frame->function_code += 0x80;
