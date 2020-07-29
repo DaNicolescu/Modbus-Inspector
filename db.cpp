@@ -26,7 +26,8 @@ bool db_manager::open()
     }
 
     if (!mysql_real_connect(this->connection, "127.0.0.1", "root", NULL,
-                            NULL, 3306, NULL, 0)) {
+        NULL, 3306, NULL, 0)) {
+
         std::cout << mysql_error(this->connection) << std::endl;
 
         mysql_close(this->connection);
@@ -91,8 +92,6 @@ bool db_manager::create_tables()
         return false;
     }
 
-    std::cout << "frames table created" << std::endl;
-
     query = "CREATE TABLE IF NOT EXISTS `addresses` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
             "`slave_id` TINYINT UNSIGNED,"
@@ -106,8 +105,6 @@ bool db_manager::create_tables()
 
         return false;
     }
-
-    std::cout << "addresses table created" << std::endl;
 
     query = "CREATE TABLE IF NOT EXISTS `aggregated_data` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
@@ -129,8 +126,6 @@ bool db_manager::create_tables()
         return false;
     }
 
-    std::cout << "aggregated frames table created" << std::endl;
-
     query = "CREATE TABLE IF NOT EXISTS `display_frames` ("
             "`id` INTEGER AUTO_INCREMENT PRIMARY KEY,"
             "`type` TEXT,"
@@ -144,8 +139,6 @@ bool db_manager::create_tables()
 
         return false;
     }
-
-    std::cout << "display frames table created" << std::endl;
 
     return true;
 }
@@ -200,8 +193,6 @@ bool db_manager::add_address(struct address_struct *address, uint8_t slave_id)
                         + address->description + "', '"
                         + address->notes + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -226,8 +217,6 @@ bool db_manager::add_modbus_generic(const struct modbus_generic
                         + std::to_string(modbus_struct->unit_id) + ", "
                         + std::to_string(modbus_struct->function_code) + ")";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -251,8 +240,6 @@ bool db_manager::add_modbus_generic(const struct modbus_generic
                         + std::to_string(modbus_struct->unit_id) + ", "
                         + std::to_string(modbus_struct->function_code) + ", '"
                         + errors + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -280,8 +267,6 @@ bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct)
                             modbus_struct->generic_header.function_code) + ", "
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ")";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -311,8 +296,6 @@ bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct,
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ", '"
                         + errors + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -371,8 +354,6 @@ bool db_manager::add_read_response(
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + response_data + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -401,8 +382,6 @@ bool db_manager::add_single_write(
                             modbus_struct->generic_header.function_code) + ", "
                         + std::to_string(modbus_struct->address) + ", "
                         + std::to_string(modbus_struct->value) + ")";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -435,8 +414,6 @@ bool db_manager::add_single_write(
                         + std::to_string(modbus_struct->value) + ", '"
                         + errors + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -468,8 +445,6 @@ bool db_manager::add_exception_status_response(
                             modbus_struct->generic_header.function_code) + ", '"
                         + response_data + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -499,8 +474,6 @@ bool db_manager::add_diagnostics(const struct modbus_diagnostics *modbus_struct,
                         + std::to_string(
                             modbus_struct->generic_header.function_code) + ", '"
                         + data + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -533,8 +506,6 @@ bool db_manager::add_event_counter_response(
                         + std::to_string(
                             modbus_struct->generic_header.function_code) + ", '"
                         + response_data + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -571,8 +542,6 @@ bool db_manager::add_event_log_response(const struct modbus_event_log_response
                             modbus_struct->generic_header.function_code) + ", "
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + response_data + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -630,8 +599,6 @@ bool db_manager::add_multiple_write_query(
                         + std::to_string(modbus_struct->num_of_points) + ", "
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + request_data + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -691,8 +658,6 @@ bool db_manager::add_multiple_write_query(
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + request_data + "', '" + errors  + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -720,8 +685,6 @@ bool db_manager::add_multiple_write_response(
                             modbus_struct->generic_header.function_code) + ", "
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ")";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -752,8 +715,6 @@ bool db_manager::add_multiple_write_response(
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ", '"
                         + errors + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -796,8 +757,6 @@ bool db_manager::add_report_slave_id_response(
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + response_data + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -829,8 +788,6 @@ bool db_manager::add_mask_write(const struct modbus_mask_write *modbus_struct,
                         + std::to_string(
                             modbus_struct->generic_header.function_code) + ", '"
                         + data + "')";
-
-    std::cout << "db query: " << query << std::endl;
 
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -864,8 +821,6 @@ bool db_manager::add_mask_write(const struct modbus_mask_write *modbus_struct,
                             modbus_struct->generic_header.function_code) + ", '"
                         + data + "', '" + errors + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -893,8 +848,6 @@ bool db_manager::add_exception(const struct modbus_exception *modbus_struct)
                         +  ", '" + std::to_string(modbus_struct->exception_code)
                         + "')";
 
-    std::cout << "db query: " << query << std::endl;
-
     if (mysql_query(this->connection, query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
         mysql_close(this->connection);
@@ -912,8 +865,6 @@ bool db_manager::add_display_frame(const std::string &type,
     std::string db_query = "INSERT INTO `display_frames`(type, request, "
                            "response) VALUES('" + type + "', '" + query
                            + "', '" + response + "')";
-
-    std::cout << "db query: " << db_query << std::endl;
 
     if (mysql_query(this->connection, db_query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -934,8 +885,6 @@ bool db_manager::add_display_frame(const std::string &type,
                            "response, aggregated) VALUES('" + type + "', '"
                            + query + "', '" + response + "', '" + aggregated
                            + "')";
-
-    std::cout << "db query: " << db_query << std::endl;
 
     if (mysql_query(this->connection, db_query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -959,8 +908,6 @@ bool db_manager::add_aggregated_data(int address_id, uint16_t transaction_id,
                            + std::to_string(address) + ", "
                            + std::to_string(operation) + ", '"
                            + value + "')";
-
-    std::cout << "db query: " << db_query << std::endl;
 
     if (mysql_query(this->connection, db_query.c_str())) {
         std::cout << mysql_error(this->connection) << std::endl;
@@ -1111,8 +1058,6 @@ bool db_manager::add_aggregated_frame(const struct device_struct *dev,
         read_query = (struct modbus_read_query*) aggregated_frame->query;
         read_response = (struct modbus_read_response*)
             aggregated_frame->response;
-
-        std::cout << "I am hereeee" << std::endl;
 
         query = get_modbus_read_query_string(read_query,
             DISPLAY_FRAME_SEPARATOR);
@@ -1529,7 +1474,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
         query = get_modbus_read_query_string(read_query,
-                                             DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case READ_INPUT_STATUS:
         type = "READ INPUT STATUS EXCEPTION";
@@ -1537,7 +1483,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
         query = get_modbus_read_query_string(read_query,
-                                             DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case READ_HOLDING_REGISTERS:
         type = "READ HOLDING REGISTERS EXCEPTION";
@@ -1545,7 +1492,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
         query = get_modbus_read_query_string(read_query,
-                                             DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case READ_INPUT_REGISTERS:
         type = "READ INPUT REGISTERS EXCEPTION";
@@ -1553,7 +1501,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
         read_query = (struct modbus_read_query*) aggregated_frame->query;
 
         query = get_modbus_read_query_string(read_query,
-                                             DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case FORCE_SINGLE_COIL:
         type = "FORCE SINGLE COIL EXCEPTION";
@@ -1562,7 +1511,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_single_write_string(single_write_query,
-                                               DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case PRESET_SINGLE_REGISTER:
         type = "PRESET SINGLE REGISTER EXCEPTION";
@@ -1571,7 +1521,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_single_write_string(single_write_query,
-                                               DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case READ_EXCEPTION_STATUS:
         type = "READ EXCEPTION STATUS EXCEPTION";
@@ -1580,7 +1531,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_generic_string(exception_status_request,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case DIAGNOSTICS:
         type = "DIAGNOSTICS EXCEPTION";
@@ -1589,7 +1541,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_diagnostics_string(diagnostics_query,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case FETCH_COMM_EVENT_COUNTER:
         type = "FETCH COMM EVENT COUNTER EXCEPTION";
@@ -1598,7 +1551,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_generic_string(event_counter_request,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case FETCH_COMM_EVENT_LOG:
         type = "FETCH COMM EVENT LOG EXCEPTION";
@@ -1607,7 +1561,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_generic_string(event_log_request,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case FORCE_MULTIPLE_COILS:
         type = "FORCE MULTIPLE COILS EXCEPTION";
@@ -1616,7 +1571,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_multiple_write_query_string(multiple_write_query,
-                                                       DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case PRESET_MULTIPLE_REGISTERS:
         type = "PRESET MULTIPLE REGISTERS EXCEPTION";
@@ -1625,7 +1581,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
             aggregated_frame->query;
 
         query = get_modbus_multiple_write_query_string(multiple_write_query,
-                                                       DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     case REPORT_SLAVE_ID:
         type = "REPORT SLAVE ID EXCEPTION";
@@ -1633,7 +1590,8 @@ bool db_manager::add_aggregated_exception_frame(const struct modbus_aggregate
         report_slave_id_request = (struct modbus_generic*)
             aggregated_frame->query;
         query = get_modbus_generic_string(report_slave_id_request,
-                                              DISPLAY_FRAME_SEPARATOR);
+            DISPLAY_FRAME_SEPARATOR);
+
         break;
     default:
         std::cout << "Function code decoding not yet implemented" << std::endl;
