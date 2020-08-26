@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <pcap.h>
+#include <chrono>
 
 #include "db.h"
 
@@ -92,6 +93,8 @@ namespace logger {
         const std::string &errors);
 
     void modbus_packet_handler(const uint8_t *payload);
+
+    void inc_duration(std::chrono::duration<double> diff);
 };
 
 #endif

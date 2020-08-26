@@ -22,7 +22,7 @@ public class SlaveTestRTU {
             Modbus.setLogLevel(Modbus.LogLevel.LEVEL_DEBUG);
             SerialParameters serialParameters = new SerialParameters();
 
-            serialParameters.setDevice("/dev/pts/9");
+            serialParameters.setDevice("/dev/pts/8");
 
             serialParameters.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
             serialParameters.setDataBits(8);

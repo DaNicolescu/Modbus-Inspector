@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <chrono>
 
 #include "serial_sniffer.h"
 #include "modbus.h"
@@ -663,10 +664,18 @@ namespace serial_sniffer {
             for(i = 0; i < event_count; i++) {
                 event_fd = events[i].data.fd;
 
+                auto start = std::chrono::high_resolution_clock::now();
+
                 if (event_fd == port1_fd)
                     read_query_frame();
                 else if (event_fd == port2_fd)
                     read_response_frame();
+
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> diff = end - start;
+                std::cout << "Modbus TCP time: " << diff.count() << "s"
+                    << std::endl;
+                logger::inc_duration(diff);
             }
         }
 

@@ -22,6 +22,8 @@ namespace logger {
     bool timed;
     bool serial;
 
+    std::chrono::duration<double> duration;
+
     // modbus tcp
     std::string interface;
 
@@ -1032,6 +1034,11 @@ namespace logger {
         return 0;
     }
 
+    void inc_duration(std::chrono::duration<double> diff)
+    {
+        duration += diff;
+    }
+
     void sig_handler(int signum)
     {
         std::cout << std::endl;
@@ -1067,6 +1074,8 @@ namespace logger {
             tcp_sniffer::init(interface);
         }
 
+        duration = std::chrono::duration<double>::zero();
+
         return 0;
     }
 
@@ -1095,6 +1104,8 @@ namespace logger {
 
         if (log)
             db->close();
+
+        std::cout << "Duration: " << duration.count() << "s" << std::endl;
     }
 }
 

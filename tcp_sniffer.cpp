@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <net/ethernet.h>
 #include <netinet/in.h>
+#include <chrono>
 
 #include "tcp_sniffer.h"
 #include "logger.h"
@@ -50,6 +51,8 @@ namespace tcp_sniffer {
         int payload_length;
 
         // std::cout << "entered handler" << std::endl;
+
+        auto start = std::chrono::high_resolution_clock::now();
 
         ethernet_header = (struct ether_header*) packet;
 
@@ -104,6 +107,13 @@ namespace tcp_sniffer {
             return;
 
         logger::modbus_packet_handler(payload);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff = end - start;
+
+        std::cout << "Modbus TCP time: " << diff.count() << "s" << std::endl;
+
+        logger::inc_duration(diff);
     }
 
     int init(std::string interface)
