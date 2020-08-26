@@ -20,8 +20,6 @@ void read_range(struct address_struct *addr, std::string str)
 
     token = strtok(cstr, ":");
 
-    std::cout << "read range: " << str << std::endl;
-
     if (!token) {
         std::cout << "Invalid Range" << std::endl;
 
@@ -47,14 +45,11 @@ void read_range(struct address_struct *addr, std::string str)
         return;
     }
 
-    std::cout << "token1:" << token << std::endl;
-
     token = strtok(NULL, ":");
 
     if (!token) {
         addr->possible_values.push_back(first_num);
     } else {
-        std::cout << "token2:" << token << std::endl;
         switch (addr->type) {
         case XLS_INT_TYPE:
             sscanf(token, "%d", &second_num.i);
@@ -85,28 +80,20 @@ void read_range(struct address_struct *addr, std::string str)
 std::vector<std::string> split_into_strings(std::string str,
                                             std::string delimiter)
 {
-    std::cout << str << std::endl;
     std::string::iterator end_pos = std::remove(str.begin(), str.end(), ' ');
     str.erase(end_pos, str.end());
-    std::cout << str << std::endl;
     char *cstr = new char[str.length() + 1];
     char *cdelimiter = new char[delimiter.length() + 1];
     char *current;
     std::vector<std::string> arr;
 
-    std::cout << "Split into strings" << std::endl;
-
     strcpy(cstr, str.c_str());
 
     strcpy(cdelimiter, delimiter.c_str());
 
-    std::cout << cstr << std::endl;
-    std::cout << cdelimiter << std::endl;
-
     current = strtok(cstr, cdelimiter);
 
     while (current) {
-        std::cout << current << std::endl;
         arr.push_back(current);
         current = strtok(NULL, cdelimiter);
     }
@@ -188,26 +175,18 @@ void extract_data_from_xls_config_file(std::string file_name,
 
     work_book.InitIterator(devices_sheet_num);
 
-    std::cout << "pula1" << std::endl;
-
     while (true) {
         xls::cellContent cell = work_book.GetNextCell();
 
         if (cell.type == xls::cellBlank)
             break;
 
-        work_book.ShowCell(cell);
-
         if (cell.row == 1)
             continue;
 
         switch (cell.col) {
         case XLS_DEVICES_SLAVE_ID_COLUMN:
-            std::cout << "slave id" << std::endl;
-
             dev = new device_struct;
-
-            std::cout << "malloced" << std::endl;
 
             if (!dev) {
                 std::cout << "Not enough memory for a new device structure"
@@ -217,10 +196,7 @@ void extract_data_from_xls_config_file(std::string file_name,
             sscanf(cell.str.c_str(), "%d", &int_id);
 
             dev->id = (uint8_t) int_id;
-            std::cout << "dev id: " << (unsigned) dev->id << std::endl;
             dev->name = "No devices name";
-
-            std::cout << "set device strings" << std::endl;
 
             devices_map[dev->id] = dev;
 
@@ -247,7 +223,6 @@ void extract_data_from_xls_config_file(std::string file_name,
             coils_ranges = split_into_strings(cell.str, ",");
 
             for (std::string str : coils_ranges) {
-                std::cout << "coil: " << str << std::endl;
                 dev->add_read_coils_range(str);
             }
 
@@ -262,7 +237,6 @@ void extract_data_from_xls_config_file(std::string file_name,
             coils_ranges = split_into_strings(cell.str, ",");
 
             for (std::string str : coils_ranges) {
-                std::cout << "coil: " << str << std::endl;
                 dev->add_write_coils_range(str);
             }
 
@@ -277,7 +251,6 @@ void extract_data_from_xls_config_file(std::string file_name,
             strings_vec = split_into_strings(cell.str, ",");
 
             for (std::string str : strings_vec) {
-                std::cout << "input: " << str << std::endl;
                 dev->add_inputs_range(str);
             }
 
@@ -292,7 +265,6 @@ void extract_data_from_xls_config_file(std::string file_name,
             strings_vec = split_into_strings(cell.str, ",");
 
             for (std::string str : strings_vec) {
-                std::cout << "read holding register: " << str << std::endl;
                 dev->add_read_hld_regs_range(str);
             }
 
@@ -307,7 +279,6 @@ void extract_data_from_xls_config_file(std::string file_name,
             strings_vec = split_into_strings(cell.str, ",");
 
             for (std::string str : strings_vec) {
-                std::cout << "write holding register: " << str << std::endl;
                 dev->add_write_hld_regs_range(str);
             }
 
@@ -322,7 +293,6 @@ void extract_data_from_xls_config_file(std::string file_name,
             strings_vec = split_into_strings(cell.str, ",");
 
             for (std::string str : strings_vec) {
-                std::cout << "input register: " << str << std::endl;
                 dev->add_input_regs_range(str);
             }
 
@@ -364,8 +334,6 @@ void extract_data_from_xls_config_file(std::string file_name,
         crt_dev_slave_id = it->first;
         dev = it->second;
 
-        std::cout << "Device " << crt_dev_slave_id << std::endl;
-
         for (device_sheet_num = 0; device_sheet_num < num_of_sheets;
              device_sheet_num++) {
 
@@ -390,8 +358,6 @@ void extract_data_from_xls_config_file(std::string file_name,
             if (cell.type == xls::cellBlank)
                 break;
 
-            work_book.ShowCell(cell);
-
             if (cell.row == 1)
                 continue;
 
@@ -407,8 +373,6 @@ void extract_data_from_xls_config_file(std::string file_name,
                 }
 
                 sscanf(cell.str.c_str(), "%hu", &addr->address);
-
-                std::cout << "address: " << addr->address << std::endl;
 
                 dev->addresses_map[addr->address] = addr;
 
@@ -492,20 +456,10 @@ void extract_data_from_xls_config_file(std::string file_name,
                     return;
                 }
 
-                std::cout << std::endl;
-                std::cout << std::endl;
-                std::cout << std::endl;
-                std::cout << std::endl;
-                std::cout << std::endl;
-
-                std::cout << cell.str << std::endl;
-
                 range_strings = split_into_strings(cell.str, ",");
 
-                for (std::string str : range_strings) {
-                    std::cout << "read range for " << str << std::endl;
+                for (std::string str : range_strings)
                     read_range(addr, str);
-                }
 
                 break;
             case XLS_DEVICE_ADDRESSES_NOTES_COLUMN:

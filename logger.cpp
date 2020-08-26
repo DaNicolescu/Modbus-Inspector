@@ -1051,9 +1051,9 @@ namespace logger {
         if (ret)
             return 1;
 
-        //display_xls_config_file(XLS_CONFIG_FILE_NAME);
+        // display_xls_config_file(XLS_CONFIG_FILE_NAME);
         extract_data_from_xls_config_file(XLS_CONFIG_FILE_NAME, devices_map);
-        display_devices();
+        // display_devices();
 
         if (log)
             add_addresses_to_db(db);

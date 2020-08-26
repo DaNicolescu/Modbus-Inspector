@@ -114,15 +114,12 @@ std::pair<uint16_t, uint16_t> device_struct::make_uint16_pair(std::string str)
 
     sscanf(token, "%hu", &first_num);
 
-    std::cout << "token1:" << token << std::endl;
-
     token = strtok(NULL, ":");
 
     if (!token) {
         pair.first = first_num;
         pair.second = first_num;
     } else {
-        std::cout << "token2:" << token << std::endl;
         sscanf(token, "%hu", &second_num);
 
         pair.first = first_num;
