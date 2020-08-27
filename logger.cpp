@@ -1097,6 +1097,8 @@ namespace logger {
 
     void close_logger()
     {
+        std::cout << "Duration: " << duration.count() << "s" << std::endl;
+
         if (serial)
             serial_sniffer::close_sniffer();
         else
@@ -1104,8 +1106,6 @@ namespace logger {
 
         if (log)
             db->close();
-
-        std::cout << "Duration: " << duration.count() << "s" << std::endl;
     }
 }
 

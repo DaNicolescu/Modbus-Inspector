@@ -19,8 +19,9 @@ void db_manager::db_thread_function(struct db_manager *manager)
 {
     while (true) {
         std::string query = manager->db_queue->consume();
-        
-        std::cout << query << std::endl;
+
+        if (query == "end")
+            break;
 
         if (mysql_query(manager->connection, query.c_str())) {
             std::cout << mysql_error(manager->connection) << std::endl;
@@ -28,6 +29,19 @@ void db_manager::db_thread_function(struct db_manager *manager)
 
             return;
         }
+    }
+
+    while (!manager->db_queue->queue.empty()){
+        std::string query = manager->db_queue->queue.front();
+
+        if (mysql_query(manager->connection, query.c_str())) {
+            std::cout << mysql_error(manager->connection) << std::endl;
+            mysql_close(manager->connection);
+
+            return;
+        }
+
+        manager->db_queue->queue.pop();
     }
 }
 
@@ -59,6 +73,9 @@ bool db_manager::open()
 
 void db_manager::close()
 {
+    this->db_queue->add("end");
+    this->db_thread.join();
+
     mysql_close(this->connection);
 }
 
@@ -236,12 +253,7 @@ bool db_manager::add_modbus_generic(const struct modbus_generic
                         + std::to_string(modbus_struct->unit_id) + ", "
                         + std::to_string(modbus_struct->function_code) + ")";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -260,12 +272,7 @@ bool db_manager::add_modbus_generic(const struct modbus_generic
                         + std::to_string(modbus_struct->function_code) + ", '"
                         + errors + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -287,12 +294,7 @@ bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct)
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ")";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -316,12 +318,7 @@ bool db_manager::add_read_query(const struct modbus_read_query *modbus_struct,
                         + std::to_string(modbus_struct->num_of_points) + ", '"
                         + errors + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -373,12 +370,7 @@ bool db_manager::add_read_response(
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + response_data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -402,12 +394,7 @@ bool db_manager::add_single_write(
                         + std::to_string(modbus_struct->address) + ", "
                         + std::to_string(modbus_struct->value) + ")";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -433,12 +420,7 @@ bool db_manager::add_single_write(
                         + std::to_string(modbus_struct->value) + ", '"
                         + errors + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -464,12 +446,7 @@ bool db_manager::add_exception_status_response(
                             modbus_struct->generic_header.function_code) + ", '"
                         + response_data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -494,12 +471,7 @@ bool db_manager::add_diagnostics(const struct modbus_diagnostics *modbus_struct,
                             modbus_struct->generic_header.function_code) + ", '"
                         + data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -526,12 +498,7 @@ bool db_manager::add_event_counter_response(
                             modbus_struct->generic_header.function_code) + ", '"
                         + response_data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -562,12 +529,7 @@ bool db_manager::add_event_log_response(const struct modbus_event_log_response
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + response_data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -619,12 +581,7 @@ bool db_manager::add_multiple_write_query(
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + request_data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -677,12 +634,7 @@ bool db_manager::add_multiple_write_query(
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + request_data + "', '" + errors  + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -705,12 +657,7 @@ bool db_manager::add_multiple_write_response(
                         + std::to_string(modbus_struct->starting_address) + ", "
                         + std::to_string(modbus_struct->num_of_points) + ")";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -735,12 +682,7 @@ bool db_manager::add_multiple_write_response(
                         + std::to_string(modbus_struct->num_of_points) + ", '"
                         + errors + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -776,12 +718,7 @@ bool db_manager::add_report_slave_id_response(
                         + std::to_string(modbus_struct->byte_count) + ", '"
                         + response_data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -808,12 +745,7 @@ bool db_manager::add_mask_write(const struct modbus_mask_write *modbus_struct,
                             modbus_struct->generic_header.function_code) + ", '"
                         + data + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -840,12 +772,7 @@ bool db_manager::add_mask_write(const struct modbus_mask_write *modbus_struct,
                             modbus_struct->generic_header.function_code) + ", '"
                         + data + "', '" + errors + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -867,12 +794,7 @@ bool db_manager::add_exception(const struct modbus_exception *modbus_struct)
                         +  ", '" + std::to_string(modbus_struct->exception_code)
                         + "')";
 
-    if (mysql_query(this->connection, query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(query);
 
     return true;
 }
@@ -885,12 +807,7 @@ bool db_manager::add_display_frame(const std::string &type,
                            "response) VALUES('" + type + "', '" + query
                            + "', '" + response + "')";
 
-    if (mysql_query(this->connection, db_query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(db_query);
 
     return true;
 }
@@ -905,12 +822,7 @@ bool db_manager::add_display_frame(const std::string &type,
                            + query + "', '" + response + "', '" + aggregated
                            + "')";
 
-    if (mysql_query(this->connection, db_query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(db_query);
 
     return true;
 }
@@ -928,12 +840,7 @@ bool db_manager::add_aggregated_data(int address_id, uint16_t transaction_id,
                            + std::to_string(operation) + ", '"
                            + value + "')";
 
-    if (mysql_query(this->connection, db_query.c_str())) {
-        std::cout << mysql_error(this->connection) << std::endl;
-        mysql_close(this->connection);
-
-        return false;
-    }
+    this->db_queue->add(db_query);
 
     return true;
 }

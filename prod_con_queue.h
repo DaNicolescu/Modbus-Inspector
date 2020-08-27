@@ -7,6 +7,11 @@
 #include <stdint.h>
 #include <string>
 
+struct msg_buf {
+    uint8_t *payload;
+    uint16_t length;
+};
+
 struct prod_con_queue {
     std::queue<std::string> queue;
     int max_size;
