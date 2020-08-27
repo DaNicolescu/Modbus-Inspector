@@ -18,7 +18,7 @@ public class MasterLongTestRTU {
             // if there is at least one serial port at your system
 
             // you can choose the one of those you need
-            sp.setDevice("/dev/pts/6");
+            sp.setDevice("/dev/pts/3");
             // these parameters are set by default
             sp.setBaudRate(SerialPort.BaudRate.BAUD_RATE_19200);
             sp.setDataBits(8);

@@ -5,21 +5,17 @@
 #include <mutex>
 #include <condition_variable>
 #include <stdint.h>
-
-struct msg_buf {
-    uint8_t *payload;
-    uint16_t length;
-};
+#include <string>
 
 struct prod_con_queue {
-    std::queue<struct msg_buf*> queue;
+    std::queue<std::string> queue;
     int max_size;
     std::mutex mutex;
     std::condition_variable condition;
     
     prod_con_queue(int max_size);
-    void add(struct msg_buf *item);
-    struct msg_buf *consume();
+    void add(std::string item);
+    std::string consume();
     bool is_full() const;
     bool is_empty() const;
     int length() const;

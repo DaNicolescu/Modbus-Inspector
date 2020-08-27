@@ -5,7 +5,7 @@ prod_con_queue::prod_con_queue(int max_size)
 {
 }
 
-void prod_con_queue::add(struct msg_buf *item)
+void prod_con_queue::add(std::string item)
 {
     std::unique_lock<std::mutex> lock(this->mutex);
     this->condition.wait(lock, [this]()
@@ -15,9 +15,9 @@ void prod_con_queue::add(struct msg_buf *item)
     this->condition.notify_all();
 }
 
-struct msg_buf *prod_con_queue::consume()
+std::string prod_con_queue::consume()
 {
-    struct msg_buf *item;
+    std::string item;
 
     std::unique_lock<std::mutex> lock(this->mutex);
     this->condition.wait(lock, [this]()

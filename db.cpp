@@ -15,6 +15,22 @@ void db_manager::display_client_version()
         << std::endl;
 }
 
+void db_manager::db_thread_function(struct db_manager *manager)
+{
+    while (true) {
+        std::string query = manager->db_queue->consume();
+        
+        std::cout << query << std::endl;
+
+        if (mysql_query(manager->connection, query.c_str())) {
+            std::cout << mysql_error(manager->connection) << std::endl;
+            mysql_close(manager->connection);
+
+            return;
+        }
+    }
+}
+
 bool db_manager::open()
 {
     this->connection = mysql_init(NULL);
@@ -34,6 +50,9 @@ bool db_manager::open()
 
         return false;
     }
+
+    this->db_queue = new prod_con_queue(3000);
+    this->db_thread = std::thread(db_manager::db_thread_function, this);
 
     return true;
 }

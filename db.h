@@ -2,6 +2,9 @@
 #define DB_H
 
 #include <string>
+#include <thread>
+
+#include "prod_con_queue.h"
 
 #define DISPLAY_FRAME_SEPARATOR     '|'
 
@@ -29,8 +32,11 @@ struct modbus_aggregate;
 
 struct db_manager {
     MYSQL *connection;
+    std::thread db_thread;
+    prod_con_queue *db_queue; 
 
     static void display_client_version();
+    static void db_thread_function(struct db_manager *manager);
     
     bool open();
     void close();
